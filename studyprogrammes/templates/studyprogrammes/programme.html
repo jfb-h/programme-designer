@@ -4,6 +4,12 @@
 .course-block[data-group="PG"] { background: #e3f2fd; }
 .course-block[data-group="HG"] { background: #e8f5e9; }
 .course-block[data-group="MU"] { background: #fff3e0; }
+.semester-ects {
+  color: #aaa;
+  font-style: italic;
+  font-size: 1em;
+  margin-left: 1em;
+}
 </style>
 
 <h1>{{ programme.name }} ({{ programme.get_degree_type_display }})</h1>
@@ -14,17 +20,22 @@
 <div id="semester-list">
 {% for semester in semesters %}
   <div class="semester-block" id="semester-{{ semester.id }}" style="margin-bottom:2em;">
-    <div style="display:flex; align-items:center; gap:1em;">
+    <div style="display:flex; align-items:center; gap:1em; margin-bottom:0.5em">
       <span class="semester-handle" style="cursor:grab;">&#9776;</span>
-      <h2 style="margin-bottom:0.5em;">{{ forloop.counter }}. Semester</h2>
+      <h2>
+        {{ forloop.counter }}. Semester
+      </h2>
       <!-- Remove Semester Button -->
-      <form method="post" style="margin:0;">
+      <form method="post">
         {% csrf_token %}
         <input type="hidden" name="delete_semester_id" value="{{ semester.id }}">
         <button type="submit" name="delete_semester"
           style="background:none; color:#e74c3c; border:none; border-radius:2px; padding:0.0em 0.0em; cursor:pointer; font-size:1.3em;"
           title="Remove Semester">&times;</button>
       </form>
+      <span class="semester-ects">
+        {{ semester.ects_sum|default:0 }} ECTS allocated
+      </span>
     </div>
     <div id="course-list-{{ semester.id }}" class="course-list" style="display:flex; gap:1em; flex-wrap:wrap;">
       {% for course in semester.courses.all %}
@@ -84,7 +95,6 @@
       {% csrf_token %}
       <div style="margin-bottom:1em; border-bottom:1px solid #eee; padding-bottom:1em;">
         {{ course_form.name.label_tag }} {{ course_form.name }}<br>
-        {{ course_form.group.label_tag }}<br>
         <div class="radio-row">
           {{ course_form.group }}
         </div>

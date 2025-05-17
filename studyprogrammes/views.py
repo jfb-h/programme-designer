@@ -8,7 +8,7 @@ from django.views.generic import ListView
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 import json
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Sum
 from django.db import models
 
 
@@ -41,6 +41,9 @@ def programme_view(request, programme_id):
     semesters = Semester.objects.filter(programme=programme).prefetch_related(
         Prefetch('courses', queryset=Course.objects.order_by('order', 'id'))
     ).order_by('order', 'id')
+    # Annotate each semester with ects_sum using the correct related_name
+    for semester in semesters:
+        semester.ects_sum = semester.courses.all().aggregate(total=Sum('ects'))['total'] or 0
     course_form = CourseForm(request.POST or None)
     semester_form = SemesterForm(initial={'programme': programme})
     if request.method == "POST":
