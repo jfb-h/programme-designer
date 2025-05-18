@@ -18,7 +18,7 @@ class Programme(models.Model):
     degree_type = models.CharField(max_length=20, choices=DEGREE_CHOICES)
 
     def __str__(self):
-        return f"{self.name} ({self.get_degree_type_display()})"
+        return f"{self.name} ({self.degree_type})"
 
 class Semester(models.Model):
     programme = models.ForeignKey(Programme, on_delete=models.CASCADE, related_name='semesters')
@@ -58,3 +58,18 @@ class Course(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.semester})"
+
+class ProgrammeExpectedStudents(models.Model):
+    DEGREE_CHOICES = Programme.DEGREE_CHOICES
+    semester = models.PositiveIntegerField()
+    degree_type = models.CharField(max_length=20, choices=DEGREE_CHOICES)
+    min_students = models.PositiveIntegerField()
+    mean_students = models.PositiveIntegerField()
+    max_students = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = ('semester', 'degree_type')
+        ordering = ['degree_type', 'semester']
+
+    def __str__(self):
+        return f"{self.degree_type} Sem {self.semester}: {self.min_students}/{self.mean_students}/{self.max_students}"

@@ -41,9 +41,54 @@ def programme_view(request, programme_id):
     semesters = Semester.objects.filter(programme=programme).prefetch_related(
         Prefetch('courses', queryset=Course.objects.order_by('order', 'id'))
     ).order_by('order', 'id')
-    # Annotate each semester with ects_sum using the correct related_name
-    for semester in semesters:
-        semester.ects_sum = semester.courses.all().aggregate(total=Sum('ects'))['total'] or 0
+    # Define course type groups for template
+    course_type_groups = [
+        ('lectures', 'Lectures'),
+        ('seminars_tutorials', 'Seminars & Tutorials'),
+        ('fieldtrips_thesis_external', 'Other'),
+    ]
+    from .models import ProgrammeExpectedStudents
+    expected_students_lookup = {}
+    for es in ProgrammeExpectedStudents.objects.filter(degree_type=programme.degree_type):
+        expected_students_lookup[es.semester] = {'min': es.min_students, 'mean': es.mean_students, 'max': es.max_students}
+    # Build a list of semester dicts with grouped courses and ects_sum
+    semester_contexts = []
+    for idx, semester in enumerate(semesters, 1):
+        courses = list(getattr(semester, 'courses').all())
+        ects_sum = sum(c.ects for c in courses)
+        courses_by_type = {
+            'lectures': [],
+            'seminars_tutorials': [],
+            'fieldtrips_thesis_external': [],
+        }
+        expected_students = expected_students_lookup.get(idx, {'min': '', 'mean': '', 'max': ''})
+        for c in courses:
+            min_classes = max_classes = None
+            if expected_students['min'] and expected_students['max'] and c.max_participants:
+                try:
+                    min_val = int(expected_students['min'])
+                    max_val = int(expected_students['max'])
+                    maxp = int(c.max_participants)
+                    min_classes = (min_val + maxp - 1) // maxp if min_val > 0 else 1
+                    max_classes = (max_val + maxp - 1) // maxp if max_val > 0 else 1
+                except Exception:
+                    min_classes = max_classes = None
+            c.min_classes = min_classes
+            c.max_classes = max_classes
+            if c.type == 'lecture':
+                courses_by_type['lectures'].append(c)
+            elif c.type in ('seminar', 'tutorial'):
+                courses_by_type['seminars_tutorials'].append(c)
+            elif c.type in ('fieldtrip', 'thesis', 'external'):
+                courses_by_type['fieldtrips_thesis_external'].append(c)
+        semester_contexts.append({
+            'id': semester.pk,
+            'order': getattr(semester, 'order', idx-1),
+            'ects_sum': ects_sum,
+            'courses_by_type': courses_by_type,
+            'number': idx,
+            'expected_students': expected_students,
+        })
     course_form = CourseForm(request.POST or None)
     semester_form = SemesterForm(initial={'programme': programme})
     if request.method == "POST":
@@ -74,9 +119,10 @@ def programme_view(request, programme_id):
             return redirect('programme', programme_id=programme_id)
     return render(request, "studyprogrammes/programme.html", {
         "programme": programme,
-        "semesters": semesters,
+        "semesters": semester_contexts,
         "course_form": course_form,
         "semester_form": semester_form,
+        "course_type_groups": course_type_groups,
     })
 
 def programmes_view(request):
@@ -113,8 +159,8 @@ def update_course_order(request, programme_id):
     data = json.loads(request.body)
     semester_id = data.get('semester')
     order = data.get('order', [])
-    if not semester_id or not order:
-        return JsonResponse({'status': 'error', 'message': 'Missing data'}, status=400)
+    if not semester_id:
+        return JsonResponse({'status': 'error', 'message': 'Missing semester id'}, status=400)
     from .models import Course, Semester
     try:
         semester = Semester.objects.get(id=semester_id, programme_id=programme_id)

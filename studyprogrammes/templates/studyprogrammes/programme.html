@@ -1,4 +1,5 @@
 {% extends "studyprogrammes/layout.html" %}
+{% load dict_extras %}
 {% block content %}
 <style>
 .course-block[data-group="PG"] { background: #e3f2fd; }
@@ -23,7 +24,7 @@
     <div style="display:flex; align-items:center; gap:1em; margin-bottom:0.5em">
       <span class="semester-handle" style="cursor:grab;">&#9776;</span>
       <h2>
-        {{ forloop.counter }}. Semester
+        {{ semester.number }}. Semester
       </h2>
       <!-- Remove Semester Button -->
       <form method="post">
@@ -37,24 +38,45 @@
         {{ semester.ects_sum|default:0 }} ECTS allocated
       </span>
     </div>
-    <div id="course-list-{{ semester.id }}" class="course-list" style="display:flex; gap:1em; flex-wrap:wrap;">
-      {% for course in semester.courses.all %}
-        <div class="course-block" id="course-{{ course.id }}" data-group="{{ course.group }}" style="border:1px solid #ccc; border-radius:8px; padding:1em; width:130px; position:relative;">
-          <form method="post" style="position:absolute; top:6px; right:6px; margin:0;">
-            {% csrf_token %}
-            <input type="hidden" name="delete_course_id" value="{{ course.id }}">
-            <button type="submit" name="delete_course"
-              style="background:#fff; color:#ccc; border:none; border-radius:50%; width:1.5em; height:1.5em; font-size:1em; line-height:1.2em; cursor:pointer; padding:0;"
-              title="Remove Course">&times;</button>
-          </form>
-          <em>{{ course.get_type_display }} ({{ course.get_group_display }})</em> <br>
-          <strong>{{ course.name }}</strong><br>
-          {{ course.ects }} ECTS, {{ course.sws }} SWS <br>
-        </div>
-      {% empty %}
-        <em>No courses yet.</em>
-      {% endfor %}
+    <div style="font-size:0.95em; color:#888; margin-bottom:0.5em;">
+      Expected students: {{ semester.expected_students.min }} - {{ semester.expected_students.max }}
     </div>
+    <!-- Course Groups -->
+    {% for group in course_type_groups %}
+      {% with group_courses=semester.courses_by_type|dict_get:group.0 %}
+        {% if group_courses %}
+          <div class="course-group-row" style="margin-bottom:0.5em;">
+            <div style="font-style:italic; margin-bottom:0.2em;">{{ group.1 }}</div>
+            <div id="course-list-{{ semester.id }}-{{ group.0 }}" class="course-list" style="display:flex; gap:1em; flex-wrap:wrap;">
+              {% for course in group_courses %}
+                <div class="course-block" id="course-{{ course.id }}" data-group="{{ course.group }}" style="border:1px solid #ccc; border-radius:8px; padding:1em; width:130px; position:relative;">
+                  <form method="post" style="position:absolute; top:6px; right:6px; margin:0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="delete_course_id" value="{{ course.id }}">
+                    <button type="submit" name="delete_course"
+                      style="background:none; color:#ccc; border:none; border-radius:50%; width:1.5em; height:1.5em; font-size:1em; line-height:1.2em; cursor:pointer; padding:0;"
+                      title="Remove Course">&times;</button>
+                  </form>
+                  <!-- <em>{{ course.get_type_display }} ({{ course.get_group_display }})</em> <br> -->
+                  <strong>{{ course.name }}</strong><br>
+                  {{ course.ects }} ECTS, {{ course.sws }} SWS <br>
+                  {% if course.min_classes and course.max_classes %}
+                    <span style="font-size:0.95em; color:#888;">
+                      {% if course.min_classes == course.max_classes %}
+                        {{ course.min_classes }} class{% if course.min_classes > 1 %}es{% endif %}
+                      {% else %}
+                        {{ course.min_classes }}-{{ course.max_classes }} classes
+                      {% endif %}
+                    </span><br>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      {% endwith %}
+    {% endfor %}
+
     <div style="margin-top:1em; display:flex; gap:1em; flex-wrap:wrap;">
         <div style="display:flex; align-items:center; justify-content:center; font-size:1em; padding:0.6em 0.0em; border:none">
         <svg width="24" height="24" fill="none" stroke="#2c3e50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.3em;"><circle cx="12" cy="12" r="11" stroke="#2c3e50" stroke-width="2"/><line x1="12" y1="7" x2="12" y2="17"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
@@ -155,16 +177,20 @@ document.addEventListener('DOMContentLoaded', function() {
       handle: '.course-block', // allow dragging by the whole course card
       draggable: '.course-block',
       onEnd: function(evt) {
-        const semesterId = courseList.id.replace('course-list-', '');
+        // Extract only the semester id from the course-list id
+        const match = courseList.id.match(/^course-list-(\d+)-/);
+        const semesterId = match ? match[1] : null;
         const order = Array.from(courseList.children).map(child => child.id.replace('course-', ''));
-        fetch(`{{ request.path }}update_course_order/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': '{{ csrf_token }}',
-          },
-          body: JSON.stringify({ semester: semesterId, order: order })
-        });
+        if (semesterId) {
+          fetch(`{{ request.path }}update_course_order/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({ semester: semesterId, order: order })
+          });
+        }
       }
     });
   });
@@ -175,8 +201,8 @@ document.addEventListener('DOMContentLoaded', function() {
 const typeDefaults = {
   seminar: {ects: 3, sws: 2, max_participants: 30},
   lecture: {ects: 3, sws: 2, max_participants: 600},
-  tutorial: {ects: 2, sws: 2, max_participants: 30},
-  fieldtrip: {ects: 2, sws: 1, max_participants: 20},
+  tutorial: {ects: 3, sws: 2, max_participants: 30},
+  fieldtrip: {ects: 9, sws: 1, max_participants: 20},
   thesis: {ects: 12, sws: 0, max_participants: 1},
   external: {ects: 6, sws: 0, max_participants: 1},
 };
