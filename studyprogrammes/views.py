@@ -62,6 +62,8 @@ def programme_view(request, programme_id):
             'fieldtrips_thesis_external': [],
         }
         expected_students = expected_students_lookup.get(idx, {'min': '', 'mean': '', 'max': ''})
+        expected_sws_min = 0
+        expected_sws_max = 0
         for c in courses:
             min_classes = max_classes = None
             if expected_students['min'] and expected_students['max'] and c.max_participants:
@@ -75,6 +77,16 @@ def programme_view(request, programme_id):
                     min_classes = max_classes = None
             c.min_classes = min_classes
             c.max_classes = max_classes
+            if min_classes and c.sws:
+                try:
+                    expected_sws_min += min_classes * float(c.sws)
+                except Exception:
+                    pass
+            if max_classes and c.sws:
+                try:
+                    expected_sws_max += max_classes * float(c.sws)
+                except Exception:
+                    pass
             if c.type == 'lecture':
                 courses_by_type['lectures'].append(c)
             elif c.type in ('seminar', 'tutorial'):
@@ -88,6 +100,8 @@ def programme_view(request, programme_id):
             'courses_by_type': courses_by_type,
             'number': idx,
             'expected_students': expected_students,
+            'expected_sws_min': expected_sws_min,
+            'expected_sws_max': expected_sws_max,
         })
     course_form = CourseForm(request.POST or None)
     semester_form = SemesterForm(initial={'programme': programme})

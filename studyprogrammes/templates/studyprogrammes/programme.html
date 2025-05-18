@@ -35,11 +35,12 @@
           title="Remove Semester">&times;</button>
       </form>
       <span class="semester-ects">
-        {{ semester.ects_sum|default:0 }} ECTS allocated
       </span>
     </div>
-    <div style="font-size:0.95em; color:#888; margin-bottom:0.5em;">
-      Expected students: {{ semester.expected_students.min }} - {{ semester.expected_students.max }}
+    <div style="font-size:0.95em; color:#888; margin-bottom:0.5em; display:flex; gap:0.7em; flex-wrap:wrap;">
+      <span style="background:#888; color:#fff; border-radius:12px; padding:0.2em 0.9em; font-weight:bold; font-size:1em; display:inline-block;">{{ semester.ects_sum|default:0 }} ECTS allocated</span>
+      <span style="background:#888; color:#fff; border-radius:12px; padding:0.2em 0.9em; font-weight:bold; font-size:1em; display:inline-block;">Students: {{ semester.expected_students.min }} - {{ semester.expected_students.max }}</span>
+      <span style="background:#888; color:#fff; border-radius:12px; padding:0.2em 0.9em; font-weight:bold; font-size:1em; display:inline-block;">SWS: {{ semester.expected_sws_min|floatformat:1 }} - {{ semester.expected_sws_max|floatformat:1 }}</span>
     </div>
     <!-- Course Groups -->
     {% for group in course_type_groups %}

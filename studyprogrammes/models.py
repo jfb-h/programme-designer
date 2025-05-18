@@ -64,7 +64,6 @@ class ProgrammeExpectedStudents(models.Model):
     semester = models.PositiveIntegerField()
     degree_type = models.CharField(max_length=20, choices=DEGREE_CHOICES)
     min_students = models.PositiveIntegerField()
-    mean_students = models.PositiveIntegerField()
     max_students = models.PositiveIntegerField()
 
     class Meta:
@@ -72,4 +71,4 @@ class ProgrammeExpectedStudents(models.Model):
         ordering = ['degree_type', 'semester']
 
     def __str__(self):
-        return f"{self.degree_type} Sem {self.semester}: {self.min_students}/{self.mean_students}/{self.max_students}"
+        return f"{self.degree_type} Sem {self.semester}: {self.min_students}/{self.max_students}"
