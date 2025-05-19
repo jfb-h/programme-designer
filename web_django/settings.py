@@ -135,3 +135,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CSRF_TRUSTED_ORIGINS = [
     "https://eggroup.geographie.uni-muenchen.de",
 ]
+
+try:
+    from .local_settings import *
+except ImportError:
+    pass
