@@ -11,9 +11,26 @@
   font-size: 1em;
   margin-left: 1em;
 }
+.programme-prefix {
+  color: #b2b1b1;
+  font-weight: bold;
+  font-size: 1.0em;
+}
 </style>
 
-<h1>{{ programme.name }} ({{ programme.get_degree_type_display }})</h1>
+<!-- Programme Title with Prefix -->
+<h1>
+  <span class="programme-prefix">
+    {% if programme.degree_type == 'bachelor' %}
+      BA | 
+    {% elif programme.degree_type == 'master' %}
+      MA | 
+    {% elif programme.degree_type == 'teaching' %}
+      LA | 
+    {% endif %}
+  </span>
+  {{ programme.name }} ({{ programme.get_degree_type_display }})
+</h1>
 
 <div style="display:flex; gap:1em; margin-bottom:1.2em;">
   <span style="background:#888; color:#fff; border-radius:12px; padding:0.3em 1.2em; font-weight:bold; font-size:1.1em; display:inline-block;">
