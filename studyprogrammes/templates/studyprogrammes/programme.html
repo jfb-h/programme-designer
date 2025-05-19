@@ -16,22 +16,56 @@
   font-weight: bold;
   font-size: 1.0em;
 }
+#edit-programme-form {
+  font-size: 0.7em;
+  display: none;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+  gap: 0.5em;
+}
+#edit-programme-form.show {
+  display: inline-flex;
+}
 </style>
 
-<!-- Programme Title with Prefix -->
-<h1>
+<!-- Programme Title with Prefix and Edit Button -->
+<h1 style="display: flex; align-items: center; gap:0.3em;">
   <span class="programme-prefix">
     {% if programme.degree_type == 'bachelor' %}
       BA 
     {% elif programme.degree_type == 'master' %}
-      MA
+      MA 
     {% elif programme.degree_type == 'teaching' %}
-      LA
+      LA 
     {% endif %}
+
   </span>
-  {{ programme.name }}
+  <span id="programme-name-display">{{ programme.name }}</span>
+  <button 
+    style="border:none; background-color:#fff"
+    type="button" onclick="document.getElementById('edit-programme-form').style.display='inline'; this.style.display='none'; document.getElementById('programme-name-display').style.display='none';" >
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" width="20" height="20">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+    </svg>
+  </button>
+  <form id="edit-programme-form" method="post">
+    {% csrf_token %}
+    <input 
+      type="text" 
+      name="programme_name" 
+      value="{{ programme.name }}" 
+      style="font-size:0.98em; padding:0.15em 0.5em; border:1px solid #bbb; border-radius:5px; background:#fafafa; min-width:120px;"
+    >
+    <button 
+      type="submit" 
+      name="edit_programme" 
+      style="font-size:0.95em; padding:0.15em 0.9em; border-radius:5px; border:1px solid #bbb; background:#e0e0e0; cursor:pointer; margin-left:0.2em;"
+    >Save</button>
+  </form>
 </h1>
 
+<!-- Programme stats -->
 <div style="display:flex; gap:1em; margin-bottom:1.2em;">
   <span style="background:#888; color:#fff; border-radius:12px; padding:0.3em 1.2em; font-weight:bold; font-size:1.1em; display:inline-block;">
     Total ECTS: {{ total_ects|default:0|floatformat:0 }}
@@ -261,4 +295,5 @@ function closeModal() {
   document.getElementById('modal').style.display = 'none';
 }
 </script>
+
 {% endblock %}

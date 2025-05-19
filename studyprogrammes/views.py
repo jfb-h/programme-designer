@@ -1,7 +1,7 @@
 import re
 from django.utils.timezone import datetime
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from studyprogrammes.forms import LogMessageForm, CourseForm, ProgrammeForm, SemesterForm
 from studyprogrammes.models import LogMessage, Semester, Course, Programme
 from django.views.generic import ListView
@@ -36,8 +36,8 @@ def log_message(request):
     else:
         return render(request, "studyprogrammes/log_message.html", {"form": form})
 
-def programme_view(request, programme_id):
-    programme = Programme.objects.get(pk=programme_id)
+def programme_view(request, pk):
+    programme = get_object_or_404(Programme, pk=pk)
     semesters = Semester.objects.filter(programme=programme).prefetch_related(
         Prefetch('courses', queryset=Course.objects.order_by('order', 'id'))
     ).order_by('order', 'id')
@@ -123,20 +123,27 @@ def programme_view(request, programme_id):
                 max_order = Course.objects.filter(semester=course.semester).aggregate(max_order=models.Max('order'))['max_order']
                 course.order = (max_order + 1) if max_order is not None else 0
                 course.save()
-                return redirect('programme', programme_id=programme_id)
+                return redirect('programme', pk=programme.pk)
         elif 'add_semester' in request.POST:
             semester_form = SemesterForm(request.POST)
             if semester_form.is_valid():
                 semester_form.save()
-                return redirect('programme', programme_id=programme_id)
+                return redirect('programme', pk=programme.pk)
         elif 'delete_semester' in request.POST:
             semester_id = request.POST.get('delete_semester_id')
             Semester.objects.filter(id=semester_id, programme=programme).delete()
-            return redirect('programme', programme_id=programme_id)
+            return redirect('programme', pk=programme.pk)
         elif 'delete_course' in request.POST:
             course_id = request.POST.get('delete_course_id')
             Course.objects.filter(id=course_id, semester__programme=programme).delete()
-            return redirect('programme', programme_id=programme_id)
+            return redirect('programme', pk=programme.pk)
+        elif "edit_programme" in request.POST:
+            new_name = request.POST.get("programme_name", "").strip()
+            if new_name:
+                programme.name = new_name
+                programme.save()
+            # Optionally, redirect to avoid resubmission
+            return redirect(request.path)
     return render(request, "studyprogrammes/programme.html", {
         "programme": programme,
         "semesters": semester_contexts,
