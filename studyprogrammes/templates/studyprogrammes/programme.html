@@ -22,11 +22,11 @@
 <h1>
   <span class="programme-prefix">
     {% if programme.degree_type == 'bachelor' %}
-      BA | 
+      BA 
     {% elif programme.degree_type == 'master' %}
-      MA | 
+      MA
     {% elif programme.degree_type == 'teaching' %}
-      LA | 
+      LA
     {% endif %}
   </span>
   {{ programme.name }} ({{ programme.get_degree_type_display }})
