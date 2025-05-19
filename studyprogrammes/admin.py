@@ -7,3 +7,4 @@ admin.site.register(Semester)
 admin.site.register(Course)
 admin.site.register(Programme)
 admin.site.register(ProgrammeExpectedStudents)
+# No changes needed: mean_students was not referenced in admin.

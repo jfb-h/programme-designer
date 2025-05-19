@@ -50,9 +50,12 @@ def programme_view(request, programme_id):
     from .models import ProgrammeExpectedStudents
     expected_students_lookup = {}
     for es in ProgrammeExpectedStudents.objects.filter(degree_type=programme.degree_type):
-        expected_students_lookup[es.semester] = {'min': es.min_students, 'mean': es.mean_students, 'max': es.max_students}
+        expected_students_lookup[es.semester] = {'min': es.min_students, 'max': es.max_students}
     # Build a list of semester dicts with grouped courses and ects_sum
     semester_contexts = []
+    total_ects = 0
+    total_sws_min = 0
+    total_sws_max = 0
     for idx, semester in enumerate(semesters, 1):
         courses = list(getattr(semester, 'courses').all())
         ects_sum = sum(c.ects for c in courses)
@@ -61,7 +64,7 @@ def programme_view(request, programme_id):
             'seminars_tutorials': [],
             'fieldtrips_thesis_external': [],
         }
-        expected_students = expected_students_lookup.get(idx, {'min': '', 'mean': '', 'max': ''})
+        expected_students = expected_students_lookup.get(idx, {'min': '', 'max': ''})
         expected_sws_min = 0
         expected_sws_max = 0
         for c in courses:
@@ -103,6 +106,9 @@ def programme_view(request, programme_id):
             'expected_sws_min': expected_sws_min,
             'expected_sws_max': expected_sws_max,
         })
+        total_ects += ects_sum
+        total_sws_min += expected_sws_min
+        total_sws_max += expected_sws_max
     course_form = CourseForm(request.POST or None)
     semester_form = SemesterForm(initial={'programme': programme})
     if request.method == "POST":
@@ -137,6 +143,9 @@ def programme_view(request, programme_id):
         "course_form": course_form,
         "semester_form": semester_form,
         "course_type_groups": course_type_groups,
+        "total_ects": total_ects,
+        "total_sws_min": total_sws_min,
+        "total_sws_max": total_sws_max,
     })
 
 def programmes_view(request):

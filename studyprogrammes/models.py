@@ -32,12 +32,12 @@ class Semester(models.Model):
 
 class Course(models.Model):
     TYPE_CHOICES = [
-        ('lecture', 'Lecture'),
-        ('seminar', 'Seminar'),
-        ('tutorial', 'Tutorial'),
-        ('fieldtrip', 'Field Trip'),
-        ('thesis', 'Thesis'),
-        ('external', 'External'),
+        ('lecture', 'VL (Lecture)'),
+        ('seminar', 'S (Seminar)'),
+        ('tutorial', 'Ü (Tutorial)'),
+        ('fieldtrip', 'G (Field Trip)'),
+        ('thesis', 'T (Thesis)'),
+        ('external', 'E (External)'),
     ]
     GROUP_CHOICES = [
         ('PG', 'PG'),

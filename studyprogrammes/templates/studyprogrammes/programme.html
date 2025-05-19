@@ -15,6 +15,15 @@
 
 <h1>{{ programme.name }} ({{ programme.get_degree_type_display }})</h1>
 
+<div style="display:flex; gap:1em; margin-bottom:1.2em;">
+  <span style="background:#888; color:#fff; border-radius:12px; padding:0.3em 1.2em; font-weight:bold; font-size:1.1em; display:inline-block;">
+    Total ECTS: {{ total_ects|default:0|floatformat:0 }}
+  </span>
+  <span style="background:#888; color:#fff; border-radius:12px; padding:0.3em 1.2em; font-weight:bold; font-size:1.1em; display:inline-block;">
+    Total SWS: {{ total_sws_min|floatformat:1 }} - {{ total_sws_max|floatformat:1 }}
+  </span>
+</div>
+
 <hr/>
 
 <!-- Semester List -->
@@ -50,7 +59,7 @@
             <div style="font-style:italic; margin-bottom:0.2em;">{{ group.1 }}</div>
             <div id="course-list-{{ semester.id }}-{{ group.0 }}" class="course-list" style="display:flex; gap:1em; flex-wrap:wrap;">
               {% for course in group_courses %}
-                <div class="course-block" id="course-{{ course.id }}" data-group="{{ course.group }}" style="border:1px solid #ccc; border-radius:8px; padding:1em; width:130px; position:relative;">
+                <div class="course-block" id="course-{{ course.id }}" data-group="{{ course.group }}" style="border:1px solid #ccc; border-radius:8px; padding:1em; width:120px; position:relative;">
                   <form method="post" style="position:absolute; top:6px; right:6px; margin:0;">
                     {% csrf_token %}
                     <input type="hidden" name="delete_course_id" value="{{ course.id }}">
@@ -58,7 +67,9 @@
                       style="background:none; color:#ccc; border:none; border-radius:50%; width:1.5em; height:1.5em; font-size:1em; line-height:1.2em; cursor:pointer; padding:0;"
                       title="Remove Course">&times;</button>
                   </form>
-                  <!-- <em>{{ course.get_type_display }} ({{ course.get_group_display }})</em> <br> -->
+                  <span style="color:#b2b1b1; font-weight:bold; font-size:0.95em;">
+                    {% if course.type == 'lecture' %}VL{% elif course.type == 'seminar' %}S{% elif course.type == 'tutorial' %}Ü{% elif course.type == 'fieldtrip' %}E{% elif course.type == 'thesis' %}T{% elif course.type == 'external' %}E{% endif %}
+                  </span>
                   <strong>{{ course.name }}</strong><br>
                   {{ course.ects }} ECTS, {{ course.sws }} SWS <br>
                   {% if course.min_classes and course.max_classes %}
