@@ -25,7 +25,12 @@ SECRET_KEY = 'PLACEHOLDER'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "eggroup.geographie.uni-muenchen.de",
+    "141.84.116.198"
+    "localhost",
+    "127.0.0.1"
+]
 
 
 # Application definition
