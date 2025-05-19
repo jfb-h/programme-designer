@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     "eggroup.geographie.uni-muenchen.de",
-    "141.84.116.198"
+    "141.84.116.198",
     "localhost",
     "127.0.0.1"
 ]
