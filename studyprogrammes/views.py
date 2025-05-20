@@ -59,6 +59,13 @@ def programme_view(request, pk):
     total_ects = 0
     total_sws_min = 0
     total_sws_max = 0
+    # Calculate ECTS for all, winter (odd), and summer (even) semesters
+    ects_winter = 0
+    ects_summer = 0
+    sws_odd_min = 0
+    sws_odd_max = 0
+    sws_even_min = 0
+    sws_even_max = 0
     for idx, semester in enumerate(semesters, 1):
         courses = list(getattr(semester, 'courses').all())
         ects_sum = sum(c.ects for c in courses)
@@ -111,7 +118,15 @@ def programme_view(request, pk):
         })
         total_ects += ects_sum
         total_sws_min += expected_sws_min
-        total_sws_max += total_sws_max
+        total_sws_max += expected_sws_max
+        if idx % 2 == 1:
+            ects_winter += ects_sum
+            sws_odd_min += expected_sws_min
+            sws_odd_max += expected_sws_max
+        else:
+            ects_summer += ects_sum
+            sws_even_min += expected_sws_min
+            sws_even_max += expected_sws_max
     course_form = CourseForm(request.POST or None)
     semester_form = SemesterForm(initial={'programme': programme})
     if request.method == "POST":
@@ -150,16 +165,23 @@ def programme_view(request, pk):
                 programme.save()
             # Optionally, redirect to avoid resubmission
             return redirect(request.path)
-    return render(request, "studyprogrammes/programme.html", {
+    context = {
         "programme": programme,
         "semesters": semester_contexts,
         "course_form": course_form,
         "semester_form": semester_form,
         "course_type_groups": course_type_groups,
-        "total_ects": total_ects,
-        "total_sws_min": total_sws_min,
-        "total_sws_max": total_sws_max,
-    })
+        'total_ects': total_ects,
+        'total_sws_min': total_sws_min,
+        'total_sws_max': total_sws_max,
+        'ects_winter': ects_winter,
+        'ects_summer': ects_summer,
+        'sws_odd_min': sws_odd_min,
+        'sws_odd_max': sws_odd_max,
+        'sws_even_min': sws_even_min,
+        'sws_even_max': sws_even_max,
+    }
+    return render(request, "studyprogrammes/programme.html", context)
 
 def programmes_view(request):
     programmes = Programme.objects.all()

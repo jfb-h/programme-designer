@@ -39,14 +39,24 @@
 </h1>
 
 <!-- Programme stats -->
-<div style="display:flex; gap:1em; margin-bottom:1.2em;">
-  <span style="background:#888; color:#fff; border-radius:12px; padding:0.3em 1.2em; font-weight:bold; font-size:1.1em; display:inline-block;">
-    ECTS: {{ total_ects|default:0|floatformat:0 }}
-  </span>
-  <span style="background:#888; color:#fff; border-radius:12px; padding:0.3em 1.2em; font-weight:bold; font-size:1.1em; display:inline-block;">
-    SWS: {{ total_sws_min|floatformat:1 }} - {{ total_sws_max|floatformat:1 }}
-  </span>
-</div>
+<div style="display:flex; gap:0.5em; margin-bottom:1.2em; align-items: flex-end; flex-wrap: wrap;">
+      <span class="programme-stat-pill">
+        <span class="programme-stat-pill-label">ECTS</span>
+        <span class="programme-stat-pill-value">{{ total_ects|default:0|floatformat:0 }}</span>
+      </span>
+      <span class="programme-stat-pill">
+        <span class="programme-stat-pill-label">SWS Gesamt</span>
+        <span class="programme-stat-pill-value">{{ total_sws_min|floatformat:1 }} - {{ total_sws_max|floatformat:1 }}</span>
+      </span>
+      <span class="programme-stat-pill">
+        <span class="programme-stat-pill-label">SWS WiSe</span>
+        <span class="programme-stat-pill-value">{{ sws_odd_min|floatformat:1 }} - {{ sws_odd_max|floatformat:1 }}</span>
+      </span>
+      <span class="programme-stat-pill">
+        <span class="programme-stat-pill-label">SWS SoSe</span>
+        <span class="programme-stat-pill-value">{{ sws_even_min|floatformat:1 }} - {{ sws_even_max|floatformat:1 }}</span>
+      </span>
+    </div>
 
 <hr/>
 
@@ -71,9 +81,18 @@
       </span>
     </div>
     <div style="font-size:0.95em; color:#888; margin-bottom:0.5em; display:flex; gap:0.7em; flex-wrap:wrap;">
-      <span style="background:#888; color:#fff; border-radius:12px; padding:0.2em 0.9em; font-weight:bold; font-size:1em; display:inline-block;">{{ semester.ects_sum|default:0 }} ECTS</span>
-      <span style="background:#888; color:#fff; border-radius:12px; padding:0.2em 0.9em; font-weight:bold; font-size:1em; display:inline-block;">{{ semester.expected_students.min }} - {{ semester.expected_students.max }} Studierende</span>
-      <span style="background:#888; color:#fff; border-radius:12px; padding:0.2em 0.9em; font-weight:bold; font-size:1em; display:inline-block;">{{ semester.expected_sws_min|floatformat:1 }} - {{ semester.expected_sws_max|floatformat:1 }} SWS</span>
+      <span class="programme-stat-pill">
+        <span class="programme-stat-pill-label">ECTS</span>
+        <span class="programme-stat-pill-value">{{ semester.ects_sum|default:0 }}</span>
+      </span>
+      <span class="programme-stat-pill">
+        <span class="programme-stat-pill-label">Studierende</span>
+        <span class="programme-stat-pill-value">{{ semester.expected_students.min }} - {{ semester.expected_students.max }}</span>
+      </span>
+      <span class="programme-stat-pill">
+        <span class="programme-stat-pill-label">SWS</span>
+        <span class="programme-stat-pill-value">{{ semester.expected_sws_min|floatformat:1 }} - {{ semester.expected_sws_max|floatformat:1 }}</span>
+      </span>
     </div>
     <!-- Course Groups -->
     {% for group in course_type_groups %}

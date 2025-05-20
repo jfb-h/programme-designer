@@ -129,3 +129,33 @@ input[name=message] {
   margin-bottom: 1em;
   padding-bottom: 0.7em;
 }
+.programme-stat-pill {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 999px;
+  overflow: hidden;
+  font-weight: bold;
+  font-size: 0.9em;
+  margin-right: 0.5em;
+  margin-bottom: 0.3em;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.programme-stat-pill-label {
+  background: #888;
+  color: #fff;
+  padding: 0.3em 1em 0.3em 1.2em;
+  display: flex;
+  align-items: center;
+}
+.programme-stat-pill-value {
+  background: #cfcfcf;
+  color: #222;
+  padding: 0.3em 1.2em 0.3em 1em;
+  display: flex;
+  align-items: center;
+}
+@media (max-width: 600px) {
+  .programme-stat-pill {
+    font-size: 1em;
+  }
+}
