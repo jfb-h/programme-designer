@@ -46,9 +46,9 @@ def programme_view(request, pk):
     ).order_by('order', 'id')
     # Define course type groups for template
     course_type_groups = [
-        ('lectures', 'Lectures'),
-        ('seminars_tutorials', 'Seminars & Tutorials'),
-        ('fieldtrips_thesis_external', 'Other'),
+        ('lectures', 'Vorlesungen'),
+        ('seminars_tutorials', 'Seminare & Übungen'),
+        ('fieldtrips_thesis_external', 'Sonstige'),
     ]
     from .models import ProgrammeExpectedStudents
     expected_students_lookup = {}
