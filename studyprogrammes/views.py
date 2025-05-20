@@ -1,6 +1,6 @@
 import re
 from django.utils.timezone import datetime
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from studyprogrammes.forms import LogMessageForm, CourseForm, ProgrammeForm, SemesterForm
 from studyprogrammes.models import LogMessage, Semester, Course, Programme
@@ -200,3 +200,22 @@ def update_course_order(request, programme_id):
     for idx, course_id in enumerate(order):
         Course.objects.filter(id=course_id, semester=semester).update(order=idx)
     return JsonResponse({'status': 'ok'})
+
+from .models import Course
+
+def course_detail_api(request, course_id):
+    try:
+        course = Course.objects.get(pk=course_id)
+    except Course.DoesNotExist:
+        raise Http404("Course does not exist")
+    return JsonResponse({
+        "id": course.id,
+        "name": course.name,
+        "group": course.group,
+        "type": course.type,
+        "ects": course.ects,
+        "sws": course.sws,
+        "max_participants": course.max_participants,
+        "semester": course.semester_id,
+        "description": course.description,
+    })

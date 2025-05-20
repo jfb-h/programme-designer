@@ -22,6 +22,7 @@
 }
 
 .body-content {
+    margin: 2em auto;
     padding: 5px;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -52,4 +53,79 @@ input[name=message] {
     gap: 0.3em;
 }
 
-/* Styles for studyprogrammes app (formerly 'hello') */
+.course-block[data-group="PG"] { background: #e3f2fd; }
+.course-block[data-group="HG"] { background: #e8f5e9; }
+.course-block[data-group="MU"] { background: #fff3e0; }
+
+.semester-ects {
+  color: #aaa;
+  font-style: italic;
+  font-size: 1em;
+  margin-left: 1em;
+}
+.programme-prefix {
+  color: #b2b1b1;
+  font-weight: bold;
+  font-size: 1.0em;
+}
+#edit-programme-form {
+  font-size: 0.7em;
+  display: none;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+  gap: 0.5em;
+}
+#edit-programme-form.show {
+  display: inline-flex;
+}
+#modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.18);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+#modal.show {
+  display: flex;
+}
+#modal .modal-content {
+  background: #fff;
+  padding: 1.2em 1.5em;
+  border-radius: 8px;
+  min-width: 260px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  position: relative;
+}
+#modal .close-btn {
+  position: absolute;
+  top: 8px; right: 10px;
+  background: none;
+  border: none;
+  font-size: 1.4em;
+  color: #888;
+  cursor: pointer;
+}
+#modal form input[type="text"],
+#modal form input[type="number"],
+#modal form select {
+  max-width: 200px;
+  padding: 0.25em 0.5em;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  background: #fafafa;
+  margin-bottom: 0.5em;
+}
+#modal .radio-row {
+  display: flex;
+  gap: 1.2em;
+  margin-bottom: 0.5em;
+}
+#modal .modal-section {
+  border-bottom: 1px solid #eee;
+  margin-bottom: 1em;
+  padding-bottom: 0.7em;
+}

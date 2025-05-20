@@ -17,7 +17,8 @@ class LogMessageForm(forms.ModelForm):
 class CourseForm(forms.ModelForm):
     group = forms.ChoiceField(
         choices=Course.GROUP_CHOICES,
-        widget=forms.RadioSelect(attrs={'style': 'display:flex; gap:1em;'})
+        widget=forms.RadioSelect(attrs={'style': 'display:flex; gap:1em;'}),
+        label="Gruppe"
     )
     class Meta:
         model = Course
@@ -29,7 +30,21 @@ class CourseForm(forms.ModelForm):
             "type",
             "max_participants",
             "semester",
+            "description",
         ]
+        labels = {
+            "name": "Kursname",
+            "group": "Gruppe",
+            "ects": "ECTS",
+            "sws": "SWS",
+            "type": "Typ",
+            "max_participants": "Maximale Teilnehmer",
+            "semester": "Semester",
+            "description": "Beschreibung",
+        }
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -44,10 +59,17 @@ class ProgrammeForm(forms.ModelForm):
     class Meta:
         model = Programme
         fields = ["name", "degree_type"]
+        labels = {
+            "name": "Name",
+            "degree_type": "Abschlussart",
+        }
 
 class SemesterForm(forms.ModelForm):
     class Meta:
         model = Semester
         fields = ['programme']
+        labels = {
+            "programme": "Studiengang",
+        }
 
 # Forms for studyprogrammes app (formerly 'static/studyprogrammes')

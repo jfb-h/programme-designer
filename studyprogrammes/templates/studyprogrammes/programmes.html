@@ -1,15 +1,17 @@
 {% extends "studyprogrammes/layout.html" %}
 {% block content %}
-<h1>Programmes</h1>
+<h1>Studiengänge</h1>
 
 <!-- Add Programme Form Row -->
 <div style="margin-bottom:2em; padding:1em; background:#f7f7f7; border:1px solid #ddd; border-radius:8px;">
-  <h2 style="margin-top:0;">Add Programme</h2>
-  <form method="post" style="display:flex; align-items:flex-end; gap:1em;">
+  <h2 style="margin-top:0;">Neuer Studiengang</h2>
+  <form method="post" style="display:flex; flex-direction:column; align-items:flex-start; gap:0.7em;">
     {% csrf_token %}
-    {{ programme_form.name.label_tag }} {{ programme_form.name }}
-    {{ programme_form.degree_type.label_tag }} {{ programme_form.degree_type }}
-    <button type="submit" style="height:2.4em;">Add Programme</button>
+    <div style="display:flex; gap:1em; align-items:flex-end;">
+      {{ programme_form.name.label_tag }} {{ programme_form.name }}
+      {{ programme_form.degree_type.label_tag }} {{ programme_form.degree_type }}
+    </div>
+    <button type="submit" style="height:2.4em;">Hinzufügen</button>
   </form>
 </div>
 
@@ -26,7 +28,7 @@
       </form>
       <a href="{% url 'programme' programme.id %}" style="text-decoration:none; color:inherit;">
         <strong>{{ programme.name }}</strong><br>
-        Type: {{ programme.get_degree_type_display }}
+        {{ programme.get_degree_type_display }}
       </a>
     </div>
   {% endfor %}

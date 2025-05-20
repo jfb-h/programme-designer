@@ -32,12 +32,12 @@ class Semester(models.Model):
 
 class Course(models.Model):
     TYPE_CHOICES = [
-        ('lecture', 'VL (Lecture)'),
+        ('lecture', 'VL (Vorlesung)'),
         ('seminar', 'S (Seminar)'),
-        ('tutorial', 'Ü (Tutorial)'),
-        ('fieldtrip', 'G (Field Trip)'),
+        ('tutorial', 'Ü (Übung)'),
+        ('fieldtrip', 'G (Exkursion)'),
         ('thesis', 'T (Thesis)'),
-        ('external', 'E (External)'),
+        ('external', 'E (Extern)'),
     ]
     GROUP_CHOICES = [
         ('PG', 'PG'),
@@ -52,6 +52,7 @@ class Course(models.Model):
     group = models.CharField(max_length=24, choices=GROUP_CHOICES)
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name='courses')
     order = models.PositiveIntegerField(default=0)
+    description = models.TextField(blank=True, null=True)
 
     class Meta:
         ordering = ['order', 'id']
