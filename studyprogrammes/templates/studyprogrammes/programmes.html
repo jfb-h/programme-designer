@@ -7,7 +7,7 @@
   <h2 style="margin-top:0;">Neuer Studiengang</h2>
   <form method="post" style="display:flex; flex-direction:column; align-items:flex-start; gap:0.7em;">
     {% csrf_token %}
-    <div style="display:flex; gap:1em; align-items:flex-end;">
+    <div style="display:flex; gap:1em; align-items:center;">
       {{ programme_form.name.label_tag }} {{ programme_form.name }}
       {{ programme_form.degree_type.label_tag }} {{ programme_form.degree_type }}
     </div>
@@ -24,7 +24,7 @@
       </a>
       <div style="display:flex; flex-direction:row; align-items:center; gap:0.5em; margin-top:1em; width:100%;">
         <form method="post" style="margin:0;"
-              onsubmit="return confirm('Are you sure you want to delete this programme? This cannot be undone.');">
+              onsubmit="return confirm('Kurs löschen? Diese Aktion kann nicht rückgängig gemacht werden.');">
           {% csrf_token %}
           <input type="hidden" name="delete_programme_id" value="{{ programme.id }}">
           <button type="submit" name="delete_programme"
