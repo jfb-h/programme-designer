@@ -83,7 +83,7 @@
             <div style="font-style:italic; margin-bottom:0.2em;">{{ group.1 }}</div>
             <div id="course-list-{{ semester.id }}-{{ group.0 }}" class="course-list" style="display:flex; gap:1em; flex-wrap:wrap;">
               {% for course in group_courses %}
-                <div class="course-block" id="course-{{ course.id }}" data-group="{{ course.group }}" style="border:1px solid #ccc; border-radius:8px; padding:1em; width:120px; position:relative;">
+                <div class="course-block" id="course-{{ course.id }}" data-group="{{ course.group }}" style="border:1px solid #ccc; border-radius:8px; padding:1em; width:130px; position:relative;">
                   <form method="post" style="position:absolute; top:0px; right:4px; margin:0;">
                     {% csrf_token %}
                     <input type="hidden" name="delete_course_id" value="{{ course.id }}">
