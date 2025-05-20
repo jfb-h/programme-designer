@@ -41,10 +41,10 @@
 <!-- Programme stats -->
 <div style="display:flex; gap:1em; margin-bottom:1.2em;">
   <span style="background:#888; color:#fff; border-radius:12px; padding:0.3em 1.2em; font-weight:bold; font-size:1.1em; display:inline-block;">
-    Total ECTS: {{ total_ects|default:0|floatformat:0 }}
+    ECTS: {{ total_ects|default:0|floatformat:0 }}
   </span>
   <span style="background:#888; color:#fff; border-radius:12px; padding:0.3em 1.2em; font-weight:bold; font-size:1.1em; display:inline-block;">
-    Total SWS: {{ total_sws_min|floatformat:1 }} - {{ total_sws_max|floatformat:1 }}
+    SWS: {{ total_sws_min|floatformat:1 }} - {{ total_sws_max|floatformat:1 }}
   </span>
 </div>
 
