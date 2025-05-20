@@ -5,14 +5,8 @@
 <!-- Programme Title with Prefix and Edit Button -->
 <h1 style="display: flex; align-items: center; gap:0.3em;">
   <span class="programme-prefix">
-    {% if programme.degree_type == 'bachelor' %}
-      BA 
-    {% elif programme.degree_type == 'master' %}
-      MA 
-    {% elif programme.degree_type == 'teaching' %}
-      LA 
-    {% endif %}
-
+    <em> {% if programme.degree_type == 'bachelor' %} BA {% elif programme.degree_type == 'master' %} MA {% elif programme.degree_type == 'teaching' %} LA {% endif %} </em>
+    <em> ({{ total_ects|default:0|floatformat:0 }} ECTS) </em>
   </span>
   <span id="programme-name-display">{{ programme.name }}</span>
   <button 
@@ -39,7 +33,7 @@
 </h1>
 
 <!-- Programme stats -->
-<div style="display:flex; gap:0.5em; margin-bottom:1.2em; align-items: flex-end; flex-wrap: wrap;">
+    <!-- <div style="display:flex; gap:0.5em; margin-bottom:1.2em; align-items: flex-end; flex-wrap: wrap;">
       <span class="programme-stat-pill">
         <span class="programme-stat-pill-label">ECTS</span>
         <span class="programme-stat-pill-value">{{ total_ects|default:0|floatformat:0 }}</span>
@@ -56,6 +50,27 @@
         <span class="programme-stat-pill-label">SWS SoSe</span>
         <span class="programme-stat-pill-value">{{ sws_even_min|floatformat:1 }} - {{ sws_even_max|floatformat:1 }}</span>
       </span>
+    </div> -->
+
+    <div style="font-size:1em; color:#444; display:flex; flex-direction:column; gap:0.2em; align-items:flex-start; width:100%;">
+      <table style="width:100%; max-width:600px; font-size:1.2em; color:#444; border-collapse:collapse; text-align:center; margin-left:0;">
+        <thead>
+          <tr>
+            <th style="color:#888; padding:0.5em 0; border-bottom:1px solid #bbb; border-right:1px solid #eee;">SWS Gesamt</th>
+            <th style="color:#888; padding:0.5em 0; border-bottom:1px solid #bbb; border-right:1px solid #eee;">SWS VL</th>
+            <th style="color:#888; padding:0.5em 0; border-bottom:1px solid #bbb; border-right:1px solid #eee;">SWS S/Ü</th>
+            <th style="color:#888; padding:0.5em 0; border-bottom:1px solid #bbb;">SWS Sonstige</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="text-align:center; border-right:1px solid #eee;">{{ total_sws_min|floatformat:0 }} - {{ total_sws_max|floatformat:0 }}</td>
+            <td style="text-align:center; border-right:1px solid #eee;">{{ sws_lectures_min|floatformat:0 }} - {{ sws_lectures_max|floatformat:0 }}</td>
+            <td style="text-align:center; border-right:1px solid #eee;">{{ sws_seminars_min|floatformat:0 }} - {{ sws_seminars_max|floatformat:0 }}</td>
+            <td style="text-align:center;">{{ sws_other_min|floatformat:0 }} - {{ sws_other_max|floatformat:0 }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
 <hr/>

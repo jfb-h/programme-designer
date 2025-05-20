@@ -1,4 +1,5 @@
 {% extends "studyprogrammes/layout.html" %}
+{% load dict_extras %}
 {% block content %}
 <h1>Studiengänge</h1>
 
@@ -17,12 +18,42 @@
 
 <div style="display:flex; gap:2em; flex-wrap:wrap;">
   {% for programme in programmes %}
-    <div style="border:1px solid #ccc; border-radius:8px; padding:1em; width:200px; position:relative; display:flex; flex-direction:column; align-items:flex-start;">
-      <a href="{% url 'programme' programme.id %}" style="text-decoration:none; color:inherit;">
-        <strong>{{ programme.name }}</strong><br>
-        {{ programme.get_degree_type_display }}
-      </a>
-      <div style="display:flex; flex-direction:row; align-items:center; gap:0.5em; margin-top:1em; width:100%;">
+    <div style="border:1px solid #ccc; border-radius:8px; padding:0.7em 0.7em 0.5em 0.7em; width:220px; position:relative; display:flex; flex-direction:column; align-items:stretch; background:#fff;">
+      <!-- Top row: name and type -->
+      <div style="padding-bottom:0.2em; display:flex; flex-direction:column; gap:0.4em;">
+        <span class="programme-prefix" style="color:#b2b1b1; font-weight:bold; font-size:1.0em;">
+          <em>{% if programme.degree_type == 'bachelor' %}BA{% elif programme.degree_type == 'master' %}MA{% elif programme.degree_type == 'teaching' %}LA{% endif %}</em>
+          <em>({{ programme_stats|dict_get:programme.id|dict_get:'total_ects'|default_if_none:0|floatformat:0 }} ECTS)</em>
+        </span>
+        <a href="{% url 'programme' programme.id %}" style="text-decoration:none; color:inherit;">
+          <strong>{{ programme.name }}</strong>
+        </a>
+      </div>
+      <hr style="margin:0.5em 0 0.5em 0; border:none; border-top:1px solid #eee;"/>
+      <!-- Middle row: stats -->
+      <div style="font-size:1em; color:#444; display:flex; flex-direction:column; gap:0.2em; align-items:flex-start; width:100%;">
+        <table style="width:100%; font-size:0.98em; color:#444; border-collapse:collapse;">
+          <tr>
+            <td style="color:#888; border-top:1px; padding:0 0.3em 0 0;">SWS Gesamt</td>
+            <td style="text-align:right;">{{ programme_stats|dict_get:programme.id|dict_get:'total_sws_min'|default_if_none:0|floatformat:0 }} - {{ programme_stats|dict_get:programme.id|dict_get:'total_sws_max'|default_if_none:0|floatformat:0 }}</td>
+          </tr>
+          <tr>
+            <td style="color:#888; border-top:1px; padding:0 0.3em 0 0;">SWS VL</td>
+            <td style="text-align:right;">{{ programme_stats|dict_get:programme.id|dict_get:'sws_lectures_min'|default_if_none:0|floatformat:0 }} - {{ programme_stats|dict_get:programme.id|dict_get:'sws_lectures_max'|default_if_none:0|floatformat:0 }}</td>
+          </tr>
+          <tr>
+            <td style="color:#888; padding:0 0.3em 0 0;">SWS S/Ü</td>
+            <td style="text-align:right;">{{ programme_stats|dict_get:programme.id|dict_get:'sws_seminars_min'|default_if_none:0|floatformat:0 }} - {{ programme_stats|dict_get:programme.id|dict_get:'sws_seminars_max'|default_if_none:0|floatformat:0 }}</td>
+          </tr>
+          <tr>
+            <td style="color:#888; padding:0 0.3em 0 0;">SWS Sonstige</td>
+            <td style="text-align:right;">{{ programme_stats|dict_get:programme.id|dict_get:'sws_other_min'|default_if_none:0|floatformat:0 }} - {{ programme_stats|dict_get:programme.id|dict_get:'sws_other_max'|default_if_none:0|floatformat:0 }}</td>
+          </tr>
+        </table>
+      </div>
+      <hr style="margin:0.5em 0 0.5em 0; border:none; border-top:1px solid #eee;"/>
+      <!-- Bottom row: actions -->
+      <div style="display:flex; flex-direction:row; align-items:center; gap:0.5em; width:100%; justify-content:space-between;">
         <form method="post" style="margin:0;"
               onsubmit="return confirm('Kurs löschen? Diese Aktion kann nicht rückgängig gemacht werden.');">
           {% csrf_token %}

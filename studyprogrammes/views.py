@@ -165,6 +165,29 @@ def programme_view(request, pk):
                 programme.save()
             # Optionally, redirect to avoid resubmission
             return redirect(request.path)
+    # Compute SWS group stats for detail view (lectures, seminars/tutorials, other)
+    sws_groups_min = {'lectures': 0.0, 'seminars_tutorials': 0.0, 'other': 0.0}
+    sws_groups_max = {'lectures': 0.0, 'seminars_tutorials': 0.0, 'other': 0.0}
+    for sem in semester_contexts:
+        # For each semester, group SWS by type
+        for group, courses in sem['courses_by_type'].items():
+            group_key = 'other'
+            if group == 'lectures':
+                group_key = 'lectures'
+            elif group == 'seminars_tutorials':
+                group_key = 'seminars_tutorials'
+            # For each course, use min_classes/max_classes and sws
+            for c in courses:
+                if hasattr(c, 'min_classes') and c.min_classes and c.sws:
+                    try:
+                        sws_groups_min[group_key] += c.min_classes * float(c.sws)
+                    except Exception:
+                        pass
+                if hasattr(c, 'max_classes') and c.max_classes and c.sws:
+                    try:
+                        sws_groups_max[group_key] += c.max_classes * float(c.sws)
+                    except Exception:
+                        pass
     context = {
         "programme": programme,
         "semesters": semester_contexts,
@@ -180,12 +203,78 @@ def programme_view(request, pk):
         'sws_odd_max': sws_odd_max,
         'sws_even_min': sws_even_min,
         'sws_even_max': sws_even_max,
+        'sws_lectures_min': sws_groups_min['lectures'],
+        'sws_lectures_max': sws_groups_max['lectures'],
+        'sws_seminars_min': sws_groups_min['seminars_tutorials'],
+        'sws_seminars_max': sws_groups_max['seminars_tutorials'],
+        'sws_other_min': sws_groups_min['other'],
+        'sws_other_max': sws_groups_max['other'],
     }
     return render(request, "studyprogrammes/programme.html", context)
 
 def programmes_view(request):
     programmes = Programme.objects.all()
     form = ProgrammeForm(request.POST or None)
+    # Compute stats for preview
+    from .models import Semester, Course, ProgrammeExpectedStudents
+    programme_stats = {}
+    for prog in programmes:
+        semesters = Semester.objects.filter(programme=prog)
+        total_ects = 0
+        total_sws_min = 0
+        total_sws_max = 0
+        sws_groups_min = {'lectures': 0.0, 'seminars_tutorials': 0.0, 'other': 0.0}
+        sws_groups_max = {'lectures': 0.0, 'seminars_tutorials': 0.0, 'other': 0.0}
+        for idx, semester in enumerate(semesters, 1):
+            courses = list(Course.objects.filter(semester=semester))
+            ects_sum = sum(c.ects for c in courses)
+            total_ects += ects_sum
+            expected_students = ProgrammeExpectedStudents.objects.filter(degree_type=prog.degree_type, semester=idx).first()
+            expected_sws_min = {'lectures': 0.0, 'seminars_tutorials': 0.0, 'other': 0.0}
+            expected_sws_max = {'lectures': 0.0, 'seminars_tutorials': 0.0, 'other': 0.0}
+            for c in courses:
+                min_classes = max_classes = None
+                if expected_students and c.max_participants:
+                    try:
+                        min_val = int(expected_students.min_students)
+                        max_val = int(expected_students.max_students)
+                        maxp = int(c.max_participants)
+                        min_classes = (min_val + maxp - 1) // maxp if min_val > 0 else 1
+                        max_classes = (max_val + maxp - 1) // maxp if max_val > 0 else 1
+                    except Exception:
+                        min_classes = max_classes = None
+                group = 'other'
+                if c.type == 'lecture':
+                    group = 'lectures'
+                elif c.type in ('seminar', 'tutorial'):
+                    group = 'seminars_tutorials'
+                if min_classes and c.sws:
+                    try:
+                        expected_sws_min[group] += min_classes * float(c.sws)
+                    except Exception:
+                        pass
+                if max_classes and c.sws:
+                    try:
+                        expected_sws_max[group] += max_classes * float(c.sws)
+                    except Exception:
+                        pass
+            for group in ['lectures', 'seminars_tutorials', 'other']:
+                sws_groups_min[group] += expected_sws_min[group]
+                sws_groups_max[group] += expected_sws_max[group]
+            total_sws_min += sum(expected_sws_min.values())
+            total_sws_max += sum(expected_sws_max.values())
+        programme_stats[prog.pk] = {
+            'total_ects': total_ects,
+            'total_sws_min': total_sws_min,
+            'total_sws_max': total_sws_max,
+            'sws_lectures_min': sws_groups_min['lectures'],
+            'sws_lectures_max': sws_groups_max['lectures'],
+            'sws_seminars_min': sws_groups_min['seminars_tutorials'],
+            'sws_seminars_max': sws_groups_max['seminars_tutorials'],
+            'sws_other_min': sws_groups_min['other'],
+            'sws_other_max': sws_groups_max['other'],
+        }
+    # ...existing code...
     if request.method == "POST":
         if "delete_programme" in request.POST:
             programme_id = request.POST.get("delete_programme_id")
@@ -226,6 +315,7 @@ def programmes_view(request):
     return render(request, "studyprogrammes/programmes.html", {
         "programmes": programmes,
         "programme_form": form,
+        "programme_stats": programme_stats,
     })
 
 def home_redirect(request):
