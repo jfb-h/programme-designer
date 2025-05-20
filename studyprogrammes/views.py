@@ -111,7 +111,7 @@ def programme_view(request, pk):
         })
         total_ects += ects_sum
         total_sws_min += expected_sws_min
-        total_sws_max += expected_sws_max
+        total_sws_max += total_sws_max
     course_form = CourseForm(request.POST or None)
     semester_form = SemesterForm(initial={'programme': programme})
     if request.method == "POST":
@@ -167,7 +167,36 @@ def programmes_view(request):
     if request.method == "POST":
         if "delete_programme" in request.POST:
             programme_id = request.POST.get("delete_programme_id")
-            Programme.objects.filter(id=programme_id).delete()
+            Programme.objects.filter(pk=programme_id).delete()
+            return redirect('programmes')
+        elif "copy_programme" in request.POST:
+            copy_id = request.POST.get("copy_programme_id")
+            orig = Programme.objects.filter(pk=copy_id).first()
+            if orig:
+                new_prog = Programme.objects.create(
+                    name=f"{orig.name} (Copy)",
+                    degree_type=orig.degree_type
+                )
+                # Deep copy semesters and courses
+                orig_semesters = Semester.objects.filter(programme=orig).order_by('order', 'pk')
+                for sem in orig_semesters:
+                    new_sem = Semester.objects.create(
+                        programme=new_prog,
+                        order=sem.order
+                    )
+                    orig_courses = Course.objects.filter(semester=sem)
+                    for course in orig_courses:
+                        Course.objects.create(
+                            name=course.name,
+                            group=course.group,
+                            ects=course.ects,
+                            sws=course.sws,
+                            type=course.type,
+                            max_participants=course.max_participants,
+                            semester=new_sem,
+                            description=course.description,
+                            order=course.order
+                        )
             return redirect('programmes')
         elif form.is_valid():
             form.save()
