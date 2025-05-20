@@ -293,7 +293,8 @@ function closeModal() {
 }
 
 function openEditCourseModal(courseId) {
-  fetch(`/api/course/${courseId}/`)
+  const apiUrl = "{% url 'course_detail_api' 0 %}".replace("0", courseId);
+  fetch(apiUrl)
     .then(response => response.json())
     .then(data => {
       document.getElementById('id_name').value = data.name;
