@@ -52,22 +52,28 @@
       </span>
     </div> -->
 
+<hr/>
+
     <div style="font-size:1em; color:#444; display:flex; flex-direction:column; gap:0.2em; align-items:flex-start; width:100%;">
-      <table style="width:100%; max-width:600px; font-size:1.2em; color:#444; border-collapse:collapse; text-align:center; margin-left:0;">
+      <table style="width:100%; max-width:800px; font-size:1.2em; color:#444; border-collapse:collapse; text-align:center; margin-left:0;">
         <thead>
           <tr>
-            <th style="color:#888; padding:0.5em 0; border-bottom:1px solid #bbb; border-right:1px solid #eee;">SWS Gesamt</th>
-            <th style="color:#888; padding:0.5em 0; border-bottom:1px solid #bbb; border-right:1px solid #eee;">SWS VL</th>
-            <th style="color:#888; padding:0.5em 0; border-bottom:1px solid #bbb; border-right:1px solid #eee;">SWS S/Ü</th>
-            <th style="color:#888; padding:0.5em 0; border-bottom:1px solid #bbb;">SWS Sonstige</th>
+            <th style="padding:0.5em 0; border-bottom:2px solid #bbb; border-right:4px solid #444;">SWS Gesamt</th>
+            <th style="padding:0.5em 0; border-bottom:2px solid #bbb; border-right:2px solid #bbb;">SWS VL</th>
+            <th style="padding:0.5em 0; border-bottom:2px solid #bbb; border-right:2px solid #bbb;">SWS S/Ü</th>
+            <th style="padding:0.5em 0; border-bottom:2px solid #bbb; border-right:4px solid #444;">SWS Sonst.</th>
+            <th style="padding:0.5em 0; border-bottom:2px solid #bbb; border-right:2px solid #bbb;">SWS WiSe</th>
+            <th style="padding:0.5em 0; border-bottom:2px solid #bbb;">SWS SoSe</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td style="text-align:center; border-right:1px solid #eee;">{{ total_sws_min|floatformat:0 }} - {{ total_sws_max|floatformat:0 }}</td>
-            <td style="text-align:center; border-right:1px solid #eee;">{{ sws_lectures_min|floatformat:0 }} - {{ sws_lectures_max|floatformat:0 }}</td>
-            <td style="text-align:center; border-right:1px solid #eee;">{{ sws_seminars_min|floatformat:0 }} - {{ sws_seminars_max|floatformat:0 }}</td>
-            <td style="text-align:center;">{{ sws_other_min|floatformat:0 }} - {{ sws_other_max|floatformat:0 }}</td>
+            <td style="text-align:center; border-right:4px solid #444;">{{ total_sws_min|floatformat:0 }} - {{ total_sws_max|floatformat:0 }}</td>
+            <td style="text-align:center; border-right:2px solid #bbb;">{{ sws_lectures_min|floatformat:0 }} - {{ sws_lectures_max|floatformat:0 }}</td>
+            <td style="text-align:center; border-right:2px solid #bbb;">{{ sws_seminars_min|floatformat:0 }} - {{ sws_seminars_max|floatformat:0 }}</td>
+            <td style="text-align:center; border-right:4px solid #444;">{{ sws_other_min|floatformat:0 }} - {{ sws_other_max|floatformat:0 }}</td>
+            <td style="text-align:center; border-right:2px solid #bbb;">{{ sws_odd_min|floatformat:0 }} - {{ sws_odd_max|floatformat:0 }}</td>
+            <td style="text-align:center;">{{ sws_even_min|floatformat:0 }} - {{ sws_even_max|floatformat:0 }}</td>
           </tr>
         </tbody>
       </table>
