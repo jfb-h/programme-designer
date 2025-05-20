@@ -193,7 +193,8 @@
       {{ course_form.semester.as_hidden }}
       <input type="hidden" name="semester" id="semesterInput">
       <input type="hidden" name="type" id="typeInput">
-      <button type="submit" name="add_course" style="margin-top:1em;">Hinzufügen</button>
+      <input type="hidden" name="edit_course_id" id="editCourseIdInput">
+      <button type="submit" name="add_course" style="margin-top:1em;">Speichern</button>
     </form>
   </div>
 </div>
@@ -304,8 +305,9 @@ function openEditCourseModal(courseId) {
       document.getElementById('id_max_participants').value = data.max_participants;
       document.getElementById('semesterInput').value = data.semester;
       document.getElementById('typeInput').value = data.type;
-      document.getElementById('courseForm').action = `/courses/edit/${courseId}/`;
+      document.getElementById('courseForm').action = "";
       document.getElementById('id_description').value = data.description || '';
+      document.getElementById('editCourseIdInput').value = courseId;
 
       // Prefill radio buttons for group
       const radios = document.getElementsByName('group');
@@ -316,6 +318,24 @@ function openEditCourseModal(courseId) {
       document.getElementById('modal').classList.add('show');
     });
 }
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Restore scroll position if available
+  const scrollY = sessionStorage.getItem('scrollY');
+  if (scrollY !== null) {
+    window.scrollTo(0, parseInt(scrollY, 10));
+    sessionStorage.removeItem('scrollY');
+  }
+
+  // Attach to all forms that reload the page
+  document.querySelectorAll('form').forEach(function(form) {
+    form.addEventListener('submit', function() {
+      sessionStorage.setItem('scrollY', window.scrollY);
+    });
+  });
+});
 </script>
 
 {% endblock %}

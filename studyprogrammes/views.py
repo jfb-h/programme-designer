@@ -36,6 +36,9 @@ def log_message(request):
     else:
         return render(request, "studyprogrammes/log_message.html", {"form": form})
 
+from django.shortcuts import get_object_or_404, redirect
+from .models import Course
+
 def programme_view(request, pk):
     programme = get_object_or_404(Programme, pk=pk)
     semesters = Semester.objects.filter(programme=programme).prefetch_related(
@@ -112,18 +115,21 @@ def programme_view(request, pk):
     course_form = CourseForm(request.POST or None)
     semester_form = SemesterForm(initial={'programme': programme})
     if request.method == "POST":
-        if 'add_course' in request.POST:
-            post_data = request.POST.copy()
-            if 'type' in post_data:
-                post_data['type'] = post_data['type']
-            course_form = CourseForm(post_data)
-            if course_form.is_valid():
-                course = course_form.save(commit=False)
-                # Set order to max+1 for the semester
-                max_order = Course.objects.filter(semester=course.semester).aggregate(max_order=models.Max('order'))['max_order']
-                course.order = (max_order + 1) if max_order is not None else 0
-                course.save()
-                return redirect('programme', pk=programme.pk)
+        if "add_course" in request.POST:
+            edit_course_id = request.POST.get("edit_course_id")
+            if edit_course_id:
+                # Edit existing course
+                course = get_object_or_404(Course, pk=edit_course_id)
+                form = CourseForm(request.POST, instance=course)
+                if form.is_valid():
+                    form.save()
+                    return redirect(request.path)
+            else:
+                # Add new course
+                form = CourseForm(request.POST)
+                if form.is_valid():
+                    form.save()
+                    return redirect(request.path)
         elif 'add_semester' in request.POST:
             semester_form = SemesterForm(request.POST)
             if semester_form.is_valid():
