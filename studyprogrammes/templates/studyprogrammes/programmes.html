@@ -16,8 +16,10 @@
   </form>
 </div>
 
-<div style="display:flex; gap:2em; flex-wrap:wrap;">
-  {% for programme in programmes %}
+<h2>Öffentliche Studiengänge</h2>
+
+<div style="display:flex; gap:2em; flex-wrap:wrap; margin-bottom:2em">
+  {% for programme in public_programmes %}
     <div style="border:1px solid #ccc; border-radius:8px; padding:0.7em 0.7em 0.5em 0.7em; width:220px; position:relative; display:flex; flex-direction:column; align-items:stretch; background:#fff;">
       <!-- Top row: name and type -->
       <div style="padding-bottom:0.2em; display:flex; flex-direction:column; gap:0.4em;">
@@ -29,7 +31,7 @@
           <strong>{{ programme.name }}</strong>
         </a>
         <span style="font-size:0.95em; color:#888; margin-top:0.2em;">
-          {{ programme.user.username|default:"?" }}
+          Author: {{ programme.user.username|default:"?" }}
         </span>
       </div>
       <hr style="margin:0.5em 0 0.5em 0; border:none; border-top:1px solid #eee;"/>
@@ -56,7 +58,8 @@
       </div>
       <hr style="margin:0.5em 0 0.5em 0; border:none; border-top:1px solid #eee;"/>
       <!-- Bottom row: actions -->
-      <div style="display:flex; flex-direction:row; align-items:center; gap:0.5em; width:100%; justify-content:space-between;">
+      <div style="display:flex; flex-direction:row; align-items:center; gap:0.5em; width:100%; justify-content:flex-start;">
+        {% if programme.user == request.user %}
         <form method="post" style="margin:0;"
               onsubmit="return confirm('Kurs löschen? Diese Aktion kann nicht rückgängig gemacht werden.');">
           {% csrf_token %}
@@ -65,11 +68,12 @@
             style="background:none; color:#e74c3c; border:none; border-radius:2px; padding:0.0em 0.0em; cursor:pointer; font-size:1.3em;"
             title="löschen">&times;</button>
         </form>
-        <form method="post" style="margin:0; flex:1;">
+        {% endif %}
+        <form method="post" style="margin:0;">
           {% csrf_token %}
           <input type="hidden" name="copy_programme_id" value="{{ programme.id }}">
           <button type="submit" name="copy_programme"
-            style="background:none; color:#1976d2; border:none; border-radius:2px; padding:0.0em 0.0em; cursor:pointer; font-size:1.1em; display:flex; align-items:center; gap:0.4em;"
+            style="background:none; border:none; border-radius:2px; padding:0.0em 0.0em; cursor:pointer; font-size:1.1em; display:flex; align-items:center; gap:0.4em;"
             title="kopieren">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#888" width="20" height="20">
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
@@ -78,6 +82,88 @@
         </form>
       </div>
     </div>
+  {% empty %}
+    <div><em style="color: #888">Keine öffentlichen Studiengänge.</em></div>
   {% endfor %}
 </div>
+
+<hr style="margin-top:0.5em"/>
+
+<h2>Meine Studiengänge</h2>
+<div style="display:flex; gap:2em; flex-wrap:wrap; margin-bottom:2em;">
+  {% for programme in private_programmes %}
+    <div style="border:1px solid #ccc; border-radius:8px; padding:0.7em 0.7em 0.5em 0.7em; width:220px; position:relative; display:flex; flex-direction:column; align-items:stretch; background:#fff;">
+      <!-- Top row: name and type -->
+      <div style="padding-bottom:0.2em; display:flex; flex-direction:column; gap:0.4em;">
+        <span class="programme-prefix" style="color:#b2b1b1; font-weight:bold; font-size:1.0em;">
+          <em>{% if programme.degree_type == 'bachelor' %}BA{% elif programme.degree_type == 'master' %}MA{% elif programme.degree_type == 'teaching' %}LA{% endif %}</em>
+          <em>({{ programme_stats|dict_get:programme.id|dict_get:'total_ects'|default_if_none:0|floatformat:0 }} ECTS)</em>
+        </span>
+        <a href="{% url 'programme' programme.id %}" style="text-decoration:none; color:inherit; font-size:1.1em">
+          <strong>{{ programme.name }}</strong>
+        </a>
+        <span style="font-size:0.95em; color:#888; margin-top:0.2em;">
+          Author: {{ programme.user.username|default:"?" }}
+        </span>
+      </div>
+      <hr style="margin:0.5em 0 0.5em 0; border:none; border-top:1px solid #eee;"/>
+      <!-- Middle row: stats -->
+      <div style="font-size:1em; color:#444; display:flex; flex-direction:column; gap:0.2em; align-items:flex-start; width:100%;">
+        <table style="width:100%; font-size:0.98em; color:#444; border-collapse:collapse;">
+          <tr>
+            <td style="color:#888; border-top:1px; padding:0 0.3em 0 0;">SWS Gesamt</td>
+            <td style="text-align:right;">{{ programme_stats|dict_get:programme.id|dict_get:'total_sws_min'|default_if_none:0|floatformat:0 }} - {{ programme_stats|dict_get:programme.id|dict_get:'total_sws_max'|default_if_none:0|floatformat:0 }}</td>
+          </tr>
+          <tr>
+            <td style="color:#888; border-top:1px; padding:0 0.3em 0 0;">SWS VL</td>
+            <td style="text-align:right;">{{ programme_stats|dict_get:programme.id|dict_get:'sws_lectures_min'|default_if_none:0|floatformat:0 }} - {{ programme_stats|dict_get:programme.id|dict_get:'sws_lectures_max'|default_if_none:0|floatformat:0 }}</td>
+          </tr>
+          <tr>
+            <td style="color:#888; padding:0 0.3em 0 0;">SWS S/Ü</td>
+            <td style="text-align:right;">{{ programme_stats|dict_get:programme.id|dict_get:'sws_seminars_min'|default_if_none:0|floatformat:0 }} - {{ programme_stats|dict_get:programme.id|dict_get:'sws_seminars_max'|default_if_none:0|floatformat:0 }}</td>
+          </tr>
+          <tr>
+            <td style="color:#888; padding:0 0.3em 0 0;">SWS Sonstige</td>
+            <td style="text-align:right;">{{ programme_stats|dict_get:programme.id|dict_get:'sws_other_min'|default_if_none:0|floatformat:0 }} - {{ programme_stats|dict_get:programme.id|dict_get:'sws_other_max'|default_if_none:0|floatformat:0 }}</td>
+          </tr>
+        </table>
+      </div>
+      <hr style="margin:0.5em 0 0.5em 0; border:none; border-top:1px solid #eee;"/>
+      <!-- Bottom row: actions -->
+      <div style="display:flex; flex-direction:row; align-items:center; gap:0.5em; width:100%; justify-content:flex-start;">
+        <form method="post" style="margin:0;"
+              onsubmit="return confirm('Kurs löschen? Diese Aktion kann nicht rückgängig gemacht werden.');">
+          {% csrf_token %}
+          <input type="hidden" name="delete_programme_id" value="{{ programme.id }}">
+          <button type="submit" name="delete_programme"
+            style="background:none; color:#e74c3c; border:none; border-radius:2px; padding:0.0em 0.0em; cursor:pointer; font-size:1.3em;"
+            title="löschen">&times;</button>
+        </form>
+        <form method="post" style="margin:0;">
+          {% csrf_token %}
+          <input type="hidden" name="copy_programme_id" value="{{ programme.id }}">
+          <button type="submit" name="copy_programme"
+            style="background:none; border:none; border-radius:2px; padding:0.0em 0.0em; cursor:pointer; font-size:1.1em; display:flex; align-items:center; gap:0.4em;"
+            title="kopieren">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#888" width="20" height="20">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
+            </svg>
+          </button>
+        </form>
+        <form method="post" style="margin:0;">
+          {% csrf_token %}
+          <input type="hidden" name="publish_programme_id" value="{{ programme.id }}">
+          <button type="submit" name="publish_programme"
+            style="background:none; border:none; border-radius:2px; padding:0.0em 0.0em; cursor:pointer; font-size:1.1em; display:flex; align-items:center; gap:0.4em;"
+            title="veröffentlichen">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="#888" width="20" height="20"> <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /> <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /> </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  {% empty %}
+    <div><em style="color: #888">Keine privaten Studiengänge.</em></div>
+  {% endfor %}
+</div>
+
 {% endblock %}

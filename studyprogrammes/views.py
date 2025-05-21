@@ -214,7 +214,9 @@ def programme_view(request, pk):
     return render(request, "studyprogrammes/programme.html", context)
 
 def programmes_view(request):
-    programmes = Programme.objects.filter(user=request.user)
+    private_programmes = Programme.objects.filter(user=request.user, is_public=False)
+    # FIX: Show all public programmes, including user's own
+    public_programmes = Programme.objects.filter(is_public=True)
     form = ProgrammeForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         programme = form.save(commit=False)
@@ -224,7 +226,9 @@ def programmes_view(request):
     # Compute stats for preview
     from .models import Semester, Course, ProgrammeExpectedStudents
     programme_stats = {}
-    for prog in programmes:
+    # Add stats for all programmes in both lists
+    all_programmes = list(private_programmes) + list(public_programmes)
+    for prog in all_programmes:
         semesters = Semester.objects.filter(programme=prog)
         total_ects = 0
         total_sws_min = 0
@@ -293,7 +297,8 @@ def programmes_view(request):
                 new_prog = Programme.objects.create(
                     name=f"{orig.name} (Copy)",
                     degree_type=orig.degree_type,
-                    user=request.user
+                    user=request.user,
+                    is_public=False  # Always create as private
                 )
                 # Deep copy semesters and courses
                 orig_semesters = Semester.objects.filter(programme=orig).order_by('order', 'pk')
@@ -316,11 +321,19 @@ def programmes_view(request):
                             order=course.order
                         )
             return redirect('programmes')
+        elif "publish_programme" in request.POST:
+            publish_id = request.POST.get("publish_programme_id")
+            prog = Programme.objects.filter(pk=publish_id, user=request.user).first()
+            if prog:
+                prog.is_public = True
+                prog.save()
+            return redirect('programmes')
         elif form.is_valid():
             form.save()
             return redirect('programmes')
     return render(request, "studyprogrammes/programmes.html", {
-        "programmes": programmes,
+        "private_programmes": private_programmes,
+        "public_programmes": public_programmes,
         "programme_form": form,
         "programme_stats": programme_stats,
     })
