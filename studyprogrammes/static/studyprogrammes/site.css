@@ -68,6 +68,7 @@ input[name=message] {
   padding: 1em;
   padding-right: 3.5em; /* Increased right padding */
   width: 130px;
+  min-height: 65px;
   position: relative;
   box-shadow: 0 2px 8px 0 rgba(0,0,0,0.10);
   background: #fff;
