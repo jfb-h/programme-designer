@@ -95,21 +95,39 @@
                 <div id="course-list-{{ semester.id }}-{{ group.0 }}" class="course-list" style="display:flex; gap:1em; flex-wrap:wrap;">
                   {% for course in group_courses %}
                     <div class="course-block" id="course-{{ course.id }}" data-group="{{ course.group }}">
-                      <form method="post" style="position:absolute; top:0px; right:4px; margin:0;">
-                        {% csrf_token %}
-                        <input type="hidden" name="delete_course_id" value="{{ course.id }}">
-                        <button type="submit" name="delete_course"
-                          style="background:none; color:#888; border:none; border-radius:2px; padding:0.0em 0.0em; cursor:pointer; font-size:1.3em;"
-                          title="Remove Course">&times;</button>
-                      </form>
-                      <!-- Add Edit Button -->
-                      <button type="button"
-                        class="edit-course-btn"
-                        style="position:absolute; top:2px; right:20px; background:none; border:none; color:#888; cursor:pointer; font-size:0.9em;"
-                        title="Kurs bearbeiten"
-                        onclick="openEditCourseModal('{{ course.id }}')">
-                        &#9998;
-                      </button>
+                      <!-- Action Buttons Container -->
+                      <div style="display:flex; flex-direction:column; align-items:center; gap:0.2em;">
+                        <div class="course-actions-vertical">
+                          <form method="post" style="margin:0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="delete_course_id" value="{{ course.id }}">
+                            <button type="submit" name="delete_course"
+                              style="background:none; color:#888; border:none; border-radius:2px; cursor:pointer; font-size:1.3em;"
+                              title="Remove Course">&times;</button>
+                          </form>
+                          <button type="button"
+                            class="edit-course-btn"
+                            style="background:none; border:none; color:#888; cursor:pointer; font-size:0.9em;"
+                            title="Kurs bearbeiten"
+                            onclick="openEditCourseModal('{{ course.id }}')">
+                            &#9998;
+                          </button>
+                          <form method="post" style="margin:0;">
+                            {% csrf_token %}
+                            <input type="hidden" name="duplicate_course_id" value="{{ course.id }}">
+                            <button type="submit" name="duplicate_course"
+                              class="duplicate-course-btn"
+                              style="background:none; border:none; color:#888; cursor:pointer; font-size:0.9em;"
+                              title="Kurs duplizieren">
+                              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="5" y="5" width="10" height="10" rx="2" stroke="#888"/>
+                                <rect x="8" y="8" width="10" height="10" rx="2" fill="#fff" stroke="#888"/>
+                              </svg>
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                      <!-- End Action Buttons Container -->
                       <span style="color:#b2b1b1; font-weight:bold; font-size:0.95em;">
                         {% if course.type == 'lecture' %}VL{% elif course.type == 'seminar' %}S{% elif course.type == 'tutorial' %}Ü{% elif course.type == 'fieldtrip' %}E{% elif course.type == 'thesis' %}T{% elif course.type == 'external' %}E{% endif %}
                       </span>

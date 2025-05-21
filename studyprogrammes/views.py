@@ -146,6 +146,25 @@ def programme_view(request, pk):
                 if form.is_valid():
                     form.save()
                     return redirect(request.path)
+        elif 'duplicate_course' in request.POST:
+            # Duplicate a course in the same semester
+            course_id = request.POST.get('duplicate_course_id')
+            orig = Course.objects.filter(id=course_id, semester__programme=programme).first()
+            if orig:
+                # Find the max order in this semester
+                max_order = Course.objects.filter(semester=orig.semester).aggregate(models.Max('order'))['order__max'] or 0
+                Course.objects.create(
+                    name=orig.name,
+                    group=orig.group,
+                    ects=orig.ects,
+                    sws=orig.sws,
+                    type=orig.type,
+                    max_participants=orig.max_participants,
+                    semester=orig.semester,
+                    description=orig.description,
+                    order=max_order + 1
+                )
+            return redirect(request.path)
         elif 'add_semester' in request.POST:
             semester_form = SemesterForm(request.POST)
             if semester_form.is_valid():

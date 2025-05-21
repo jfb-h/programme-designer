@@ -66,10 +66,22 @@ input[name=message] {
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 1em;
+  padding-right: 3.5em; /* Increased right padding */
   width: 130px;
   position: relative;
   box-shadow: 0 2px 8px 0 rgba(0,0,0,0.10);
   background: #fff;
+}
+
+.course-actions-vertical {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3em;
+  z-index: 2;
 }
 
 .semester-ects {
