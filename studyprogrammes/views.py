@@ -292,7 +292,8 @@ def programmes_view(request):
             if orig:
                 new_prog = Programme.objects.create(
                     name=f"{orig.name} (Copy)",
-                    degree_type=orig.degree_type
+                    degree_type=orig.degree_type,
+                    user=request.user
                 )
                 # Deep copy semesters and courses
                 orig_semesters = Semester.objects.filter(programme=orig).order_by('order', 'pk')

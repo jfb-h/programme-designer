@@ -177,8 +177,7 @@ input[name=message] {
 }
 
 .programme-sidebar {
-  min-width: 270px;
-  max-width: 400px;
+  width: 270px;
   flex: 0 0 320px;
   position: fixed;
   top: 6.5em; /* below navbar, adjust as needed */
