@@ -25,9 +25,12 @@
           <em>{% if programme.degree_type == 'bachelor' %}BA{% elif programme.degree_type == 'master' %}MA{% elif programme.degree_type == 'teaching' %}LA{% endif %}</em>
           <em>({{ programme_stats|dict_get:programme.id|dict_get:'total_ects'|default_if_none:0|floatformat:0 }} ECTS)</em>
         </span>
-        <a href="{% url 'programme' programme.id %}" style="text-decoration:none; color:inherit;">
+        <a href="{% url 'programme' programme.id %}" style="text-decoration:none; color:inherit; font-size:1.1em">
           <strong>{{ programme.name }}</strong>
         </a>
+        <span style="font-size:0.95em; color:#888; margin-top:0.2em;">
+          {{ programme.user.username|default:"?" }}
+        </span>
       </div>
       <hr style="margin:0.5em 0 0.5em 0; border:none; border-top:1px solid #eee;"/>
       <!-- Middle row: stats -->

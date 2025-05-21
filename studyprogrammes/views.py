@@ -214,8 +214,13 @@ def programme_view(request, pk):
     return render(request, "studyprogrammes/programme.html", context)
 
 def programmes_view(request):
-    programmes = Programme.objects.all()
+    programmes = Programme.objects.filter(user=request.user)
     form = ProgrammeForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        programme = form.save(commit=False)
+        programme.user = request.user
+        programme.save()
+        return redirect('programmes')
     # Compute stats for preview
     from .models import Semester, Course, ProgrammeExpectedStudents
     programme_stats = {}
