@@ -227,9 +227,9 @@ input[name=message] {
   padding: 0.0em 0.0em 0.8em 0.0em; 
 }
 .group-placeholder.drop-hover {
-  box-shadow: 0 0 0 3px #1976d2, 0 2px 8px 0 rgba(0,0,0,0.10);
-  border: 2px solid #1976d2;
+  box-shadow: 0 0 0 1.5px #1976d2, 0 2px 8px 0 rgba(0,0,0,0.10);
+  border: 1.5px solid #1976d2;
   opacity: 1.0;
-  background: #e3f2fd;
-  transition: box-shadow 0.15s, border 0.15s, background 0.15s;
+  background: #e8f0fa;
+  transition: box-shadow 0.1s, border 0.1s, background 0.1s;
 }
