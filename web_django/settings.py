@@ -68,6 +68,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "studyprogrammes.context_processors.studyprogrammes_base_url",
             ],
         },
     },
@@ -142,6 +143,9 @@ LOGIN_REDIRECT_URL = '/programme-designer/programmes/'
 LOGOUT_REDIRECT_URL = '/programme-designer/login/'
 
 ALLOWED_LOGOUT_METHODS = ["GET", "POST"]
+
+# Add a setting for the AJAX base URL for studyprogrammes
+STUDYPROGRAMMES_BASE_URL = '/programme-designer/'
 
 # The following will be overridden in local_settings.py for development
 

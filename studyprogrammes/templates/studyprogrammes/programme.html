@@ -2,6 +2,11 @@
 {% load dict_extras %}
 {% block content %}
 
+<script>
+// Set the base URL for AJAX endpoints from Django settings
+window.STUDYPROGRAMMES_BASE_URL = "{{ STUDYPROGRAMMES_BASE_URL|escapejs }}";
+</script>
+
 <div class="programme-layout">
   <div class="programme-sidebar">
     <!-- Programme Title and ECTS/type in separate rows -->
@@ -400,7 +405,7 @@ function handleCourseDrop(event, targetSemesterId, targetGroup) {
     }
     return cookieValue;
   }
-  fetch('/move_course/', {
+  fetch(window.STUDYPROGRAMMES_BASE_URL + 'move_course/', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -413,11 +418,8 @@ function handleCourseDrop(event, targetSemesterId, targetGroup) {
     })
   }).then(response => {
     if (response.ok) {
-      // Instead of location.reload(), update the DOM and set the correct data-group attribute
-      // But for now, force a reload to ensure Django template logic re-applies the correct data-group
       location.reload();
     }
-    // If not ok, do nothing (no alert)
   });
   draggedCourseId = null;
 }
