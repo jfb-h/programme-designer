@@ -320,6 +320,18 @@ function openModal(semesterId, courseType) {
     if (typeField) typeField.value = courseType;
     setCourseDefaults(courseType);
   }
+  // Clear all course form fields for a new course
+  document.getElementById('id_name').value = '';
+  document.getElementById('id_type').value = courseType || '';
+  document.getElementById('id_ects').value = '';
+  document.getElementById('id_sws').value = '';
+  document.getElementById('id_max_participants').value = '';
+  document.getElementById('id_description').value = '';
+  // Clear radio buttons for group
+  const radios = document.getElementsByName('group');
+  radios.forEach(radio => { radio.checked = false; });
+  // Clear editCourseIdInput so we don't accidentally edit an old course
+  document.getElementById('editCourseIdInput').value = '';
 }
 function setCourseDefaults(type) {
   const defaults = typeDefaults[type];
