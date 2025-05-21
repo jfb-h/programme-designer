@@ -169,6 +169,34 @@ input[name=message] {
   display: flex;
   align-items: center;
 }
+.programme-layout {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  justify-content: center;
+}
+
+.programme-sidebar {
+  min-width: 270px;
+  max-width: 400px;
+  flex: 0 0 320px;
+  position: fixed;
+  top: 6.5em; /* below navbar, adjust as needed */
+  transform: translateX(-450px); /* Center sidebar and main as a block, adjust as needed */
+  height: auto;
+  z-index: 10;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.programme-main {
+  flex: 1 1 0%;
+  min-width: 0;
+  margin-left: 360px; /* leave space for fixed sidebar */
+  max-width: 900px;
+}
 @media (max-width: 600px) {
   .programme-stat-pill {
     font-size: 1em;

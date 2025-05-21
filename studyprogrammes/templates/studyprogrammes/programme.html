@@ -2,194 +2,177 @@
 {% load dict_extras %}
 {% block content %}
 
-<!-- Programme Title with Prefix and Edit Button -->
-<h1 style="display: flex; align-items: center; gap:0.3em;">
-  <span class="programme-prefix">
-    <em> {% if programme.degree_type == 'bachelor' %} BA {% elif programme.degree_type == 'master' %} MA {% elif programme.degree_type == 'teaching' %} LA {% endif %} </em>
-    <em> ({{ total_ects|default:0|floatformat:0 }} ECTS) </em>
-  </span>
-  <span id="programme-name-display">{{ programme.name }}</span>
-  <button 
-    style="border:none; background-color:#fff"
-    type="button" onclick="document.getElementById('edit-programme-form').style.display='inline'; this.style.display='none'; document.getElementById('programme-name-display').style.display='none';" >
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" width="20" height="20">
-      <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
-    </svg>
-  </button>
-  <form id="edit-programme-form" method="post">
-    {% csrf_token %}
-    <input 
-      type="text" 
-      name="programme_name" 
-      value="{{ programme.name }}" 
-      style="font-size:0.98em; padding:0.15em 0.5em; border:1px solid #bbb; border-radius:5px; background:#fafafa; min-width:120px;"
-    >
-    <button 
-      type="submit" 
-      name="edit_programme" 
-      style="font-size:0.95em; padding:0.15em 0.9em; border-radius:5px; border:1px solid #bbb; background:#e0e0e0; cursor:pointer; margin-left:0.2em;"
-    >Save</button>
-  </form>
-</h1>
-
-<!-- Programme stats -->
-    <!-- <div style="display:flex; gap:0.5em; margin-bottom:1.2em; align-items: flex-end; flex-wrap: wrap;">
-      <span class="programme-stat-pill">
-        <span class="programme-stat-pill-label">ECTS</span>
-        <span class="programme-stat-pill-value">{{ total_ects|default:0|floatformat:0 }}</span>
-      </span>
-      <span class="programme-stat-pill">
-        <span class="programme-stat-pill-label">SWS Gesamt</span>
-        <span class="programme-stat-pill-value">{{ total_sws_min|floatformat:1 }} - {{ total_sws_max|floatformat:1 }}</span>
-      </span>
-      <span class="programme-stat-pill">
-        <span class="programme-stat-pill-label">SWS WiSe</span>
-        <span class="programme-stat-pill-value">{{ sws_odd_min|floatformat:1 }} - {{ sws_odd_max|floatformat:1 }}</span>
-      </span>
-      <span class="programme-stat-pill">
-        <span class="programme-stat-pill-label">SWS SoSe</span>
-        <span class="programme-stat-pill-value">{{ sws_even_min|floatformat:1 }} - {{ sws_even_max|floatformat:1 }}</span>
-      </span>
-    </div> -->
-
-<hr/>
-
-    <div style="font-size:1em; color:#444; display:flex; flex-direction:column; gap:0.2em; align-items:flex-start; width:100%;">
-      <table style="width:100%; max-width:800px; font-size:1.2em; color:#444; border-collapse:collapse; text-align:center; margin-left:0;">
-        <thead>
-          <tr>
-            <th style="padding:0.5em 0; border-bottom:2px solid #bbb; border-right:4px solid #444;">SWS Gesamt</th>
-            <th style="padding:0.5em 0; border-bottom:2px solid #bbb; border-right:2px solid #bbb;">SWS VL</th>
-            <th style="padding:0.5em 0; border-bottom:2px solid #bbb; border-right:2px solid #bbb;">SWS S/Ü</th>
-            <th style="padding:0.5em 0; border-bottom:2px solid #bbb; border-right:4px solid #444;">SWS Sonst.</th>
-            <th style="padding:0.5em 0; border-bottom:2px solid #bbb; border-right:2px solid #bbb;">SWS WiSe</th>
-            <th style="padding:0.5em 0; border-bottom:2px solid #bbb;">SWS SoSe</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="text-align:center; border-right:4px solid #444;">{{ total_sws_min|floatformat:0 }} - {{ total_sws_max|floatformat:0 }}</td>
-            <td style="text-align:center; border-right:2px solid #bbb;">{{ sws_lectures_min|floatformat:0 }} - {{ sws_lectures_max|floatformat:0 }}</td>
-            <td style="text-align:center; border-right:2px solid #bbb;">{{ sws_seminars_min|floatformat:0 }} - {{ sws_seminars_max|floatformat:0 }}</td>
-            <td style="text-align:center; border-right:4px solid #444;">{{ sws_other_min|floatformat:0 }} - {{ sws_other_max|floatformat:0 }}</td>
-            <td style="text-align:center; border-right:2px solid #bbb;">{{ sws_odd_min|floatformat:0 }} - {{ sws_odd_max|floatformat:0 }}</td>
-            <td style="text-align:center;">{{ sws_even_min|floatformat:0 }} - {{ sws_even_max|floatformat:0 }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-<hr/>
-
-<!-- Semester List -->
-<div id="semester-list">
-{% for semester in semesters %}
-  <div class="semester-block" id="semester-{{ semester.id }}" style="margin-bottom:2em;">
-    <div style="display:flex; align-items:center; gap:1em; margin-bottom:0.5em">
-      <span class="semester-handle" style="cursor:grab;">&#9776;</span>
-      <h2>
-        {{ semester.number }}. Semester
-      </h2>
-      <!-- Remove Semester Button -->
-      <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name="delete_semester_id" value="{{ semester.id }}">
-        <button type="submit" name="delete_semester"
-          style="background:none; color:#e74c3c; border:none; border-radius:2px; padding:0.0em 0.0em; cursor:pointer; font-size:1.3em;"
-          title="Remove Semester">&times;</button>
-      </form>
-      <span class="semester-ects">
+<div class="programme-layout">
+  <div class="programme-sidebar">
+    <!-- Programme Title and ECTS/type in separate rows -->
+    <div style="color:#888; font-style:italic; font-size:1.5em; margin-bottom:0.1em;">
+      <span class="programme-prefix">
+        <em>
+          {% if programme.degree_type == 'bachelor' %} BA {% elif programme.degree_type == 'master' %} MA {% elif programme.degree_type == 'teaching' %} LA {% endif %}
+          ({{ total_ects|default:0|floatformat:0 }} ECTS)
+        </em>
       </span>
     </div>
-    <div style="font-size:0.95em; color:#888; margin-bottom:0.5em; display:flex; gap:0.7em; flex-wrap:wrap;">
-      <span class="programme-stat-pill">
-        <span class="programme-stat-pill-label">ECTS</span>
-        <span class="programme-stat-pill-value">{{ semester.ects_sum|default:0 }}</span>
-      </span>
-      <span class="programme-stat-pill">
-        <span class="programme-stat-pill-label">Studierende</span>
-        <span class="programme-stat-pill-value">{{ semester.expected_students.min }} - {{ semester.expected_students.max }}</span>
-      </span>
-      <span class="programme-stat-pill">
-        <span class="programme-stat-pill-label">SWS</span>
-        <span class="programme-stat-pill-value">{{ semester.expected_sws_min|floatformat:1 }} - {{ semester.expected_sws_max|floatformat:1 }}</span>
-      </span>
-    </div>
-    <!-- Course Groups -->
-    {% for group in course_type_groups %}
-      {% with group_courses=semester.courses_by_type|dict_get:group.0 %}
-        {% if group_courses %}
-          <div class="course-group-row" style="margin-bottom:0.5em;">
-            <div style="font-style:italic; margin-bottom:0.2em;">{{ group.1 }}</div>
-            <div id="course-list-{{ semester.id }}-{{ group.0 }}" class="course-list" style="display:flex; gap:1em; flex-wrap:wrap;">
-              {% for course in group_courses %}
-                <div class="course-block" id="course-{{ course.id }}" data-group="{{ course.group }}">
-                  <form method="post" style="position:absolute; top:0px; right:4px; margin:0;">
-                    {% csrf_token %}
-                    <input type="hidden" name="delete_course_id" value="{{ course.id }}">
-                    <button type="submit" name="delete_course"
-                      style="background:none; color:#888; border:none; border-radius:2px; padding:0.0em 0.0em; cursor:pointer; font-size:1.3em;"
-                      title="Remove Course">&times;</button>
-                  </form>
-                  <!-- Add Edit Button -->
-                  <button type="button"
-                    class="edit-course-btn"
-                    style="position:absolute; top:2px; right:20px; background:none; border:none; color:#888; cursor:pointer; font-size:0.9em;"
-                    title="Kurs bearbeiten"
-                    onclick="openEditCourseModal({{ course.id }})">
-                    &#9998;
-                  </button>
-                  <span style="color:#b2b1b1; font-weight:bold; font-size:0.95em;">
-                    {% if course.type == 'lecture' %}VL{% elif course.type == 'seminar' %}S{% elif course.type == 'tutorial' %}Ü{% elif course.type == 'fieldtrip' %}E{% elif course.type == 'thesis' %}T{% elif course.type == 'external' %}E{% endif %}
-                  </span>
-                  <strong>{{ course.name }}</strong><br>
-                  {{ course.ects }} ECTS, {{ course.sws }} SWS <br>
-                  {% if course.min_classes and course.max_classes %}
-                    <span style="font-size:0.95em; color:#888;">
-                      {% if course.min_classes == course.max_classes %}
-                        {{ course.min_classes }} class{% if course.min_classes > 1 %}es{% endif %}
-                      {% else %}
-                        {{ course.min_classes }}-{{ course.max_classes }} classes
-                      {% endif %}
-                    </span><br>
-                  {% endif %}
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-        {% endif %}
-      {% endwith %}
-    {% endfor %}
-
-    <div style="margin-top:1em; display:flex; gap:1em; flex-wrap:wrap;">
-        <div style="display:flex; align-items:center; justify-content:center; font-size:1em; padding:0.6em 0.0em; border:none">
-          <svg width="24" height="24" fill="none" stroke="#2c3e50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.3em;"><circle cx="12" cy="12" r="11" stroke="#2c3e50" stroke-width="2"/><line x1="12" y1="7" x2="12" y2="17"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+    <h1 style="display: flex; align-items: center; gap:0.3em; margin-top:0; margin-bottom:0.4em;">
+      <span id="programme-name-display">{{ programme.name }}</span>
+      <button 
+        style="border:none; background-color:#fff"
+        type="button" onclick="document.getElementById('edit-programme-form').style.display='inline'; this.style.display='none'; document.getElementById('programme-name-display').style.display='none';" >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" width="20" height="20">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+        </svg>
+      </button>
+    </h1>
+    <form id="edit-programme-form" method="post">
+      {% csrf_token %}
+      <input 
+        type="text" 
+        name="programme_name" 
+        value="{{ programme.name }}" 
+        style="font-size:0.98em; padding:0.15em 0.5em; border:1px solid #bbb; border-radius:5px; background:#fafafa; min-width:120px;"
+      >
+      <button 
+        type="submit" 
+        name="edit_programme" 
+        style="font-size:0.95em; padding:0.15em 0.9em; border-radius:5px; border:1px solid #bbb; background:#e0e0e0; cursor:pointer; margin-left:0.2em;"
+      >Save</button>
+    </form>
+    <hr style="border:none; border-top:1.5px solid #bbb; margin:1em 0; width:100%;"/>
+    <!-- Transposed stats table: two columns, label left, value right -->
+    <table style="width:100%; max-width:340px; font-size:1.1em; color:#444; border-collapse:collapse; text-align:left; margin-left:0;">
+      <tbody>
+        <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS Gesamt</th><td style="padding:0.4em 0;">{{ total_sws_min|floatformat:0 }} - {{ total_sws_max|floatformat:0 }}</td></tr>
+        <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS VL</th><td style="padding:0.4em 0;">{{ sws_lectures_min|floatformat:0 }} - {{ sws_lectures_max|floatformat:0 }}</td></tr>
+        <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS S/Ü</th><td style="padding:0.4em 0;">{{ sws_seminars_min|floatformat:0 }} - {{ sws_seminars_max|floatformat:0 }}</td></tr>
+        <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS Sonst.</th><td style="padding:0.4em 0;">{{ sws_other_min|floatformat:0 }} - {{ sws_other_max|floatformat:0 }}</td></tr>
+        <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS WiSe</th><td style="padding:0.4em 0;">{{ sws_odd_min|floatformat:0 }} - {{ sws_odd_max|floatformat:0 }}</td></tr>
+        <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS SoSe</th><td style="padding:0.4em 0;">{{ sws_even_min|floatformat:0 }} - {{ sws_even_max|floatformat:0 }}</td></tr>
+      </tbody>
+    </table>
+    <hr style="border:none; border-top:1.5px solid #bbb; margin:1em 0; width:100%;"/>
+  </div>
+  <div class="programme-main">
+    <!-- Semester List -->
+    <div id="semester-list">
+    {% for semester in semesters %}
+      <div class="semester-block" id="semester-{{ semester.id }}" style="margin-bottom:2em;">
+        <div style="display:flex; align-items:center; gap:1em; margin-bottom:0.5em">
+          <span class="semester-handle" style="cursor:grab;">&#9776;</span>
+          <h2>
+            {{ semester.number }}. Semester
+          </h2>
+          <!-- Remove Semester Button -->
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="delete_semester_id" value="{{ semester.id }}">
+            <button type="submit" name="delete_semester"
+              style="background:none; color:#e74c3c; border:none; border-radius:2px; padding:0.0em 0.0em; cursor:pointer; font-size:1.3em;"
+              title="Remove Semester">&times;</button>
+          </form>
+          <span class="semester-ects">
+          </span>
         </div>
-      <button onclick="openModal('{{ semester.id }}', 'lecture')" style="display:flex; align-items:center; gap:0.5em; font-size:1em; padding:0.6em 1.2em; border:none; background:#f7f7f7; border-radius:6px; cursor:pointer;">
-        Vorlesung
-      </button>
-      <button onclick="openModal('{{ semester.id }}', 'seminar')" style="display:flex; align-items:center; gap:0.5em; font-size:1em; padding:0.6em 1.2em; border:none; background:#f7f7f7; border-radius:6px; cursor:pointer;">
-        Seminar
-      </button>
-      <button onclick="openModal('{{ semester.id }}', 'tutorial')" style="display:flex; align-items:center; gap:0.5em; font-size:1em; padding:0.6em 1.2em; border:none; background:#f7f7f7; border-radius:6px; cursor:pointer;">
-        Übung
-      </button>
-      <button onclick="openModal('{{ semester.id }}', 'fieldtrip')" style="display:flex; align-items:center; justify-content:center; font-size:1em; padding:0.6em 1.2em; border:none; background:#f7f7f7; border-radius:6px; cursor:pointer;">
-        <!-- <svg width="800px" height="800px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path fill="#000000" d="M155.605 114.634l-14.31 7.154 3.576 7.156 13.423 26.844-57.578 57.578h22.625l42.494-42.494 21.248 42.494h17.89l-45.788-91.578-3.58-7.154zm132.422 2.732v24c0 11.313 5.527 24.452 12.13 39.47 6.345 14.432 13.97 29.757 19.87 42.33v54.2h-93.765l-16-48H80.027v80h2.623c5.445-11.528 14.993-20.257 26.176-26.092 12.89-6.725 28.058-9.908 43.2-9.908 15.144 0 30.31 3.183 43.203 9.908 11.18 5.835 20.73 14.564 26.174 26.092h117.344c10.22-23.39 31.87-35.904 54.555-37.967 23.296-2.118 47.98 5.742 65.738 21.966h7.222l10.666-32h-28.9v-48H333.09c-5.778-12.2-12.63-26.108-18.285-38.97-6.367-14.482-10.778-28.342-10.778-33.03v-24h-16zm-256.054 72v80h32v-80h-32zm432.054 23.88v32h16v-32h-16zm-231.568 32.12l5.333 16h50.234v-16H232.46zm-184.433 40v24.303h16v-24.304h-16zm104 16a48 48 0 0 0-48 48 48 48 0 0 0 48 48 48 48 0 0 0 48-48 48 48 0 0 0-48-48zm253.557 0a48 48 0 0 0-48 48 48 48 0 0 0 48 48 48 48 0 0 0 48-48 48 48 0 0 0-48-48zm-173.557 24v16h96v-16h-96zm-80 8a16 16 0 0 1 16 16 16 16 0 0 1-16 16 16 16 0 0 1-16-16 16 16 0 0 1 16-16zm253.557 0a16 16 0 0 1 16 16 16 16 0 0 1-16 16 16 16 0 0 1-16-16 16 16 0 0 1 16-16z"/></svg> -->
-        Exkursion
-      </button>
-      <button onclick="openModal('{{ semester.id }}', 'thesis')" style="display:flex; align-items:center; justify-content:center; font-size:1em; padding:0.6em 1.2em; border:none; background:#f7f7f7; border-radius:6px; cursor:pointer;">
-        <!-- <svg width="24" height="24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
-        </svg> -->
-        Thesis
-      </button>
-      <button onclick="openModal('{{ semester.id }}', 'external')" style="display:flex; align-items:center; gap:0.5em; font-size:1em; padding:0.6em 1.2em; border:none; background:#f7f7f7; border-radius:6px; cursor:pointer;">
-        Extern
-      </button>
+        <div style="font-size:0.95em; color:#888; margin-bottom:0.5em; display:flex; gap:0.7em; flex-wrap:wrap;">
+          <span class="programme-stat-pill">
+            <span class="programme-stat-pill-label">ECTS</span>
+            <span class="programme-stat-pill-value">{{ semester.ects_sum|default:0 }}</span>
+          </span>
+          <span class="programme-stat-pill">
+            <span class="programme-stat-pill-label">Studierende</span>
+            <span class="programme-stat-pill-value">{{ semester.expected_students.min }} - {{ semester.expected_students.max }}</span>
+          </span>
+          <span class="programme-stat-pill">
+            <span class="programme-stat-pill-label">SWS</span>
+            <span class="programme-stat-pill-value">{{ semester.expected_sws_min|floatformat:1 }} - {{ semester.expected_sws_max|floatformat:1 }}</span>
+          </span>
+        </div>
+        <!-- Course Groups -->
+        {% for group in course_type_groups %}
+          {% with group_courses=semester.courses_by_type|dict_get:group.0 %}
+            {% if group_courses %}
+              <div class="course-group-row" style="margin-bottom:0.5em;">
+                <div style="font-style:italic; margin-bottom:0.2em;">{{ group.1 }}</div>
+                <div id="course-list-{{ semester.id }}-{{ group.0 }}" class="course-list" style="display:flex; gap:1em; flex-wrap:wrap;">
+                  {% for course in group_courses %}
+                    <div class="course-block" id="course-{{ course.id }}" data-group="{{ course.group }}">
+                      <form method="post" style="position:absolute; top:0px; right:4px; margin:0;">
+                        {% csrf_token %}
+                        <input type="hidden" name="delete_course_id" value="{{ course.id }}">
+                        <button type="submit" name="delete_course"
+                          style="background:none; color:#888; border:none; border-radius:2px; padding:0.0em 0.0em; cursor:pointer; font-size:1.3em;"
+                          title="Remove Course">&times;</button>
+                      </form>
+                      <!-- Add Edit Button -->
+                      <button type="button"
+                        class="edit-course-btn"
+                        style="position:absolute; top:2px; right:20px; background:none; border:none; color:#888; cursor:pointer; font-size:0.9em;"
+                        title="Kurs bearbeiten"
+                        onclick="openEditCourseModal('{{ course.id }}')">
+                        &#9998;
+                      </button>
+                      <span style="color:#b2b1b1; font-weight:bold; font-size:0.95em;">
+                        {% if course.type == 'lecture' %}VL{% elif course.type == 'seminar' %}S{% elif course.type == 'tutorial' %}Ü{% elif course.type == 'fieldtrip' %}E{% elif course.type == 'thesis' %}T{% elif course.type == 'external' %}E{% endif %}
+                      </span>
+                      <strong>{{ course.name }}</strong><br>
+                      {{ course.ects }} ECTS, {{ course.sws }} SWS <br>
+                      {% if course.min_classes and course.max_classes %}
+                        <span style="font-size:0.95em; color:#888;">
+                          {% if course.min_classes == course.max_classes %}
+                            {{ course.min_classes }} class{% if course.min_classes > 1 %}es{% endif %}
+                          {% else %}
+                            {{ course.min_classes }}-{{ course.max_classes }} classes
+                          {% endif %}
+                        </span><br>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          {% endwith %}
+        {% endfor %}
+
+        <div style="margin-top:1em; display:flex; gap:1em; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; justify-content:center; font-size:1em; padding:0.6em 0.0em; border:none">
+              <svg width="24" height="24" fill="none" stroke="#2c3e50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:0.3em;"><circle cx="12" cy="12" r="11" stroke="#2c3e50" stroke-width="2"/><line x1="12" y1="7" x2="12" y2="17"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+            </div>
+          <button onclick="openModal('{{ semester.id }}', 'lecture')" style="display:flex; align-items:center; gap:0.5em; font-size:1em; padding:0.6em 1.2em; border:none; background:#f7f7f7; border-radius:6px; cursor:pointer;">
+            Vorlesung
+          </button>
+          <button onclick="openModal('{{ semester.id }}', 'seminar')" style="display:flex; align-items:center; gap:0.5em; font-size:1em; padding:0.6em 1.2em; border:none; background:#f7f7f7; border-radius:6px; cursor:pointer;">
+            Seminar
+          </button>
+          <button onclick="openModal('{{ semester.id }}', 'tutorial')" style="display:flex; align-items:center; gap:0.5em; font-size:1em; padding:0.6em 1.2em; border:none; background:#f7f7f7; border-radius:6px; cursor:pointer;">
+            Übung
+          </button>
+          <button onclick="openModal('{{ semester.id }}', 'fieldtrip')" style="display:flex; align-items:center; justify-content:center; font-size:1em; padding:0.6em 1.2em; border:none; background:#f7f7f7; border-radius:6px; cursor:pointer;">
+            <!-- <svg width="800px" height="800px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path fill="#000000" d="M155.605 114.634l-14.31 7.154 3.576 7.156 13.423 26.844-57.578 57.578h22.625l42.494-42.494 21.248 42.494h17.89l-45.788-91.578-3.58-7.154zm132.422 2.732v24c0 11.313 5.527 24.452 12.13 39.47 6.345 14.432 13.97 29.757 19.87 42.33v54.2h-93.765l-16-48H80.027v80h2.623c5.445-11.528 14.993-20.257 26.176-26.092 12.89-6.725 28.058-9.908 43.2-9.908 15.144 0 30.31 3.183 43.203 9.908 11.18 5.835 20.73 14.564 26.174 26.092h117.344c10.22-23.39 31.87-35.904 54.555-37.967 23.296-2.118 47.98 5.742 65.738 21.966h7.222l10.666-32h-28.9v-48H333.09c-5.778-12.2-12.63-26.108-18.285-38.97-6.367-14.482-10.778-28.342-10.778-33.03v-24h-16zm-256.054 72v80h32v-80h-32zm432.054 23.88v32h16v-32h-16zm-231.568 32.12l5.333 16h50.234v-16H232.46zm-184.433 40v24.303h16v-24.304h-16zm104 16a48 48 0 0 0-48 48 48 48 0 0 0 48 48 48 48 0 0 0 48-48 48 48 0 0 0-48-48zm253.557 0a48 48 0 0 0-48 48 48 48 0 0 0 48 48 48 48 0 0 0 48-48 48 48 0 0 0-48-48zm-173.557 24v16h96v-16h-96zm-80 8a16 16 0 0 1 16 16 16 16 0 0 1-16 16 16 16 0 0 1-16-16 16 16 0 0 1 16-16zm253.557 0a16 16 0 0 1 16 16 16 16 0 0 1-16 16 16 16 0 0 1-16-16 16 16 0 0 1 16-16z"/></svg> -->
+            Exkursion
+          </button>
+          <button onclick="openModal('{{ semester.id }}', 'thesis')" style="display:flex; align-items:center; justify-content:center; font-size:1em; padding:0.6em 1.2em; border:none; background:#f7f7f7; border-radius:6px; cursor:pointer;">
+            <!-- <svg width="24" height="24" fill="none" stroke="#2c3e50" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
+            </svg> -->
+            Thesis
+          </button>
+          <button onclick="openModal('{{ semester.id }}', 'external')" style="display:flex; align-items:center; gap:0.5em; font-size:1em; padding:0.6em 1.2em; border:none; background:#f7f7f7; border-radius:6px; cursor:pointer;">
+            Extern
+          </button>
+        </div>
+      </div>
+    {% endfor %}
+    </div>
+    <!-- Add Semester Form Row -->
+    <hr style="border:none; border-top:2px solid; margin:1.5em 0 1em 0; width:100%; max-width:900px;"/>
+    <div>
+      <form method="post" style="display:flex; align-items:flex-end; gap:1em; margin-top:0;">
+        {% csrf_token %}
+        {{ semester_form.name.label_tag }} {{ semester_form.name }}
+        {{ semester_form.programme.as_hidden }}
+        <button type="submit" name="add_semester" style="height:2.4em;">Semester hinzufügen</button>
+      </form>
     </div>
   </div>
-{% endfor %}
 </div>
 
 <!-- Modal Form -->
@@ -237,16 +220,6 @@
       <button type="submit" name="add_course" style="margin-top:1em;">Speichern</button>
     </form>
   </div>
-</div>
-
-<!-- Add Semester Form Row -->
-<div>
-  <form method="post" style="display:flex; align-items:flex-end; gap:1em;">
-    {% csrf_token %}
-    {{ semester_form.name.label_tag }} {{ semester_form.name }}
-    {{ semester_form.programme.as_hidden }}
-    <button type="submit" name="add_semester" style="height:2.4em;">Semester hinzufügen</button>
-  </form>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
