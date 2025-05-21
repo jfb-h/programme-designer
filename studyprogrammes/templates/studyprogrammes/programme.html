@@ -90,11 +90,15 @@
         {% for group in course_type_groups %}
           <div class="course-group-row group-placeholder" style="margin-bottom:0.5em; min-height:48px; background:#f3f3f3; border-radius:6px; padding:0.2em 0.8em; opacity:0.7;">
             <div style="font-style:italic; color:#888; min-width:120px; margin-bottom:0.2em;">{{ group.1 }}</div>
-            <div id="course-list-{{ semester.id }}-{{ group.0 }}" class="course-list" style="display:flex; gap:1em; flex-wrap:wrap; width:100%; min-height:32px; background:transparent;">
+            <div id="course-list-{{ semester.id }}-{{ group.0 }}" class="course-list" style="display:flex; gap:1em; flex-wrap:wrap; width:100%; min-height:32px; background:transparent;"
+              ondragover="handleDropZoneDragOver(event, this)" 
+              ondragleave="handleDropZoneDragLeave(event, this)" 
+              ondrop="handleCourseDrop(event, '{{ semester.id }}', '{{ group.0 }}')">
               {% with group_courses=semester.courses_by_type|dict_get:group.0 %}
                 {% if group_courses %}
                   {% for course in group_courses %}
-                    <div class="course-block" id="course-{{ course.id }}" data-group="{{ course.group }}">
+                    <div class="course-block" id="course-{{ course.id }}" data-group="{{ course.group }}" draggable="true"
+                      ondragstart="handleCourseDragStart(event, '{{ course.id }}')">
                       <!-- Action Buttons Container -->
                       <div style="display:flex; flex-direction:column; align-items:center; gap:0.2em;">
                         <div class="course-actions-vertical">
@@ -348,6 +352,74 @@ function openEditCourseModal(courseId) {
 
       document.getElementById('modal').classList.add('show');
     });
+}
+</script>
+
+<script>
+// Drag and Drop for moving courses between semesters
+let draggedCourseId = null;
+function handleCourseDragStart(event, courseId) {
+  draggedCourseId = courseId;
+  event.dataTransfer.effectAllowed = 'move';
+}
+function handleDropZoneDragOver(event, el) {
+  event.preventDefault();
+  // Only trigger if the pointer is over the drop zone itself, not a child (like a card)
+  if (event.target !== el) return;
+  if (el._dropHoverTimeout) return;
+  el._dropHoverTimeout = setTimeout(function() {
+    el.closest('.group-placeholder').classList.add('drop-hover');
+    el._dropHoverTimeout = null;
+  }, 80);
+}
+function handleDropZoneDragLeave(event, el) {
+  // Only remove if leaving the drop zone itself, not a child
+  if (event.target !== el) return;
+  if (el._dropHoverTimeout) {
+    clearTimeout(el._dropHoverTimeout);
+    el._dropHoverTimeout = null;
+  }
+  el.closest('.group-placeholder').classList.remove('drop-hover');
+}
+function handleCourseDrop(event, targetSemesterId, targetGroup) {
+  event.preventDefault();
+  document.querySelectorAll('.group-placeholder.drop-hover').forEach(el => el.classList.remove('drop-hover'));
+  if (!draggedCourseId) return;
+  // CSRF token from cookie
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  fetch('/move_course/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': getCookie('csrftoken'),
+    },
+    body: JSON.stringify({
+      course_id: draggedCourseId,
+      target_semester_id: targetSemesterId,
+      target_group: targetGroup
+    })
+  }).then(response => {
+    if (response.ok) {
+      // Instead of location.reload(), update the DOM and set the correct data-group attribute
+      // But for now, force a reload to ensure Django template logic re-applies the correct data-group
+      location.reload();
+    }
+    // If not ok, do nothing (no alert)
+  });
+  draggedCourseId = null;
 }
 </script>
 

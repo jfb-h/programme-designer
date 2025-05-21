@@ -411,3 +411,27 @@ def logout_then_login(request):
     from django.shortcuts import redirect
     logout(request)
     return redirect('/login/')
+
+@csrf_exempt
+@require_POST
+def move_course(request):
+    import json
+    from .models import Course, Semester
+    data = json.loads(request.body)
+    course_id = data.get('course_id')
+    target_semester_id = data.get('target_semester_id')
+    target_group = data.get('target_group')
+    if not (course_id and target_semester_id and target_group):
+        return JsonResponse({'status': 'error', 'message': 'Missing data'}, status=400)
+    try:
+        course = Course.objects.get(pk=course_id)
+        target_semester = Semester.objects.get(pk=target_semester_id)
+    except (Course.DoesNotExist, Semester.DoesNotExist):
+        return JsonResponse({'status': 'error', 'message': 'Not found'}, status=404)
+    # Only update the semester, do NOT change the group (radio attribute)
+    course.semester = target_semester
+    # Place at the end of the order in the new semester
+    max_order = Course.objects.filter(semester=target_semester).aggregate(models.Max('order'))['order__max'] or 0
+    course.order = max_order + 1
+    course.save()
+    return JsonResponse({'status': 'ok'})
