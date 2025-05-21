@@ -136,6 +136,15 @@ CSRF_TRUSTED_ORIGINS = [
     "https://eggroup.geographie.uni-muenchen.de",
 ]
 
+# Use these for production (with FORCE_SCRIPT_NAME)
+LOGIN_URL = '/programme-designer/login/'
+LOGIN_REDIRECT_URL = '/programme-designer/programmes/'
+LOGOUT_REDIRECT_URL = '/programme-designer/login/'
+
+ALLOWED_LOGOUT_METHODS = ["GET", "POST"]
+
+# The following will be overridden in local_settings.py for development
+
 try:
     from .local_settings import *
 except ImportError:

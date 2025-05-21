@@ -1,0 +1,21 @@
+{% extends "studyprogrammes/layout.html" %}
+{% block content %}
+<div class="login-container" style="max-width:400px;margin:4em auto;padding:2em 2.5em;background:#fff;border-radius:10px;box-shadow:0 2px 16px #0001;">
+  <h2 style="margin-bottom:1.2em;">Login</h2>
+  {% if form.errors %}
+    <div style="color:#c00; margin-bottom:1em;">Benutzername oder Passwort falsch.</div>
+  {% endif %}
+  <form method="post" action="">
+    {% csrf_token %}
+    <div style="margin-bottom:1.2em;">
+      <label for="id_username">Benutzername</label><br>
+      <input type="text" name="username" autofocus required id="id_username" style="width:100%;padding:0.5em;margin-top:0.2em;">
+    </div>
+    <div style="margin-bottom:1.2em;">
+      <label for="id_password">Passwort</label><br>
+      <input type="password" name="password" required id="id_password" style="width:100%;padding:0.5em;margin-top:0.2em;">
+    </div>
+    <button type="submit" style="width:100%;padding:0.7em 0;font-size:1.1em;background:#2c3e50;color:#fff;border:none;border-radius:5px;cursor:pointer;">Login</button>
+  </form>
+</div>
+{% endblock %}

@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 import json
 from django.db.models import Prefetch, Sum
 from django.db import models
+from django.contrib.auth.views import LogoutView as DjangoLogoutView
 
 
 class HomeListView(ListView):
@@ -366,3 +367,9 @@ def course_detail_api(request, course_id):
         "semester": course.semester_id,
         "description": course.description,
     })
+
+def logout_then_login(request):
+    from django.contrib.auth import logout
+    from django.shortcuts import redirect
+    logout(request)
+    return redirect('/login/')
