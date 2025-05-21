@@ -88,11 +88,11 @@
         </div>
         <!-- Course Groups -->
         {% for group in course_type_groups %}
-          {% with group_courses=semester.courses_by_type|dict_get:group.0 %}
-            {% if group_courses %}
-              <div class="course-group-row" style="margin-bottom:0.5em;">
-                <div style="font-style:italic; margin-bottom:0.2em;">{{ group.1 }}</div>
-                <div id="course-list-{{ semester.id }}-{{ group.0 }}" class="course-list" style="display:flex; gap:1em; flex-wrap:wrap;">
+          <div class="course-group-row group-placeholder" style="margin-bottom:0.5em; min-height:48px; background:#f3f3f3; border-radius:6px; padding:0.2em 0.8em; opacity:0.7;">
+            <div style="font-style:italic; color:#888; min-width:120px; margin-bottom:0.2em;">{{ group.1 }}</div>
+            <div id="course-list-{{ semester.id }}-{{ group.0 }}" class="course-list" style="display:flex; gap:1em; flex-wrap:wrap; width:100%; min-height:32px; background:transparent;">
+              {% with group_courses=semester.courses_by_type|dict_get:group.0 %}
+                {% if group_courses %}
                   {% for course in group_courses %}
                     <div class="course-block" id="course-{{ course.id }}" data-group="{{ course.group }}">
                       <!-- Action Buttons Container -->
@@ -144,10 +144,10 @@
                       {% endif %}
                     </div>
                   {% endfor %}
-                </div>
-              </div>
-            {% endif %}
-          {% endwith %}
+                {% endif %}
+              {% endwith %}
+            </div>
+          </div>
         {% endfor %}
 
         <div style="margin-top:1em; display:flex; gap:1em; flex-wrap:wrap;">
