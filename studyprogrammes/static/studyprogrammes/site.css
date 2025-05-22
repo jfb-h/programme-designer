@@ -53,14 +53,18 @@ input[name=message] {
     gap: 0.3em;
 }
 
+/* Update group color backgrounds for new group names */
 .course-block[data-group="PG"] {
   background: #e3f2fd;
 }
 .course-block[data-group="HG"] {
   background: #e8f5e9;
 }
-.course-block[data-group="MU"] {
+.course-block[data-group="MA"] {
   background: #fff3e0;
+}
+.course-block[data-group="WÜ"] {
+  background: linear-gradient(90deg,#e8f5e9 0%, #e3f2fd 100%);
 }
 .course-block {
   border: 1px solid #ccc;

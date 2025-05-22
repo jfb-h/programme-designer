@@ -45,7 +45,8 @@ class Course(models.Model):
     GROUP_CHOICES = [
         ('PG', 'PG'),
         ('HG', 'HG'),
-        ('MU', 'MÜ'),
+        ('WÜ', 'WÜ'),
+        ('MA', 'MA'),
     ]
     name = models.CharField(max_length=200)
     ects = models.IntegerField()
