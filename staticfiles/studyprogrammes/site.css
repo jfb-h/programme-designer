@@ -53,3 +53,14 @@ input[name=message] {
 }
 
 /* Styles for studyprogrammes app (formerly 'hello') */
+
+/* Add a subtle shadow to programme cards in the overview */
+.programme-card, .programme-overview-card {
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.10), 0 1.5px 4px rgba(44, 62, 80, 0.08);
+  border-radius: 8px;
+  background: #fff;
+  transition: box-shadow 0.2s;
+}
+.programme-card:hover, .programme-overview-card:hover {
+  box-shadow: 0 4px 16px rgba(44, 62, 80, 0.16), 0 2.5px 8px rgba(44, 62, 80, 0.12);
+}

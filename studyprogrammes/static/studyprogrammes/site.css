@@ -74,6 +74,11 @@ input[name=message] {
   background: #fff;
 }
 
+.course-block:hover {
+  box-shadow: 0 4px 16px rgba(44, 62, 80, 0.16), 0 2.5px 8px rgba(44, 62, 80, 0.12);
+}
+
+
 .course-actions-vertical {
   position: absolute;
   top: 8px;
@@ -222,7 +227,6 @@ input[name=message] {
   padding: 1.2em 1.2em 1.5em 1.2em; 
   opacity: 0.7;
 }
-
 .group-placeholder .course-list {
   padding: 0.0em 0.0em 0.8em 0.0em; 
 }
@@ -232,4 +236,14 @@ input[name=message] {
   opacity: 1.0;
   background: #e8f0fa;
   transition: box-shadow 0.1s, border 0.1s, background 0.1s;
+}
+
+.programme-overview-card {
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.10), 0 1.5px 4px rgba(44, 62, 80, 0.08);
+  border-radius: 8px;
+  background: #fff;
+  transition: box-shadow 0.2s;
+}
+.programme-overview-card:hover {
+  box-shadow: 0 4px 16px rgba(44, 62, 80, 0.16), 0 2.5px 8px rgba(44, 62, 80, 0.12);
 }
