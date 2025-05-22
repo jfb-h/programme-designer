@@ -451,4 +451,19 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const modal = document.getElementById('modal');
+  const modalContent = document.querySelector('#modal .modal-content');
+  if (modal) {
+    modal.addEventListener('mousedown', function(event) {
+      // Only close if click is outside modal-content
+      if (!modalContent.contains(event.target)) {
+        closeModal();
+      }
+    });
+  }
+});
+</script>
+
 {% endblock %}
