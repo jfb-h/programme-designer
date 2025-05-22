@@ -314,13 +314,7 @@ const typeDefaults = {
 function openModal(semesterId, courseType) {
   document.getElementById('modal').classList.add('show');
   document.getElementById('semesterInput').value = semesterId;
-  if (courseType) {
-    document.getElementById('typeInput').value = courseType;
-    const typeField = document.getElementById('id_type');
-    if (typeField) typeField.value = courseType;
-    setCourseDefaults(courseType);
-  }
-  // Clear all course form fields for a new course
+  // Always clear all course form fields for a new course
   document.getElementById('id_name').value = '';
   document.getElementById('id_type').value = courseType || '';
   document.getElementById('id_ects').value = '';
@@ -332,6 +326,13 @@ function openModal(semesterId, courseType) {
   radios.forEach(radio => { radio.checked = false; });
   // Clear editCourseIdInput so we don't accidentally edit an old course
   document.getElementById('editCourseIdInput').value = '';
+  // If a courseType is provided, set defaults for that type
+  if (courseType) {
+    document.getElementById('typeInput').value = courseType;
+    const typeField = document.getElementById('id_type');
+    if (typeField) typeField.value = courseType;
+    setCourseDefaults(courseType);
+  }
 }
 function setCourseDefaults(type) {
   const defaults = typeDefaults[type];
