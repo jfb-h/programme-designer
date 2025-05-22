@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils import timezone
 from django.conf import settings
 
 class LogMessage(models.Model):
@@ -19,6 +18,7 @@ class Programme(models.Model):
     degree_type = models.CharField(max_length=20, choices=DEGREE_CHOICES)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='programmes', null=True, blank=True)
     is_public = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0, db_index=True)
 
     def __str__(self):
         return f"{self.name} ({self.degree_type})"
@@ -77,3 +77,4 @@ class ProgrammeExpectedStudents(models.Model):
 
     def __str__(self):
         return f"{self.degree_type} Sem {self.semester}: {self.min_students}/{self.max_students}"
+

@@ -240,9 +240,9 @@ def programme_view(request, pk):
     return render(request, "studyprogrammes/programme.html", context)
 
 def programmes_view(request):
-    private_programmes = Programme.objects.filter(user=request.user, is_public=False)
+    private_programmes = Programme.objects.filter(user=request.user, is_public=False).order_by('order', 'id')
     # FIX: Show all public programmes, including user's own
-    public_programmes = Programme.objects.filter(is_public=True)
+    public_programmes = Programme.objects.filter(is_public=True).order_by('order', 'id')
     form = ProgrammeForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         programme = form.save(commit=False)
@@ -366,6 +366,14 @@ def programmes_view(request):
 
 def home_redirect(request):
     return redirect('programmes')
+
+@require_POST
+def update_programme_order(request):
+    data = json.loads(request.body)
+    order = data.get("order", [])
+    for idx, programme_id in enumerate(order):
+        Programme.objects.filter(id=programme_id, user=request.user).update(order=idx)
+    return JsonResponse({"status": "ok"})
 
 def update_semester_order(request, programme_id):
     if request.method == "POST":

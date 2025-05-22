@@ -18,9 +18,9 @@
 
 <h2>Öffentliche Studiengänge</h2>
 
-<div style="display:flex; gap:2em; flex-wrap:wrap; margin-bottom:2em">
+<div id="public-programme-list" style="display:flex; gap:2em; flex-wrap:wrap; margin-bottom:2em">
   {% for programme in public_programmes %}
-    <div class="programme-overview-card" style="border:1px solid #ccc; border-radius:8px; padding:0.7em 0.7em 0.5em 0.7em; width:220px; position:relative; display:flex; flex-direction:column; align-items:stretch; background:#fff;">
+    <div class="programme-overview-card" id="programm-{{ programme.id }}" style="border:1px solid #ccc; border-radius:8px; padding:0.7em 0.7em 0.5em 0.7em; width:220px; position:relative; display:flex; flex-direction:column; align-items:stretch; background:#fff;">
       <!-- Top row: name and type -->
       <div style="padding-bottom:0.2em; display:flex; flex-direction:column; gap:0.4em;">
         <span class="programme-prefix" style="color:#b2b1b1; font-weight:bold; font-size:1.0em;">
@@ -90,9 +90,9 @@
 <hr style="margin-top:0.5em"/>
 
 <h2>Meine Studiengänge</h2>
-<div style="display:flex; gap:2em; flex-wrap:wrap; margin-bottom:2em;">
+<div id="private-programme-list" style="display:flex; gap:2em; flex-wrap:wrap; margin-bottom:2em;">
   {% for programme in private_programmes %}
-    <div class="programme-overview-card" style="border:1px solid #ccc; border-radius:8px; padding:0.7em 0.7em 0.5em 0.7em; width:220px; position:relative; display:flex; flex-direction:column; align-items:stretch; background:#fff;">
+    <div class="programme-overview-card" id="programme-{{ programme.id }}" style="border:1px solid #ccc; border-radius:8px; padding:0.7em 0.7em 0.5em 0.7em; width:220px; position:relative; display:flex; flex-direction:column; align-items:stretch; background:#fff;">
       <!-- Top row: name and type -->
       <div style="padding-bottom:0.2em; display:flex; flex-direction:column; gap:0.4em;">
         <span class="programme-prefix" style="color:#b2b1b1; font-weight:bold; font-size:1.0em;">
@@ -165,5 +165,34 @@
     <div><em style="color: #888">Keine privaten Studiengänge.</em></div>
   {% endfor %}
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  function setupProgrammeSortable(listId) {
+    const el = document.getElementById(listId);
+    if (el) {
+      Sortable.create(el, {
+        animation: 150,
+        handle: '.programme-overview-card',
+        draggable: '.programme-overview-card',
+        onEnd: function(evt) {
+          const order = Array.from(el.children).map(child => child.id.replace('programme-', ''));
+          fetch("{% url 'update_programme_order' %}", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({ order: order, list: listId })
+          });
+        }
+      });
+    }
+  }
+  setupProgrammeSortable('private-programme-list');
+  setupProgrammeSortable('public-programme-list');
+});
+</script>
 
 {% endblock %}

@@ -12,4 +12,5 @@ urlpatterns = [
     path("programme/<int:programme_id>/update_course_order/", login_required(views.update_course_order), name="update_course_order"),
     path('api/course/<int:course_id>/', login_required(views.course_detail_api), name='course_detail_api'),
     path("move_course/", views.move_course, name="move_course"),
+    path('update_programme_order/', views.update_programme_order, name='update_programme_order'),
 ]

@@ -138,7 +138,7 @@ window.STUDYPROGRAMMES_BASE_URL = "{{ STUDYPROGRAMMES_BASE_URL|escapejs }}";
                       </div>
                       <!-- End Action Buttons Container -->
                       <span style="color:#b2b1b1; font-weight:bold; font-size:0.95em;">
-                        {% if course.type == 'lecture' %}VL{% elif course.type == 'seminar' %}S{% elif course.type == 'tutorial' %}Ü{% elif course.type == 'fieldtrip' %}E{% elif course.type == 'thesis' %}T{% elif course.type == 'external' %}E{% endif %}
+                        {% if course.type == 'lecture' %}VL{% elif course.type == 'seminar' %}S{% elif course.type == 'tutorial' %}Ü{% elif course.type == 'fieldtrip' %}G{% elif course.type == 'thesis' %}T{% elif course.type == 'external' %}E{% endif %}
                       </span>
                       <strong>{{ course.name }}</strong><br>
                       {{ course.ects }} ECTS, {{ course.sws }} SWS <br>
