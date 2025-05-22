@@ -224,10 +224,6 @@ window.STUDYPROGRAMMES_BASE_URL = "{{ STUDYPROGRAMMES_BASE_URL|escapejs }}";
       </div>
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.7em;">
         <div>
-          {{ course_form.type.label_tag }}<br>
-          {{ course_form.type }}
-        </div>
-        <div>
           {{ course_form.ects.label_tag }}<br>
           {{ course_form.ects }}
         </div>
@@ -303,12 +299,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 const typeDefaults = {
-  seminar: {ects: 3, sws: 2, max_participants: 30},
+  seminar: {ects: 3, sws: 2, max_participants: 15},
   lecture: {ects: 3, sws: 2, max_participants: 600},
   tutorial: {ects: 3, sws: 2, max_participants: 30},
-  fieldtrip: {ects: 9, sws: 1, max_participants: 20},
+  fieldtrip: {ects: 9, sws: 1, max_participants: 15},
   thesis: {ects: 15, sws: 0, max_participants: 1},
-  external: {ects: 6, sws: 0, max_participants: 1},
+  external: {ects: 6, sws: 0, max_participants: 600},
 };
 
 function openModal(semesterId, courseType) {

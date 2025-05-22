@@ -5,9 +5,12 @@ from studyprogrammes.models import LogMessage
 from .models import Course, Programme, Semester
 
 DEFAULTS = {
-    'seminar': {'ects': 3, 'sws': 2, 'max_participants': 30},
-    'lecture': {'ects': 3, 'sws': 2, 'max_participants': 600},
-    # Add more as needed
+    'seminar':    {'ects': 3,  'sws': 2, 'max_participants': 15},
+    'lecture':    {'ects': 3,  'sws': 2, 'max_participants': 600},
+    'tutorial':   {'ects': 3,  'sws': 2, 'max_participants': 30},
+    'fieldtrip':  {'ects': 9,  'sws': 1, 'max_participants': 15},
+    'thesis':     {'ects': 15, 'sws': 0, 'max_participants': 1},
+    'external':   {'ects': 6,  'sws': 0, 'max_participants': 600},
 }
 
 class LogMessageForm(forms.ModelForm):
