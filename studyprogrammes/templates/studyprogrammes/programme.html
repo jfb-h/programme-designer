@@ -312,7 +312,7 @@ function openModal(semesterId, courseType) {
   document.getElementById('semesterInput').value = semesterId;
   // Always clear all course form fields for a new course
   document.getElementById('id_name').value = '';
-  document.getElementById('id_type').value = courseType || '';
+  document.getElementById('typeInput').value = courseType || '';
   document.getElementById('id_ects').value = '';
   document.getElementById('id_sws').value = '';
   document.getElementById('id_max_participants').value = '';
@@ -325,7 +325,7 @@ function openModal(semesterId, courseType) {
   // If a courseType is provided, set defaults for that type
   if (courseType) {
     document.getElementById('typeInput').value = courseType;
-    const typeField = document.getElementById('id_type');
+    const typeField = document.getElementById('typeInput');
     if (typeField) typeField.value = courseType;
     setCourseDefaults(courseType);
   }
@@ -348,12 +348,11 @@ function openEditCourseModal(courseId) {
     .then(response => response.json())
     .then(data => {
       document.getElementById('id_name').value = data.name;
-      document.getElementById('id_type').value = data.type;
+      document.getElementById('typeInput').value = data.type;
       document.getElementById('id_ects').value = data.ects;
       document.getElementById('id_sws').value = data.sws;
       document.getElementById('id_max_participants').value = data.max_participants;
       document.getElementById('semesterInput').value = data.semester;
-      document.getElementById('typeInput').value = data.type;
       document.getElementById('courseForm').action = "";
       document.getElementById('id_description').value = data.description || '';
       document.getElementById('editCourseIdInput').value = courseId;
