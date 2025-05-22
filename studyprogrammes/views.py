@@ -168,7 +168,14 @@ def programme_view(request, pk):
         elif 'add_semester' in request.POST:
             semester_form = SemesterForm(request.POST)
             if semester_form.is_valid():
-                semester_form.save()
+                # Set order to max+1 for this programme
+                programme_instance = programme
+                max_order = Semester.objects.filter(programme=programme_instance).aggregate(models.Max('order'))['order__max']
+                next_order = (max_order + 1) if max_order is not None else 0
+                semester = semester_form.save(commit=False)
+                semester.order = next_order
+                semester.programme = programme_instance
+                semester.save()
                 return redirect('programme', pk=programme.pk)
         elif 'delete_semester' in request.POST:
             semester_id = request.POST.get('delete_semester_id')
