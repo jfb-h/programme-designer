@@ -49,7 +49,7 @@ class Course(models.Model):
         ('MA', 'MA'),
     ]
     name = models.CharField(max_length=200)
-    ects = models.IntegerField()
+    ects = models.PositiveIntegerField()
     sws = models.DecimalField(max_digits=3, decimal_places=1)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     max_participants = models.PositiveIntegerField()

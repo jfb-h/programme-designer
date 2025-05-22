@@ -145,9 +145,9 @@ window.STUDYPROGRAMMES_BASE_URL = "{{ STUDYPROGRAMMES_BASE_URL|escapejs }}";
                       {% if course.min_classes and course.max_classes %}
                         <span style="font-size:0.95em; color:#888;">
                           {% if course.min_classes == course.max_classes %}
-                            {{ course.min_classes }} class{% if course.min_classes > 1 %}es{% endif %}
+                            {{ course.min_classes }} Kurs{% if course.min_classes > 1 %}e{% endif %}
                           {% else %}
-                            {{ course.min_classes }}-{{ course.max_classes }} classes
+                            {{ course.min_classes }}-{{ course.max_classes }} Kurse
                           {% endif %}
                         </span><br>
                       {% endif %}

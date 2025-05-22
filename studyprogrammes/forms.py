@@ -1,4 +1,5 @@
 from django import forms
+from django.core.validators import MinValueValidator
 
 from studyprogrammes.models import LogMessage
 from .models import Course, Programme, Semester
