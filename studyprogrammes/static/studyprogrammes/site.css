@@ -61,7 +61,7 @@ input[name=message] {
   background: #fef8c1;
 }
 .course-block[data-group="MA"] {
-  background: #ffe5e5;
+  background: #e5ffe7;
 }
 .course-block[data-group="WÜ"] {
   background: linear-gradient(90deg,#e5e4ff 0%, #fef8c1 100%);
