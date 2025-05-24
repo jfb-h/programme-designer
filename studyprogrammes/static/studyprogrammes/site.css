@@ -55,16 +55,16 @@ input[name=message] {
 
 /* Update group color backgrounds for new group names */
 .course-block[data-group="PG"] {
-  background: #9ceefc;
+  background: #e5e4ff;
 }
 .course-block[data-group="HG"] {
-  background: #faf1a1;
+  background: #fef8c1;
 }
 .course-block[data-group="MA"] {
-  background: #b1ffd3;
+  background: #ffe5e5;
 }
 .course-block[data-group="WÜ"] {
-  background: linear-gradient(90deg,#9ceefc 0%, #faf1a1 100%);
+  background: linear-gradient(90deg,#e5e4ff 0%, #fef8c1 100%);
 }
 .course-block {
   border: 1px solid #ccc;
