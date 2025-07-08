@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Programm bearbeiten: {{ programme_name|default:degree_type }}</h2>
+<button onclick="openModuleModal()" style="margin-bottom:1em;">Modul hinzufügen</button>
+
+<div style="display: flex; flex-direction: column; gap: 1.5em;">
+  {% for mc in module_cards %}
+    <div style="background: #f8f8f8; border: 1px solid #bbb; border-radius: 8px; padding: 1.2em 1.5em; min-width: 220px; position: relative;">
+      <div style="display:flex; align-items:center; gap:0.5em; margin-bottom:0.5em;">
+        <strong style="font-size:1.15em;">{{ mc.module.name }}</strong>
+        <a href="?edit_module={{ mc.module.id }}" title="Modul bearbeiten" style="color:#007bff; font-size:1.1em; text-decoration:none; margin-left:0.5em;" onclick="openEditModuleModal(event, '{{ mc.module.id }}')">&#9998;</a>
+      </div>
+      <div style="font-size:0.98em; color:#555; margin-bottom:0.7em;">{{ mc.module.description }}</div>
+      <div style="display:flex; flex-wrap:wrap; gap:0.7em;">
+        {% for course in mc.courses %}
+          <div style="background:#e0e0e0; border-radius:6px; padding:0.5em 1em; box-shadow: 0 1px 2px rgba(0,0,0,0.04); font-size:0.97em; min-width:120px;">
+            <div><strong>{{ course.name }}</strong></div>
+            <div style="font-size:0.93em; color:#666;">{{ course.description }}</div>
+            <div style="font-size:0.92em; color:#888; margin-top:0.2em;">
+              Semester: {{ course.semester }} | ECTS: {{ course.ects }} | SWS: {{ course.sws }}<br>
+              Typ: {{ course.type }} | Fachrichtung: {{ course.discipline }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% empty %}
+    <div style="color:#888; text-align:center;">Noch keine Module vorhanden.</div>
+  {% endfor %}
+</div>
+
+<!-- Modal for adding a module -->
+<div id="moduleModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:1000;">
+  <div style="background:#fff; margin:5vh auto; padding:2em; width:400px; border-radius:8px; position:relative;">
+    <button onclick="closeModuleModal()" style="position:absolute; top:10px; right:10px; font-size:1.5em; background:none; border:none; cursor:pointer;">&times;</button>
+    <h3>{% if edit_module %}Modul bearbeiten{% else %}Neues Modul anlegen{% endif %}</h3>
+    <form method="post">
+      {% csrf_token %}
+      {% if edit_module %}
+        <input type="hidden" name="edit_module_id" value="{{ edit_module.id }}">
+      {% endif %}
+      {{ module_form.as_p }}
+      {% if module_form.non_field_errors %}
+        <div style="color:red;">{{ module_form.non_field_errors }}</div>
+      {% endif %}
+      {{ course_formset.management_form }}
+      {% for form in course_formset %}
+        <div style="margin-bottom:1em; border:1px solid #eee; padding:0.5em; border-radius:4px;">
+          {{ form.course.label_tag }} {{ form.course }}
+          {{ form.semester.label_tag }} {{ form.semester }}
+        </div>
+      {% endfor %}
+      <button type="submit" name="{% if edit_module %}edit_module{% else %}add_module{% endif %}">Speichern</button>
+    </form>
+  </div>
+</div>
+<script>
+function openModuleModal() {
+  document.getElementById('moduleModal').style.display = 'block';
+}
+function closeModuleModal() {
+  document.getElementById('moduleModal').style.display = 'none';
+}
+function openEditModuleModal(event, moduleId) {
+  event.preventDefault();
+  const url = new URL(window.location.href);
+  url.searchParams.set('edit_module', moduleId);
+  window.location.href = url.toString();
+}
+window.addEventListener('DOMContentLoaded', function() {
+  if (document.querySelector('input[name="edit_module_id"]')) {
+    openModuleModal();
+  }
+});
+</script>
+{% endblock %}

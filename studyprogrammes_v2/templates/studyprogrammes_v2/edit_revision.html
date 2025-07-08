@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Revision bearbeiten: {{ revision.name }}</h2>
+<p>Autor: {{ revision.author.get_full_name|default:revision.author.username }}</p>
+<p>Erstellt am: {{ revision.created_at|date:"Y-m-d H:i" }}</p>
+
+<h3>Programme in dieser Revision</h3>
+<table style="margin: 2em auto; min-width: 500px; border-collapse: collapse; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.07);">
+    <tr style="background: #f0f0f0;">
+        <th style="padding: 0.7em 1em; border-bottom: 2px solid #ddd;">Typ</th>
+        <th style="padding: 0.7em 1em; border-bottom: 2px solid #ddd;">Status</th>
+        <th style="padding: 0.7em 1em; border-bottom: 2px solid #ddd;">Aktion</th>
+    </tr>
+    {% for entry in programmes %}
+    <tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 0.5em 1em;">{{ entry.display_name }}</td>
+        <td style="padding: 0.5em 1em;">
+            {% if entry.completed %}
+                <span style="color: green;">Vorhanden</span>
+            {% else %}
+                <span style="color: red;">Fehlt</span>
+            {% endif %}
+        </td>
+        <td style="padding: 0.5em 1em;">
+            {% if entry.completed %}
+                <a href="{% url 'v2_edit_programme' revision.id entry.degree_type %}">Bearbeiten</a>
+            {% else %}
+                <a href="{% url 'v2_edit_programme' revision.id entry.degree_type %}">Anlegen</a>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

@@ -25,6 +25,7 @@ urlpatterns = [
     path("login/", auth_views.LoginView.as_view(template_name="studyprogrammes/login.html"), name="login"),
     path("logout/", logout_then_login, name="logout"),
     path("", include("studyprogrammes.urls")),
-    path('admin/', admin.site.urls)
+    path('admin/', admin.site.urls),
+    path('v2/', include('studyprogrammes_v2.urls')),
 ]
 urlpatterns += staticfiles_urlpatterns()

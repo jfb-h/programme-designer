@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="text-align:center;">Kurse (Pool)</h2>
+<div style="display: flex; flex-direction: column; align-items: center;">
+  <button onclick="openModal()" style="margin-bottom: 1.5em; padding: 0.5em 1.2em; border-radius: 5px; border: 1px solid #888; background: #f8f8f8; cursor: pointer;">Neuen Kurs anlegen</button>
+
+  <table style="border-collapse: collapse; min-width: 900px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.07);">
+    <tr style="background: #f0f0f0;">
+      <th style="padding: 0.7em 1em; border-bottom: 2px solid #ddd;">Name</th>
+      <th style="padding: 0.7em 1em; border-bottom: 2px solid #ddd;">Beschreibung</th>
+      <th style="padding: 0.7em 1em; border-bottom: 2px solid #ddd;">Typ</th>
+      <th style="padding: 0.7em 1em; border-bottom: 2px solid #ddd;">Fachrichtung</th>
+      <th style="padding: 0.7em 1em; border-bottom: 2px solid #ddd;">ECTS</th>
+      <th style="padding: 0.7em 1em; border-bottom: 2px solid #ddd;">SWS</th>
+      <th style="padding: 0.7em 1em; border-bottom: 2px solid #ddd;">Max. Teilnehmer</th>
+      <th style="padding: 0.7em 1em; border-bottom: 2px solid #ddd;">Aktionen</th>
+    </tr>
+    {% for course in courses %}
+    <tr style="border-bottom: 1px solid #eee;">
+      <td style="padding: 0.5em 1em;">{{ course.name }}</td>
+      <td style="padding: 0.5em 1em;">{{ course.description }}</td>
+      <td style="padding: 0.5em 1em;">{{ course.get_type_display }}</td>
+      <td style="padding: 0.5em 1em;">{{ course.get_discipline_display }}</td>
+      <td style="padding: 0.5em 1em; text-align: center;">{{ course.ects }}</td>
+      <td style="padding: 0.5em 1em; text-align: center;">{{ course.sws }}</td>
+      <td style="padding: 0.5em 1em; text-align: center;">{{ course.max_participants }}</td>
+      <td style="padding: 0.5em 1em; text-align: center;">
+        <button type="button" onclick="openEditModal({{ course.id }})" style="padding: 0.3em 0.8em; border-radius: 4px; border: 1px solid #bbb; background: #f4f4f4; cursor: pointer;">Bearbeiten</button>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<!-- Modal -->
+<div id="modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:1000;">
+  <div style="background:#fff; margin:5vh auto; padding:2em; width:400px; border-radius:8px; position:relative; box-shadow:0 4px 24px rgba(0,0,0,0.13);">
+    <button onclick="closeModal()" style="position:absolute; top:10px; right:10px; font-size:1.5em; background:none; border:none; cursor:pointer;">&times;</button>
+    <h3 style="margin-top:0;">{% if edit_course %}Kurs bearbeiten{% else %}Neuen Kurs anlegen{% endif %}</h3>
+    <form method="post">
+      {% csrf_token %}
+      {% if edit_course %}
+        <input type="hidden" name="edit_course_id" value="{{ edit_course.id }}">
+      {% endif %}
+      {{ form.as_p }}
+      <button type="submit" style="margin-top:1em; padding:0.5em 1.2em; border-radius:5px; border:1px solid #888; background:#f8f8f8; cursor:pointer;">Speichern</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function openModal() {
+  document.getElementById('modal').style.display = 'block';
+}
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+}
+function openEditModal(id) {
+  window.location = "?edit=" + id;
+}
+window.onload = function() {
+  {% if edit_course %}
+    openModal();
+  {% endif %}
+}
+</script>
+{% endblock %}
