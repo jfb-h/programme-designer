@@ -260,14 +260,14 @@ def programme_view(request, pk):
         ects_ex_target = 0
         ects_ma_target = 0
     else:
-        if programme.school_type != "high":
+        if programme.school_type == "high":
             ects_reg_target = 15
             ects_hg_target = 15
             ects_pg_target = 15
             ects_di_target = 8
             ects_ex_target = 15
             ects_ma_target = 10
-        elif programme.school_type != "elementary":
+        elif programme.school_type == "elementary":
             ects_reg_target = 15
             ects_hg_target = 10
             ects_pg_target = 10

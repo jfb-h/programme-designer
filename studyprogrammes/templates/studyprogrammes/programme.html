@@ -53,12 +53,18 @@ window.STUDYPROGRAMMES_BASE_URL = "{{ STUDYPROGRAMMES_BASE_URL|escapejs }}";
         <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS WiSe</th><td style="padding:0.4em 0;">{{ sws_odd_min|floatformat:0 }} - {{ sws_odd_max|floatformat:0 }}</td></tr>
         <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS SoSe</th><td style="padding:0.4em 0;">{{ sws_even_min|floatformat:0 }} - {{ sws_even_max|floatformat:0 }}</td></tr>
         {%if programme.degree_type == 'teaching' %} 
-          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS HG</th><td style="padding:0.4em 0;">{{ ects_hg|floatformat:0 }} ({{ ects_hg_target|floatformat:0 }})</td></tr>
-          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS PG</th><td style="padding:0.4em 0;">{{ ects_pg|floatformat:0 }} ({{ ects_pg_target|floatformat:0 }})</td></tr>
-          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS Regional</th><td style="padding:0.4em 0;">{{ ects_reg|floatformat:0 }} ({{ ects_reg_target|floatformat:0 }})</td></tr>
-          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS Didaktik</th><td style="padding:0.4em 0;">{{ ects_di|floatformat:0 }} ({{ ects_di_target|floatformat:0 }})</td></tr>
-          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS Methoden</th><td style="padding:0.4em 0;">{{ ects_ma|floatformat:0 }} ({{ ects_ma_target|floatformat:0 }})</td></tr>
-          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS Exkursion</th><td style="padding:0.4em 0;">{{ ects_ex|floatformat:0 }} ({{ ects_ex_target|floatformat:0 }})</td></tr>
+          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS HG</th>
+            <td style="padding:0.4em 0;{% if ects_hg|default:0 < ects_hg_target|default:0 %} color:red;{% endif %}">{{ ects_hg|floatformat:0 }} ({{ ects_hg_target|floatformat:0 }})</td></tr>
+          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS PG</th>
+            <td style="padding:0.4em 0;{% if ects_pg|default:0 < ects_pg_target|default:0 %} color:red;{% endif %}">{{ ects_pg|floatformat:0 }} ({{ ects_pg_target|floatformat:0 }})</td></tr>
+          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS Regional</th>
+            <td style="padding:0.4em 0;{% if ects_reg|default:0 < ects_reg_target|default:0 %} color:red;{% endif %}">{{ ects_reg|floatformat:0 }} ({{ ects_reg_target|floatformat:0 }})</td></tr>
+          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS Didaktik</th>
+            <td style="padding:0.4em 0;{% if ects_di|default:0 < ects_di_target|default:0 %} color:red;{% endif %}">{{ ects_di|floatformat:0 }} ({{ ects_di_target|floatformat:0 }})</td></tr>
+          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS Methoden</th>
+            <td style="padding:0.4em 0;{% if ects_ma|default:0 < ects_ma_target|default:0 %} color:red;{% endif %}">{{ ects_ma|floatformat:0 }} ({{ ects_ma_target|floatformat:0 }})</td></tr>
+          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS Exkursion</th>
+            <td style="padding:0.4em 0;{% if ects_ex|default:0 < ects_ex_target|default:0 %} color:red;{% endif %}">{{ ects_ex|floatformat:0 }} ({{ ects_ex_target|floatformat:0 }})</td></tr>
         {% endif %}
       </tbody>
     </table>

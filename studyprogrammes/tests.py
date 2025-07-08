@@ -21,7 +21,6 @@ class TestLogMessageModel(TestCase):
         self.assertEqual(str(self.log_message), expected_object_name)
 
 
-
 class TestViews(TestCase):
 
     def setUp(self):
