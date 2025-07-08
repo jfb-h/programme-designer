@@ -52,6 +52,14 @@ window.STUDYPROGRAMMES_BASE_URL = "{{ STUDYPROGRAMMES_BASE_URL|escapejs }}";
         <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS Sonst.</th><td style="padding:0.4em 0;">{{ sws_other_min|floatformat:0 }} - {{ sws_other_max|floatformat:0 }}</td></tr>
         <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS WiSe</th><td style="padding:0.4em 0;">{{ sws_odd_min|floatformat:0 }} - {{ sws_odd_max|floatformat:0 }}</td></tr>
         <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS SoSe</th><td style="padding:0.4em 0;">{{ sws_even_min|floatformat:0 }} - {{ sws_even_max|floatformat:0 }}</td></tr>
+        {%if programme.degree_type == 'teaching' %} 
+          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS HG</th><td style="padding:0.4em 0;">{{ ects_hg|floatformat:0 }}</td></tr>
+          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS PG</th><td style="padding:0.4em 0;">{{ ects_pg|floatformat:0 }}</td></tr>
+          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS Regional</th><td style="padding:0.4em 0;">{{ ects_reg|floatformat:0 }}</td></tr>
+          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS Didaktik</th><td style="padding:0.4em 0;">{{ ects_di|floatformat:0 }}</td></tr>
+          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS Methoden</th><td style="padding:0.4em 0;">{{ ects_ma|floatformat:0 }}</td></tr>
+          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS Exkursion</th><td style="padding:0.4em 0;">{{ ects_ex|floatformat:0 }}</td></tr>
+        {% endif %}
       </tbody>
     </table>
     <hr style="border:none; border-top:1.5px solid #bbb; margin:1em 0; width:100%;"/>

@@ -62,10 +62,11 @@ class CourseForm(forms.ModelForm):
 class ProgrammeForm(forms.ModelForm):
     class Meta:
         model = Programme
-        fields = ["name", "degree_type"]
+        fields = ["name", "degree_type", "school_type"]
         labels = {
             "name": "Name",
             "degree_type": "Abschlussart",
+            "school_type": "Schulart",
         }
 
 class SemesterForm(forms.ModelForm):

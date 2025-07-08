@@ -12,16 +12,26 @@ class Programme(models.Model):
     DEGREE_CHOICES = [
         ('bachelor', "Bachelor"),
         ('master', "Master"),
-        ('teaching', "Lehramt"),
+        ('teaching', "Staatsexamen"),
+    ]
+    SCHOOL_CHOICES = [
+        ("none", "Keine (BA oder MA)"),
+        ("elementary", "Grund-/Mittel-/Realschule"),
+        ("high", "Gymnasium"),
+        ("didactic", "Didaktikfach"),
     ]
     name = models.CharField(max_length=200)
     degree_type = models.CharField(max_length=20, choices=DEGREE_CHOICES)
+    school_type = models.CharField(max_length=40, choices=SCHOOL_CHOICES)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='programmes', null=True, blank=True)
     is_public = models.BooleanField(default=False)
     order = models.PositiveIntegerField(default=0, db_index=True)
-
     def __str__(self):
-        return f"{self.name} ({self.degree_type})"
+        if self.degree_type == 'teaching':
+            school_type_str = ": "+self.school_type
+        else:
+            school_type_str = ""
+        return f"{self.name} ({self.degree_type}{school_type_str})"
 
 class Semester(models.Model):
     programme = models.ForeignKey(Programme, on_delete=models.CASCADE, related_name='semesters')
@@ -47,6 +57,9 @@ class Course(models.Model):
         ('HG', 'HG'),
         ('WÜ', 'WÜ'),
         ('MA', 'MA'),
+        ('RG', 'RG'),
+        ('DI', 'DI'),
+        ('EX', 'EX'),
     ]
     name = models.CharField(max_length=200)
     ects = models.PositiveIntegerField()

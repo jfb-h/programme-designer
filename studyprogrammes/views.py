@@ -67,6 +67,13 @@ def programme_view(request, pk):
     sws_odd_max = 0
     sws_even_min = 0
     sws_even_max = 0
+    # Teacher programms
+    ects_pg = 0
+    ects_hg = 0
+    ects_rg = 0
+    ects_di = 0
+    ects_ex = 0
+    ects_ma = 0
     for idx, semester in enumerate(semesters, 1):
         courses = list(getattr(semester, 'courses').all())
         ects_sum = sum(c.ects for c in courses)
@@ -74,6 +81,14 @@ def programme_view(request, pk):
             'lectures': [],
             'seminars_tutorials': [],
             'fieldtrips_thesis_external': [],
+        }
+        courses_by_group = {
+            'pg': [],
+            'hg': [],
+            'di': [],
+            'ex': [],
+            'rg': [],
+            'ma': [],
         }
         expected_students = expected_students_lookup.get(idx, {'min': '', 'max': ''})
         expected_sws_min = 0
@@ -107,11 +122,33 @@ def programme_view(request, pk):
                 courses_by_type['seminars_tutorials'].append(c)
             elif c.type in ('fieldtrip', 'thesis', 'external'):
                 courses_by_type['fieldtrips_thesis_external'].append(c)
+            if c.group == 'PG':
+                courses_by_group['pg'].append(c)
+                ects_pg += c.ects
+            elif c.group == 'HG':
+                courses_by_group['hg'].append(c)
+                ects_hg += c.ects
+            elif c.group == 'DI':
+                courses_by_group['di'].append(c)
+                ects_di += c.ects
+            elif c.group == 'EX':
+                courses_by_group['ex'].append(c)
+                ects_ex += c.ects
+            elif c.group == 'RG':
+                courses_by_group['rg'].append(c)
+                ects_rg += c.ects
+            elif c.group == 'MA':
+                courses_by_group['ma'].append(c)
+                ects_ma += c.ects
+            
+            
+            
         semester_contexts.append({
             'id': semester.pk,
             'order': getattr(semester, 'order', idx-1),
             'ects_sum': ects_sum,
             'courses_by_type': courses_by_type,
+            'courses_by_group': courses_by_group,
             'number': idx,
             'expected_students': expected_students,
             'expected_sws_min': expected_sws_min,
@@ -236,6 +273,12 @@ def programme_view(request, pk):
         'sws_seminars_max': sws_groups_max['seminars_tutorials'],
         'sws_other_min': sws_groups_min['other'],
         'sws_other_max': sws_groups_max['other'],
+        'ects_reg': ects_rg,
+        'ects_hg': ects_hg,
+        'ects_pg': ects_pg,
+        'ects_di': ects_di,
+        'ects_ex': ects_ex,
+        'ects_ma': ects_ma,
     }
     return render(request, "studyprogrammes/programme.html", context)
 
@@ -323,6 +366,7 @@ def programmes_view(request):
                 new_prog = Programme.objects.create(
                     name=f"{orig.name} (Copy)",
                     degree_type=orig.degree_type,
+                    school_type=orig.school_type,
                     user=request.user,
                     is_public=False  # Always create as private
                 )
