@@ -252,6 +252,35 @@ def programme_view(request, pk):
                         sws_groups_max[group_key] += c.max_classes * float(c.sws)
                     except Exception:
                         pass
+    if programme.degree_type != "teaching":
+        ects_reg_target = 0
+        ects_hg_target = 0
+        ects_pg_target = 0
+        ects_di_target = 0
+        ects_ex_target = 0
+        ects_ma_target = 0
+    else:
+        if programme.school_type != "high":
+            ects_reg_target = 15
+            ects_hg_target = 15
+            ects_pg_target = 15
+            ects_di_target = 8
+            ects_ex_target = 15
+            ects_ma_target = 10
+        elif programme.school_type != "elementary":
+            ects_reg_target = 15
+            ects_hg_target = 10
+            ects_pg_target = 10
+            ects_di_target = 10
+            ects_ex_target = 10
+            ects_ma_target = 0
+        else:
+            ects_reg_target = 15
+            ects_hg_target = 10
+            ects_pg_target = 10
+            ects_di_target = 10
+            ects_ex_target = 10
+            ects_ma_target = 0
     context = {
         "programme": programme,
         "semesters": semester_contexts,
@@ -279,6 +308,12 @@ def programme_view(request, pk):
         'ects_di': ects_di,
         'ects_ex': ects_ex,
         'ects_ma': ects_ma,
+        'ects_reg_target': ects_reg_target,
+        'ects_hg_target': ects_hg_target,
+        'ects_pg_target': ects_pg_target,
+        'ects_di_target': ects_di_target,
+        'ects_ex_target': ects_ex_target,
+        'ects_ma_target': ects_ma_target,
     }
     return render(request, "studyprogrammes/programme.html", context)
 
