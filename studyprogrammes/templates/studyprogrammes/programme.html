@@ -47,12 +47,18 @@ window.STUDYPROGRAMMES_BASE_URL = "{{ STUDYPROGRAMMES_BASE_URL|escapejs }}";
     <table style="width:100%; max-width:340px; font-size:1.1em; color:#444; border-collapse:collapse; text-align:left; margin-left:0;">
       <tbody>
         <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS Gesamt</th><td style="padding:0.4em 0;">{{ total_sws_min|floatformat:0 }} - {{ total_sws_max|floatformat:0 }}</td></tr>
+        {%if programme.degree_type == 'teaching' %} 
+          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS Deputat</th><td style="padding:0.4em 0;">{{ total_sws_dep_min|floatformat:0 }} - {{ total_sws_dep_max|floatformat:0 }}</td></tr>
+        {% endif %}
         <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS VL</th><td style="padding:0.4em 0;">{{ sws_lectures_min|floatformat:0 }} - {{ sws_lectures_max|floatformat:0 }}</td></tr>
         <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS S/Ü</th><td style="padding:0.4em 0;">{{ sws_seminars_min|floatformat:0 }} - {{ sws_seminars_max|floatformat:0 }}</td></tr>
         <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS Sonst.</th><td style="padding:0.4em 0;">{{ sws_other_min|floatformat:0 }} - {{ sws_other_max|floatformat:0 }}</td></tr>
         <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS WiSe</th><td style="padding:0.4em 0;">{{ sws_odd_min|floatformat:0 }} - {{ sws_odd_max|floatformat:0 }}</td></tr>
         <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS SoSe</th><td style="padding:0.4em 0;">{{ sws_even_min|floatformat:0 }} - {{ sws_even_max|floatformat:0 }}</td></tr>
-        {%if programme.degree_type == 'teaching' %} 
+        {%if programme.degree_type == 'teaching' %}
+          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS WiSe Deputat</th><td style="padding:0.4em 0;">{{ sws_odd_dep_min|floatformat:0 }} - {{ sws_odd_dep_max|floatformat:0 }}</td></tr>
+          <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">SWS SoSe Deputat</th><td style="padding:0.4em 0;">{{ sws_even_dep_min|floatformat:0 }} - {{ sws_even_dep_max|floatformat:0 }}</td></tr>
+        
           <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS HG</th>
             <td style="padding:0.4em 0;{% if ects_hg|default:0 < ects_hg_target|default:0 %} color:red;{% endif %}">{{ ects_hg|floatformat:0 }} ({{ ects_hg_target|floatformat:0 }})</td></tr>
           <tr><th style="padding:0.4em 0.7em 0.4em 0; font-weight:normal;">ECTS PG</th>
@@ -104,6 +110,10 @@ window.STUDYPROGRAMMES_BASE_URL = "{{ STUDYPROGRAMMES_BASE_URL|escapejs }}";
             <span class="programme-stat-pill-label">SWS</span>
             <span class="programme-stat-pill-value">{{ semester.expected_sws_min|floatformat:1 }} - {{ semester.expected_sws_max|floatformat:1 }}</span>
           </span>
+          <span class="programme-stat-pill">
+            <span class="programme-stat-pill-label">SWS (Deputat)</span>
+            <span class="programme-stat-pill-value">{{ semester.expected_sws_dep_min|floatformat:1 }} - {{ semester.expected_sws_dep_max|floatformat:1 }}</span>
+          </span>
         </div>
         <!-- Course Groups -->
         {% for group in course_type_groups %}
@@ -154,7 +164,7 @@ window.STUDYPROGRAMMES_BASE_URL = "{{ STUDYPROGRAMMES_BASE_URL|escapejs }}";
                       <span style="color:#b2b1b1; font-weight:bold; font-size:0.95em;">
                         {% if course.type == 'lecture' %}VL{% elif course.type == 'seminar' %}S{% elif course.type == 'tutorial' %}Ü{% elif course.type == 'fieldtrip' %}G{% elif course.type == 'thesis' %}T{% elif course.type == 'external' %}E{% endif %}
                       </span>
-                      <strong>{{ course.name }}</strong><br>
+                      <strong>{{ course.name }}{% if not course.count_sws %} (polyvalent) {% endif %}</strong><br>
                       {{ course.ects }} ECTS, {{ course.sws }} SWS <br>
                       {% if course.min_classes and course.max_classes %}
                         <span style="font-size:0.95em; color:#888;">
@@ -248,6 +258,10 @@ window.STUDYPROGRAMMES_BASE_URL = "{{ STUDYPROGRAMMES_BASE_URL|escapejs }}";
         <div>
           {{ course_form.max_participants.label_tag }}<br>
           {{ course_form.max_participants }}
+        </div>
+        <div>
+          {{ course_form.count_sws.label_tag }}<br>
+          {{ course_form.count_sws }}
         </div>
       </div>
       {{ course_form.semester.as_hidden }}
@@ -365,6 +379,7 @@ function openEditCourseModal(courseId) {
       document.getElementById('typeInput').value = data.type;
       document.getElementById('id_ects').value = data.ects;
       document.getElementById('id_sws').value = data.sws;
+      document.getElementById('id_count_sws').value = data.count_sws;
       document.getElementById('id_max_participants').value = data.max_participants;
       document.getElementById('semesterInput').value = data.semester;
       document.getElementById('courseForm').action = "";

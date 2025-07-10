@@ -35,6 +35,7 @@ class CourseForm(forms.ModelForm):
             "max_participants",
             "semester",
             "description",
+            "count_sws",
         ]
         labels = {
             "name": "Kursname",
@@ -45,6 +46,7 @@ class CourseForm(forms.ModelForm):
             "max_participants": "Maximale Teilnehmer",
             "semester": "Semester",
             "description": "Beschreibung",
+            "count_sws": " SWS berücksichtigen (bei polyvalenten Veranstaltungen)",
         }
         widgets = {
             "description": forms.Textarea(attrs={"rows": 3}),

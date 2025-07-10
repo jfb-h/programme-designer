@@ -40,6 +40,7 @@ def log_message(request):
 from django.shortcuts import get_object_or_404, redirect
 from .models import Course
 
+
 def programme_view(request, pk):
     programme = get_object_or_404(Programme, pk=pk)
     semesters = Semester.objects.filter(programme=programme).prefetch_related(
@@ -60,6 +61,8 @@ def programme_view(request, pk):
     total_ects = 0
     total_sws_min = 0
     total_sws_max = 0
+    total_sws_dep_min = 0
+    total_sws_dep_max = 0
     # Calculate ECTS for all, winter (odd), and summer (even) semesters
     ects_winter = 0
     ects_summer = 0
@@ -67,6 +70,10 @@ def programme_view(request, pk):
     sws_odd_max = 0
     sws_even_min = 0
     sws_even_max = 0
+    sws_odd_dep_min = 0
+    sws_odd_dep_max = 0
+    sws_even_dep_min = 0
+    sws_even_dep_max = 0
     # Teacher programms
     ects_pg = 0
     ects_hg = 0
@@ -74,6 +81,7 @@ def programme_view(request, pk):
     ects_di = 0
     ects_ex = 0
     ects_ma = 0
+    
     for idx, semester in enumerate(semesters, 1):
         courses = list(getattr(semester, 'courses').all())
         ects_sum = sum(c.ects for c in courses)
@@ -93,6 +101,9 @@ def programme_view(request, pk):
         expected_students = expected_students_lookup.get(idx, {'min': '', 'max': ''})
         expected_sws_min = 0
         expected_sws_max = 0
+        expected_sws_dep_min = 0
+        expected_sws_dep_max = 0
+        
         for c in courses:
             min_classes = max_classes = None
             if expected_students['min'] and expected_students['max'] and c.max_participants:
@@ -111,11 +122,21 @@ def programme_view(request, pk):
                     expected_sws_min += min_classes * float(c.sws)
                 except Exception:
                     pass
+                if c.count_sws:
+                    try:
+                        expected_sws_dep_min += min_classes * float(c.sws)
+                    except Exception:
+                        pass
             if max_classes and c.sws:
                 try:
                     expected_sws_max += max_classes * float(c.sws)
                 except Exception:
                     pass
+                if c.count_sws:
+                    try:
+                        expected_sws_dep_max += max_classes * float(c.sws)
+                    except Exception:
+                        pass
             if c.type == 'lecture':
                 courses_by_type['lectures'].append(c)
             elif c.type in ('seminar', 'tutorial'):
@@ -153,18 +174,26 @@ def programme_view(request, pk):
             'expected_students': expected_students,
             'expected_sws_min': expected_sws_min,
             'expected_sws_max': expected_sws_max,
+            'expected_sws_dep_min': expected_sws_dep_min,
+            'expected_sws_dep_max': expected_sws_dep_max,
         })
         total_ects += ects_sum
         total_sws_min += expected_sws_min
         total_sws_max += expected_sws_max
+        total_sws_dep_min += expected_sws_dep_min
+        total_sws_dep_max += expected_sws_dep_max
         if idx % 2 == 1:
             ects_winter += ects_sum
             sws_odd_min += expected_sws_min
             sws_odd_max += expected_sws_max
+            sws_odd_dep_min += expected_sws_dep_min
+            sws_odd_dep_max += expected_sws_dep_max
         else:
             ects_summer += ects_sum
             sws_even_min += expected_sws_min
             sws_even_max += expected_sws_max
+            sws_even_dep_min += expected_sws_dep_min
+            sws_even_dep_max += expected_sws_dep_max
     course_form = CourseForm(request.POST or None)
     semester_form = SemesterForm(initial={'programme': programme})
     if request.method == "POST":
@@ -199,7 +228,8 @@ def programme_view(request, pk):
                     max_participants=orig.max_participants,
                     semester=orig.semester,
                     description=orig.description,
-                    order=max_order + 1
+                    order=max_order + 1,
+                    count_sws = orig.count_sws,
                 )
             return redirect(request.path)
         elif 'add_semester' in request.POST:
@@ -290,12 +320,18 @@ def programme_view(request, pk):
         'total_ects': total_ects,
         'total_sws_min': total_sws_min,
         'total_sws_max': total_sws_max,
+        'total_sws_dep_min': total_sws_dep_min,
+        'total_sws_dep_max': total_sws_dep_max,
         'ects_winter': ects_winter,
         'ects_summer': ects_summer,
         'sws_odd_min': sws_odd_min,
         'sws_odd_max': sws_odd_max,
         'sws_even_min': sws_even_min,
         'sws_even_max': sws_even_max,
+        'sws_odd_dep_min': sws_odd_dep_min,
+        'sws_odd_dep_max': sws_odd_dep_max,
+        'sws_even_dep_min': sws_even_dep_min,
+        'sws_even_dep_max': sws_even_dep_max,
         'sws_lectures_min': sws_groups_min['lectures'],
         'sws_lectures_max': sws_groups_max['lectures'],
         'sws_seminars_min': sws_groups_min['seminars_tutorials'],
@@ -337,6 +373,8 @@ def programmes_view(request):
         total_ects = 0
         total_sws_min = 0
         total_sws_max = 0
+        total_sws_dep_min = 0
+        total_sws_dep_max = 0
         sws_groups_min = {'lectures': 0.0, 'seminars_tutorials': 0.0, 'other': 0.0}
         sws_groups_max = {'lectures': 0.0, 'seminars_tutorials': 0.0, 'other': 0.0}
         for idx, semester in enumerate(semesters, 1):
@@ -346,6 +384,8 @@ def programmes_view(request):
             expected_students = ProgrammeExpectedStudents.objects.filter(degree_type=prog.degree_type, semester=idx).first()
             expected_sws_min = {'lectures': 0.0, 'seminars_tutorials': 0.0, 'other': 0.0}
             expected_sws_max = {'lectures': 0.0, 'seminars_tutorials': 0.0, 'other': 0.0}
+            expected_sws_dep_min = {'lectures': 0.0, 'seminars_tutorials': 0.0, 'other': 0.0}
+            expected_sws_dep_max = {'lectures': 0.0, 'seminars_tutorials': 0.0, 'other': 0.0}
             for c in courses:
                 min_classes = max_classes = None
                 if expected_students and c.max_participants:
@@ -367,20 +407,34 @@ def programmes_view(request):
                         expected_sws_min[group] += min_classes * float(c.sws)
                     except Exception:
                         pass
+                    if c.count_sws:
+                        try:
+                            expected_sws_dep_min[group] += min_classes * float(c.sws)
+                        except Exception:
+                            pass
                 if max_classes and c.sws:
                     try:
                         expected_sws_max[group] += max_classes * float(c.sws)
                     except Exception:
                         pass
+                    if c.count_sws:
+                        try:
+                            expected_sws_dep_max[group] += max_classes * float(c.sws)
+                        except Exception:
+                            pass
             for group in ['lectures', 'seminars_tutorials', 'other']:
                 sws_groups_min[group] += expected_sws_min[group]
                 sws_groups_max[group] += expected_sws_max[group]
             total_sws_min += sum(expected_sws_min.values())
             total_sws_max += sum(expected_sws_max.values())
+            total_sws_dep_min += sum(expected_sws_dep_min.values())
+            total_sws_dep_max += sum(expected_sws_dep_max.values())
         programme_stats[prog.pk] = {
             'total_ects': total_ects,
             'total_sws_min': total_sws_min,
             'total_sws_max': total_sws_max,
+            'total_sws_dep_min': total_sws_dep_min,
+            'total_sws_dep_max': total_sws_dep_max,
             'sws_lectures_min': sws_groups_min['lectures'],
             'sws_lectures_max': sws_groups_max['lectures'],
             'sws_seminars_min': sws_groups_min['seminars_tutorials'],
@@ -423,7 +477,8 @@ def programmes_view(request):
                             max_participants=course.max_participants,
                             semester=new_sem,
                             description=course.description,
-                            order=course.order
+                            order=course.order,
+                            count_sws = course.count_sws
                         )
             return redirect('programmes')
         elif "publish_programme" in request.POST:
@@ -498,6 +553,7 @@ def course_detail_api(request, course_id):
         "max_participants": course.max_participants,
         "semester": course.semester_id,
         "description": course.description,
+        "count_sws": course.count_sws,
     })
 
 def logout_then_login(request):

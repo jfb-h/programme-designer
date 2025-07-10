@@ -70,6 +70,7 @@ class Course(models.Model):
     semester = models.ForeignKey(Semester, on_delete=models.CASCADE, related_name='courses')
     order = models.PositiveIntegerField(default=0)
     description = models.TextField(blank=True, null=True)
+    count_sws = models.BooleanField(default = True)
 
     class Meta:
         ordering = ['order', 'id']

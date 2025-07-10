@@ -45,6 +45,10 @@
             <td style="color:#888; border-top:1px; padding:0 0.3em 0 0;">SWS Gesamt</td>
             <td style="text-align:right;">{{ programme_stats|dict_get:programme.id|dict_get:'total_sws_min'|default_if_none:0|floatformat:0 }} - {{ programme_stats|dict_get:programme.id|dict_get:'total_sws_max'|default_if_none:0|floatformat:0 }}</td>
           </tr>
+           <tr>
+            <td style="color:#888; border-top:1px; padding:0 0.3em 0 0;">SWS Deputat</td>
+            <td style="text-align:right;">{{ programme_stats|dict_get:programme.id|dict_get:'total_sws_dep_min'|default_if_none:0|floatformat:0 }} - {{ programme_stats|dict_get:programme.id|dict_get:'total_sws_dep_max'|default_if_none:0|floatformat:0 }}</td>
+          </tr>
           <tr>
             <td style="color:#888; border-top:1px; padding:0 0.3em 0 0;">SWS VL</td>
             <td style="text-align:right;">{{ programme_stats|dict_get:programme.id|dict_get:'sws_lectures_min'|default_if_none:0|floatformat:0 }} - {{ programme_stats|dict_get:programme.id|dict_get:'sws_lectures_max'|default_if_none:0|floatformat:0 }}</td>
