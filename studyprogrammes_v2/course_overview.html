@@ -1,27 +1,6 @@
 {% extends "base.html" %}
-{% load dict_extras %}
 {% block content %}
 <style>
-/* Force override Tailwind CSS for form inputs */
-input[type="text"], 
-textarea, 
-input[type="number"],
-select {
-  border: 2px solid #9ca3af !important;
-  border-radius: 0.5rem !important;
-  padding: 0.5rem !important;
-  transition: all 0.2s ease-in-out !important;
-}
-
-input[type="text"]:focus,
-textarea:focus,
-input[type="number"]:focus,
-select:focus {
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 1px #3b82f6 !important;
-  outline: none !important;
-}
-
 /* Custom styling for radio buttons and checkboxes */
 input[type="radio"], input[type="checkbox"] {
   width: 1rem;
@@ -59,7 +38,21 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
   background-color: #f9fafb;
 }
 
-/* Course-specific semester radio button styling */
+/* Force better borders on form inputs - override Tailwind defaults */
+input[type="text"], textarea, input[type="number"] {
+  border: 2px solid #9ca3af !important;
+  border-radius: 0.5rem !important;
+  padding: 0.5rem !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+input[type="text"]:focus, textarea:focus, input[type="number"]:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 1px #2563eb !important;
+  outline: none !important;
+}
+
+/* Connected semester radio buttons */
 .semester-radio-container {
   position: relative;
   display: flex;
@@ -181,149 +174,48 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
 
   <!-- Course Table -->
   <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
-    <table class="min-w-full divide-y divide-gray-300 table-fixed">
+    <table class="min-w-full divide-y divide-gray-300">
       <thead class="bg-gray-50">
         <tr>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
-            <a href="?sort=name&order={% if current_sort == 'name' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="group inline-flex items-center hover:text-gray-900">
-              Name
-              {% if current_sort == 'name' %}
-                {% if current_order == 'asc' %}
-                  <svg class="ml-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h5a1 1 0 000-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM13 16a1 1 0 102 0v-5.586l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 101.414 1.414L13 10.414V16z"/>
-                  </svg>
-                {% else %}
-                  <svg class="ml-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h7a1 1 0 100-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/>
-                  </svg>
-                {% endif %}
-              {% else %}
-                <svg class="ml-2 h-4 w-4 text-gray-300 group-hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/>
-                </svg>
-              {% endif %}
-            </a>
-          </th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Beschreibung</th>
-          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
-            <a href="?sort=course_type&order={% if current_sort == 'course_type' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="group inline-flex items-center hover:text-gray-900">
-              Typ
-              {% if current_sort == 'course_type' %}
-                {% if current_order == 'asc' %}
-                  <svg class="ml-1 h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h5a1 1 0 000-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM13 16a1 1 0 102 0v-5.586l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 101.414 1.414L13 10.414V16z"/>
-                  </svg>
-                {% else %}
-                  <svg class="ml-1 h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h7a1 1 0 100-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/>
-                  </svg>
-                {% endif %}
-              {% else %}
-                <svg class="ml-1 h-4 w-4 text-gray-300 group-hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/>
-                </svg>
-              {% endif %}
-            </a>
-          </th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-            <a href="?sort=discipline&order={% if current_sort == 'discipline' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="group inline-flex items-center hover:text-gray-900">
-              Fach
-              {% if current_sort == 'discipline' %}
-                {% if current_order == 'asc' %}
-                  <svg class="ml-1 h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h5a1 1 0 000-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM13 16a1 1 0 102 0v-5.586l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 101.414 1.414L13 10.414V16z"/>
-                  </svg>
-                {% else %}
-                  <svg class="ml-1 h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h7a1 1 0 100-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/>
-                  </svg>
-                {% endif %}
-              {% else %}
-                <svg class="ml-1 h-4 w-4 text-gray-300 group-hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/>
-                </svg>
-              {% endif %}
-            </a>
-          </th>
-          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
-            <a href="?sort=semester&order={% if current_sort == 'semester' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="group inline-flex items-center hover:text-gray-900">
-              Semester
-              {% if current_sort == 'semester' %}
-                {% if current_order == 'asc' %}
-                  <svg class="ml-1 h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h5a1 1 0 000-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM13 16a1 1 0 102 0v-5.586l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 101.414 1.414L13 10.414V16z"/>
-                  </svg>
-                {% else %}
-                  <svg class="ml-1 h-4 w-4 text-gray-400 group-hover:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h7a1 1 0 100-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/>
-                  </svg>
-                {% endif %}
-              {% else %}
-                <svg class="ml-1 h-4 w-4 text-gray-300 group-hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/>
-                </svg>
-              {% endif %}
-            </a>
-          </th>
-          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">ECTS</th>
-          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">SWS</th>
-          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-20">Max. Teilnehmer</th>
-          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Aktionen</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Beschreibung</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Typ</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fachrichtung</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Semester</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ECTS</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SWS</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max. Teilnehmer</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
         </tr>
       </thead>
       <tbody class="bg-white divide-y divide-gray-200">
         {% for course in courses %}
         <tr class="hover:bg-gray-50">
-          <td class="px-6 py-4 text-sm font-medium text-gray-900 w-1/6">
-            <div class="truncate" title="{{ course.name }}">{{ course.name }}</div>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ course.name }}</td>
+          <td class="px-6 py-4 text-sm text-gray-500 max-w-xs">
+            <div class="truncate">{{ course.description|truncatechars:60 }}</div>
           </td>
-          <td class="px-6 py-4 text-sm text-gray-500 w-24">
-            <div class="truncate" title="{{ course.description }}">{{ course.description|truncatechars:25 }}</div>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center w-16">
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" title="{{ course.get_course_type_display }}">
-              {{ course.course_type|course_type_short }}
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              {{ course.get_course_type_display }}
             </span>
           </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 w-24">
-            <div class="truncate" title="{{ course.get_discipline_display }}">
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                {{ course.discipline|discipline_short }}
-              </span>
-            </div>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              {{ course.get_discipline_display }}
+            </span>
           </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center w-16">{{ course.semester }}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center w-16">{{ course.ects }}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center w-16">{{ course.sws }}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center w-20">{{ course.max_participants|default:"—" }}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium w-32">
-            <div class="flex space-x-2 justify-center">
-              <!-- Edit Button -->
-              <a href="?edit={{ course.id }}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_order %}&order={{ current_order }}{% endif %}" class="text-primary-600 hover:text-primary-900 transition-colors p-1 hover:bg-primary-50 rounded" title="Bearbeiten">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                </svg>
-              </a>
-              
-              <!-- Copy Button -->
-              <form method="post" class="inline">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="copy">
-                <input type="hidden" name="course_id" value="{{ course.id }}">
-                <button type="submit" class="text-green-600 hover:text-green-900 transition-colors bg-transparent border-none cursor-pointer p-1 hover:bg-green-50 rounded" title="Kopieren">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                  </svg>
-                </button>
-              </form>
-              
-              <!-- Delete Button -->
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{{ course.semester }}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{{ course.ects }}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{{ course.sws }}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">{{ course.max_participants|default:"—" }}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <div class="flex space-x-2">
+              <a href="?edit={{ course.id }}" class="text-primary-600 hover:text-primary-900 transition-colors">Bearbeiten</a>
               <form method="post" action="{% url 'v2_delete_course' course.id %}" class="inline" onsubmit="return confirm('Wirklich löschen?')">
                 {% csrf_token %}
-                <button type="submit" class="text-red-600 hover:text-red-900 transition-colors bg-transparent border-none cursor-pointer p-1 hover:bg-red-50 rounded" title="Löschen">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                  </svg>
+                <button type="submit" class="text-red-600 hover:text-red-900 transition-colors bg-transparent border-none cursor-pointer text-sm font-medium">
+                  Löschen
                 </button>
               </form>
             </div>

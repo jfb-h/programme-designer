@@ -1,41 +1,209 @@
 from django import forms
-from .models import Course, Revision, Programme, Module
+from .models import Course, Module, Programme, Revision, CourseType, Discipline, LPO, LPOCategory, ProgrammeType
+
 
 class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = [
-            'name', 'description', 'type', 'discipline', 'ects', 'sws', 'max_participants'
+            'name', 'description', 'semester', 'course_type', 
+            'discipline', 'lpo_relevance', 'ects', 'sws', 'max_participants'
         ]
         labels = {
             'name': 'Kursname',
             'description': 'Beschreibung',
-            'type': 'Typ',
+            'semester': 'Semester',
+            'course_type': 'Typ',
             'discipline': 'Fachrichtung',
+            'lpo_relevance': 'LPO-Relevanz',
             'ects': 'ECTS',
             'sws': 'SWS',
             'max_participants': 'Maximale Teilnehmer',
         }
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 3}),
+            'description': forms.Textarea(attrs={
+                'rows': 3,
+                'class': 'block w-full rounded-lg border-gray-400 shadow-sm focus:border-primary-500 focus:ring-primary-500 focus:ring-1 transition-colors'
+            }),
+            'name': forms.TextInput(attrs={
+                'class': 'block w-full rounded-lg border-gray-400 shadow-sm focus:border-primary-500 focus:ring-primary-500 focus:ring-1 transition-colors',
+                'placeholder': 'z.B. Grundlagen Humangeographie I'
+            }),
+            'course_type': forms.RadioSelect(attrs={
+                'class': 'flex flex-wrap gap-4'
+            }),
+            'discipline': forms.RadioSelect(attrs={
+                'class': 'flex flex-wrap gap-4'
+            }),
+            'lpo_relevance': forms.CheckboxSelectMultiple(attrs={
+                'class': 'flex flex-wrap gap-4'
+            }),
+            'ects': forms.NumberInput(attrs={
+                'min': 1, 'max': 30,
+                'class': 'block w-full rounded-lg border-gray-400 shadow-sm focus:border-primary-500 focus:ring-primary-500 focus:ring-1 transition-colors'
+            }),
+            'sws': forms.NumberInput(attrs={
+                'min': 1, 'max': 10,
+                'class': 'block w-full rounded-lg border-gray-400 shadow-sm focus:border-primary-500 focus:ring-primary-500 focus:ring-1 transition-colors'
+            }),
+            'max_participants': forms.NumberInput(attrs={
+                'min': 1,
+                'class': 'block w-full rounded-lg border-gray-400 shadow-sm focus:border-primary-500 focus:ring-primary-500 focus:ring-1 transition-colors',
+                'placeholder': ''
+            }),
         }
 
-class RevisionForm(forms.ModelForm):
-    class Meta:
-        model = Revision
-        fields = ['name']
-        labels = {'name': 'Name der Revision'}
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Remove the empty choice option for radio buttons by setting choices directly
+        self.fields['course_type'].choices = CourseType.choices
+        self.fields['discipline'].choices = Discipline.choices
+        
+        # Set up semester choices (1-10 for maximum flexibility)
+        semester_choices = [(i, f'Semester {i}') for i in range(1, 11)]
+        self.fields['semester'].choices = semester_choices
+        
+        # Ensure LPO categories exist and set up the queryset
+        for value, label in LPO.choices:
+            LPOCategory.objects.get_or_create(name=value)
+        
+        # Set the queryset for LPO relevance field
+        self.fields['lpo_relevance'].queryset = LPOCategory.objects.all()
 
-class ProgrammeForm(forms.ModelForm):
-    class Meta:
-        model = Programme
-        fields = ['name']
 
 class ModuleForm(forms.ModelForm):
     class Meta:
         model = Module
-        fields = ['name', 'description']
+        fields = ['order', 'name', 'description', 'courses']
+        labels = {
+            'order': 'Reihenfolge',
+            'name': 'Modulname',
+            'description': 'Beschreibung',
+            'courses': 'Kurse',
+        }
+        widgets = {
+            'description': forms.Textarea(attrs={
+                'rows': 3,
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500'
+            }),
+            'order': forms.NumberInput(attrs={
+                'min': 0,
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500'
+            }),
+            'name': forms.TextInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500'
+            }),
+            'courses': forms.CheckboxSelectMultiple(attrs={
+                'class': 'space-y-2'
+            }),
+        }
 
-class ModuleCourseForm(forms.Form):
-    course = forms.ModelChoiceField(queryset=Course.objects.all(), label="Kurs")
-    semester = forms.IntegerField(min_value=1, max_value=12, label="Semester")
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Order courses by semester then by name
+        self.fields['courses'].queryset = Course.objects.all().order_by('semester', 'name')
+
+
+class ProgrammeForm(forms.ModelForm):
+    class Meta:
+        model = Programme
+        fields = ['name', 'comment', 'programme_type']
+        labels = {
+            'name': 'Studiengangsname',
+            'comment': 'Kommentar',
+            'programme_type': 'Studiengangstyp',
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'block w-full rounded-lg border-gray-400 shadow-sm focus:border-primary-500 focus:ring-primary-500 focus:ring-1 transition-colors',
+                'placeholder': 'z.B. Geographie Bachelor 100'
+            }),
+            'programme_type': forms.RadioSelect(attrs={
+                'class': 'flex flex-wrap gap-4'
+            }),
+            'comment': forms.Textarea(attrs={
+                'rows': 3,
+                'class': 'block w-full rounded-lg border-gray-400 shadow-sm focus:border-primary-500 focus:ring-primary-500 focus:ring-1 transition-colors',
+                'placeholder': 'Notizen oder Kommentare'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make programme_type required and remove empty choice
+        self.fields['programme_type'].required = True
+        self.fields['programme_type'].choices = [choice for choice in self.fields['programme_type'].choices if choice[0] != '']
+
+
+class RevisionForm(forms.ModelForm):
+    class Meta:
+        model = Revision
+        fields = ['name', 'programmes']
+        labels = {
+            'name': 'Name der Revision',
+            'programmes': 'Studiengänge',
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500'
+            }),
+            'programmes': forms.CheckboxSelectMultiple(attrs={
+                'class': 'space-y-2'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Order programmes by name
+        self.fields['programmes'].queryset = Programme.objects.all().order_by('name')
+
+
+# Additional form for quick course creation in modules
+class QuickCourseForm(forms.ModelForm):
+    """Simplified form for quick course creation when building modules."""
+    class Meta:
+        model = Course
+        fields = ['name', 'course_type', 'discipline', 'ects', 'sws']
+        labels = {
+            'name': 'Kursname',
+            'course_type': 'Typ',
+            'discipline': 'Fachrichtung',
+            'ects': 'ECTS',
+            'sws': 'SWS',
+        }
+        widgets = {
+            'ects': forms.NumberInput(attrs={'min': 1, 'max': 30}),
+            'sws': forms.NumberInput(attrs={'min': 1, 'max': 10}),
+        }
+
+
+# Filter forms for overview pages
+class CourseFilterForm(forms.Form):
+    course_type = forms.ChoiceField(
+        choices=[('', 'Alle Typen')] + CourseType.choices,
+        required=False,
+        label='Typ'
+    )
+    discipline = forms.ChoiceField(
+        choices=[('', 'Alle Fachrichtungen')] + Discipline.choices,
+        required=False,
+        label='Fachrichtung'
+    )
+    semester = forms.IntegerField(
+        required=False,
+        label='Semester',
+        widget=forms.NumberInput(attrs={'min': 1, 'max': 12})
+    )
+
+
+class ModuleFilterForm(forms.Form):
+    min_ects = forms.IntegerField(
+        required=False,
+        label='Min. ECTS',
+        widget=forms.NumberInput(attrs={'min': 0})
+    )
+    max_ects = forms.IntegerField(
+        required=False,
+        label='Max. ECTS',
+        widget=forms.NumberInput(attrs={'min': 0})
+    )
