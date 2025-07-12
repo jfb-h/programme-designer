@@ -2,33 +2,64 @@
 {% block content %}
 <h2>Revision bearbeiten: {{ revision.name }}</h2>
 <p>Autor: {{ revision.author.get_full_name|default:revision.author.username }}</p>
-<p>Erstellt am: {{ revision.created_at|date:"Y-m-d H:i" }}</p>
+<p>Erstellt am: {{ revision.date|date:"Y-m-d" }}</p>
 
-<h3>Programme in dieser Revision</h3>
-<table style="margin: 2em auto; min-width: 500px; border-collapse: collapse; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.07);">
-    <tr style="background: #f0f0f0;">
-        <th style="padding: 0.7em 1em; border-bottom: 2px solid #ddd;">Typ</th>
-        <th style="padding: 0.7em 1em; border-bottom: 2px solid #ddd;">Status</th>
-        <th style="padding: 0.7em 1em; border-bottom: 2px solid #ddd;">Aktion</th>
-    </tr>
-    {% for entry in programmes %}
-    <tr style="border-bottom: 1px solid #eee;">
-        <td style="padding: 0.5em 1em;">{{ entry.display_name }}</td>
-        <td style="padding: 0.5em 1em;">
-            {% if entry.completed %}
-                <span style="color: green;">Vorhanden</span>
-            {% else %}
-                <span style="color: red;">Fehlt</span>
-            {% endif %}
-        </td>
-        <td style="padding: 0.5em 1em;">
-            {% if entry.completed %}
-                <a href="{% url 'v2_edit_programme' revision.id entry.degree_type %}">Bearbeiten</a>
-            {% else %}
-                <a href="{% url 'v2_edit_programme' revision.id entry.degree_type %}">Anlegen</a>
-            {% endif %}
-        </td>
-    </tr>
-    {% endfor %}
-</table>
+<form method="post">
+    {% csrf_token %}
+    <h3>Programme für diese Revision auswählen</h3>
+    <p>Wählen Sie für jeden Studiengangstyp das entsprechende Programm aus:</p>
+    
+    <table class="w-full border-collapse bg-white shadow-sm">
+        <thead>
+            <tr class="bg-gray-50">
+                <th class="p-3 text-left border-b-2 border-gray-200">Studiengangstyp</th>
+                <th class="p-3 text-left border-b-2 border-gray-200">Aktuell ausgewählt</th>
+                <th class="p-3 text-left border-b-2 border-gray-200">Programm auswählen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for option in programme_options %}
+            <tr class="border-b border-gray-100">
+                <td class="p-3 font-medium">{{ option.display }}</td>
+                <td class="p-3">
+                    {% if option.selected_programme %}
+                        <span class="text-green-600">{{ option.selected_programme.name }}</span>
+                    {% else %}
+                        <span class="text-red-500">Nicht ausgewählt</span>
+                    {% endif %}
+                </td>
+                <td class="p-3">
+                    <select name="programme_{{ option.type }}" class="border border-gray-300 rounded px-3 py-1">
+                        <option value="">-- Kein Programm --</option>
+                        {% for programme in option.available_programmes %}
+                            <option value="{{ programme.id }}" 
+                                {% if option.selected_programme and option.selected_programme.id == programme.id %}selected{% endif %}>
+                                {{ programme.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="mt-6 space-x-4">
+        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Revision speichern
+        </button>
+        <a href="{% url 'v2_revision_detail' revision.id %}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded inline-block">
+            Abbrechen
+        </a>
+    </div>
+</form>
+
+<div class="mt-8">
+    <h3 class="text-lg font-bold mb-4">Hinweise</h3>
+    <ul class="list-disc list-inside space-y-2 text-gray-600">
+        <li>Eine vollständige Revision sollte für jeden Studiengangstyp ein Programm enthalten</li>
+        <li>Sie können nur aus Ihren eigenen Programmen auswählen</li>
+        <li>Programme können in mehreren Revisionen verwendet werden</li>
+    </ul>
+</div>
 {% endblock %}

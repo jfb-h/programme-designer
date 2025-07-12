@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Programme Designer{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <div>
+      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        Neues Konto erstellen
+      </h2>
+      <p class="mt-2 text-center text-sm text-gray-600">
+        Oder
+        <a href="{% url 'v2_login' %}" class="font-medium text-indigo-600 hover:text-indigo-500">
+          mit bestehendem Konto anmelden
+        </a>
+      </p>
+    </div>
+    <form class="mt-8 space-y-6" method="post">
+      {% csrf_token %}
+      <div class="space-y-4">
+        <div>
+          <label for="id_username" class="block text-sm font-medium text-gray-700">Benutzername</label>
+          <input id="id_username" name="username" type="text" required 
+                 class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                 placeholder="Benutzername wählen" value="{{ form.username.value|default:'' }}">
+          {% if form.username.errors %}
+            <div class="text-red-600 text-sm mt-1">
+              {% for error in form.username.errors %}
+                <p>{{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% if form.username.help_text %}
+            <p class="text-gray-500 text-xs mt-1">{{ form.username.help_text }}</p>
+          {% endif %}
+        </div>
+        
+        <div>
+          <label for="id_password1" class="block text-sm font-medium text-gray-700">Passwort</label>
+          <input id="id_password1" name="password1" type="password" required 
+                 class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                 placeholder="Passwort">
+          {% if form.password1.errors %}
+            <div class="text-red-600 text-sm mt-1">
+              {% for error in form.password1.errors %}
+                <p>{{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% if form.password1.help_text %}
+            <div class="text-gray-500 text-xs mt-1">
+              {{ form.password1.help_text|safe }}
+            </div>
+          {% endif %}
+        </div>
+        
+        <div>
+          <label for="id_password2" class="block text-sm font-medium text-gray-700">Passwort bestätigen</label>
+          <input id="id_password2" name="password2" type="password" required 
+                 class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
+                 placeholder="Passwort wiederholen">
+          {% if form.password2.errors %}
+            <div class="text-red-600 text-sm mt-1">
+              {% for error in form.password2.errors %}
+                <p>{{ error }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if form.non_field_errors %}
+        <div class="rounded-md bg-red-50 p-4">
+          <div class="text-sm text-red-700">
+            {% for error in form.non_field_errors %}
+              <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div>
+        <button type="submit" 
+                class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+            <svg class="h-5 w-5 text-indigo-500 group-hover:text-indigo-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+            </svg>
+          </span>
+          Konto erstellen
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

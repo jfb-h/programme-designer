@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load v2_extras %}
 {% block content %}
 <style>
 /* Force override Tailwind CSS for form inputs */
@@ -114,12 +115,18 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
     <table class="min-w-full divide-y divide-gray-300">
       <thead class="bg-gray-50">
         <tr>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <a href="?sort=name" class="hover:text-gray-700">Name</a>
+          </th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Autor</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <a href="?sort=created" class="hover:text-gray-700">Erstellt</a>
+          </th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kommentar</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Typ</th>
           <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Module</th>
-          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Gesamt ECTS</th>
-          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Gesamt SWS</th>
+          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">ECTS</th>
+          <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">SWS</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
         </tr>
       </thead>
@@ -128,19 +135,35 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
         <tr class="hover:bg-gray-50">
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
             <div class="flex items-center space-x-2">
-              <span>{{ programme.name }}</span>
+              <span class="truncate max-w-48 block" title="{{ programme.name }}">{{ programme.name }}</span>
             </div>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {% if programme.user %}
+              <span class="text-gray-700">
+                {% if programme.user.first_name and programme.user.last_name %}
+                  {{ programme.user.first_name }} {{ programme.user.last_name }}
+                {% else %}
+                  {{ programme.user.username }}
+                {% endif %}
+              </span>
+            {% else %}
+              <span class="text-gray-400 italic">Unbekannt</span>
+            {% endif %}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <span class="text-gray-600">{{ programme.created_at|date:"d.m.Y" }}</span>
           </td>
           <td class="px-6 py-4 text-sm text-gray-500">
             {% if programme.comment %}
-              <span class="truncate max-w-xs block" title="{{ programme.comment }}">{{ programme.comment|truncatechars:50 }}</span>
+              <span class="truncate max-w-24 block" title="{{ programme.comment }}">{{ programme.comment|truncatechars:30 }}</span>
             {% else %}
               <span class="text-gray-400 italic">Kein Kommentar</span>
             {% endif %}
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-              {{ programme.get_programme_type_display }}
+              {{ programme.programme_type|programme_type_short }}
             </span>
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-center">

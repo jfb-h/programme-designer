@@ -25,22 +25,34 @@
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Navigation -->
-    <nav class="bg-gray-800 shadow-lg">
+    <nav class="bg-gray-800 shadow-lg fixed top-0 left-0 right-0 z-50">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-4">
-                    <h1 class="text-white text-xl font-semibold">Programme Designer</h1>
+                <div class="flex items-center space-x-6">
+                    <h1 class="text-white text-xl font-semibold">ProgrammeDesigner</h1>
+                    {% if user.is_authenticated %}
+                        <div class="flex space-x-1">
+                            <a href="{% url 'v2_programme_overview' %}" class="text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                                Studiengänge
+                            </a>
+                            <a href="{% url 'v2_course_overview' %}" class="text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                                Kurse
+                            </a>
+                            <a href="{% url 'v2_revision_overview' %}" class="text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                                Revisionen
+                            </a>
+                        </div>
+                    {% endif %}
                 </div>
-                <div class="flex space-x-1">
-                    <a href="{% url 'v2_course_overview' %}" class="text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                        Kurse
-                    </a>
-                    <a href="{% url 'v2_programme_overview' %}" class="text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                        Studiengänge
-                    </a>
-                    <a href="{% url 'v2_revision_overview' %}" class="text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                        Revisionen
-                    </a>
+                <div class="flex items-center space-x-3">
+                    {% if user.is_authenticated %}
+                        <span class="text-gray-300 text-sm">{{ user.get_full_name|default:user.username }}</span>
+                        <a href="{% url 'v2_logout' %}" class="text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                            </svg>
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -58,7 +70,7 @@
     {% endif %}
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 py-8">
+    <main class="max-w-7xl mx-auto px-4 py-8" style="padding-top: 120px;">
         {% block content %}{% endblock %}
     </main>
 </body>

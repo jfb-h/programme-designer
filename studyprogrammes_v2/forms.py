@@ -74,16 +74,21 @@ class CourseForm(forms.ModelForm):
 class ModuleForm(forms.ModelForm):
     class Meta:
         model = Module
-        fields = ['order', 'name', 'description', 'courses']
+        fields = ['order', 'name', 'description', 'certificate', 'courses']
         labels = {
             'order': 'Reihenfolge',
             'name': 'Modulname',
             'description': 'Beschreibung',
+            'certificate': 'Leistungsnachweis',
             'courses': 'Kurse',
         }
         widgets = {
             'description': forms.Textarea(attrs={
                 'rows': 3,
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500'
+            }),
+            'certificate': forms.Textarea(attrs={
+                'rows': 2,
                 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500'
             }),
             'order': forms.NumberInput(attrs={

@@ -139,9 +139,9 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # Use these for production (with FORCE_SCRIPT_NAME)
-LOGIN_URL = '/programme-designer/login/'
-LOGIN_REDIRECT_URL = '/programme-designer/programmes/'
-LOGOUT_REDIRECT_URL = '/programme-designer/login/'
+LOGIN_URL = '/programme-designer/v2/login/'
+LOGIN_REDIRECT_URL = '/programme-designer/v2/programmes/'
+LOGOUT_REDIRECT_URL = '/programme-designer/v2/login/'
 
 ALLOWED_LOGOUT_METHODS = ["GET", "POST"]
 

@@ -1,0 +1,150 @@
+<!-- Drag and Drop JavaScript -->
+<script>
+// Drag and Drop functionality for module reordering
+let draggedElement = null;
+let placeholder = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+  const container = document.getElementById('modules-container');
+  if (!container) return;
+  
+  // Create a placeholder element
+  placeholder = document.createElement('div');
+  placeholder.className = 'drag-placeholder';
+  
+  const moduleItems = container.querySelectorAll('.module-item');
+  
+  moduleItems.forEach(item => {
+    item.addEventListener('dragstart', handleDragStart);
+    item.addEventListener('dragover', handleDragOver);
+    item.addEventListener('dragenter', handleDragEnter);
+    item.addEventListener('dragleave', handleDragLeave);
+    item.addEventListener('drop', handleDrop);
+    item.addEventListener('dragend', handleDragEnd);
+  });
+  
+  function handleDragStart(e) {
+    draggedElement = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.outerHTML);
+    
+    // Hide the original element while dragging
+    setTimeout(() => {
+      if (this.style) this.style.display = 'none';
+    }, 0);
+  }
+  
+  function handleDragEnter(e) {
+    e.preventDefault();
+    if (this !== draggedElement) {
+      this.classList.add('drag-target');
+    }
+  }
+  
+  function handleDragLeave(e) {
+    // Only remove classes if we're actually leaving the element
+    if (!this.contains(e.relatedTarget)) {
+      this.classList.remove('drag-target', 'drag-over-top', 'drag-over-bottom');
+    }
+  }
+  
+  function handleDragOver(e) {
+    if (e.preventDefault) {
+      e.preventDefault();
+    }
+    
+    if (this === draggedElement) return false;
+    
+    e.dataTransfer.dropEffect = 'move';
+    
+    // Determine if we should show indicator above or below
+    const rect = this.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    
+    // Remove existing classes
+    this.classList.remove('drag-over-top', 'drag-over-bottom');
+    
+    if (e.clientY < midpoint) {
+      this.classList.add('drag-over-top');
+      // Show placeholder above
+      if (!this.previousElementSibling || this.previousElementSibling !== placeholder) {
+        placeholder.classList.add('active');
+        this.parentNode.insertBefore(placeholder, this);
+      }
+    } else {
+      this.classList.add('drag-over-bottom');
+      // Show placeholder below
+      if (!this.nextElementSibling || this.nextElementSibling !== placeholder) {
+        placeholder.classList.add('active');
+        this.parentNode.insertBefore(placeholder, this.nextSibling);
+      }
+    }
+    
+    return false;
+  }
+  
+  function handleDrop(e) {
+    if (e.stopPropagation) {
+      e.stopPropagation();
+    }
+    
+    if (draggedElement !== this) {
+      // Replace placeholder with dragged element
+      if (placeholder.parentNode) {
+        placeholder.parentNode.replaceChild(draggedElement, placeholder);
+      }
+      
+      // Send AJAX request to update order
+      updateModuleOrder();
+    }
+    
+    return false;
+  }
+  
+  function handleDragEnd(e) {
+    // Clean up
+    this.style.display = '';
+    this.classList.remove('dragging');
+    
+    // Remove all drag-related classes from all items
+    container.querySelectorAll('.module-item').forEach(item => {
+      item.classList.remove('drag-target', 'drag-over-top', 'drag-over-bottom');
+    });
+    
+    // Remove placeholder
+    if (placeholder.parentNode) {
+      placeholder.classList.remove('active');
+      placeholder.parentNode.removeChild(placeholder);
+    }
+    
+    draggedElement = null;
+  }
+  
+  function updateModuleOrder() {
+    const moduleIds = Array.from(container.querySelectorAll('.module-item')).map(item => 
+      item.getAttribute('data-module-id')
+    );
+    
+    const formData = new FormData();
+    moduleIds.forEach(id => formData.append('module_ids[]', id));
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    const reorderUrl = window.location.pathname.replace('/edit/', '/reorder-modules/');
+    fetch(reorderUrl, {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status !== 'success') {
+        console.error('Failed to update module order');
+        // Could add user notification here
+      }
+    })
+    .catch(error => {
+      console.error('Error updating module order:', error);
+    });
+  }
+});
+</script>

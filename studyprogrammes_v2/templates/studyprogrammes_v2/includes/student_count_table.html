@@ -1,0 +1,83 @@
+{% load v2_extras %}
+
+<!-- Student Count Management Section -->
+<div class="mb-6 mt-8">
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr class="border-b-2 border-gray-300">
+          <th class="text-left py-1 px-1 text-sm font-bold text-gray-900"></th>
+          {% for semester in semester_range %}
+            <th class="text-center py-1 px-1 text-sm font-bold text-gray-900 min-w-[50px] border-l border-gray-200">
+              Sem {{ semester }}
+            </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody class="text-sm">
+        <tr class="border-b border-gray-200">
+          <td class="py-1 px-1 font-medium text-gray-900" style="width: 120px;">
+            Min. Studierende
+          </td>
+          {% for semester in semester_range %}
+            <td class="py-1 px-1 border-l border-gray-200">
+              <input type="text" 
+                     inputmode="numeric"
+                     pattern="[0-9]*"
+                     class="w-full text-center text-sm border-0 focus:outline-none focus:ring-0 student-count-input bg-transparent"
+                     style="appearance: textfield; -moz-appearance: textfield; box-shadow: none;"
+                     data-programme-id="{{ programme.id }}"
+                     data-semester="{{ semester }}"
+                     data-type="min"
+                     value="{{ student_counts.min|dict_get:semester|default:'' }}"
+                     onchange="updateStudentCount(this)"
+                     placeholder="0">
+            </td>
+          {% endfor %}
+        </tr>
+        <tr class="border-b border-gray-200">
+          <td class="py-1 px-1 font-medium text-gray-900" style="width: 120px;">
+            Max. Studierende
+          </td>
+          {% for semester in semester_range %}
+            <td class="py-1 px-1 border-l border-gray-200">
+              <input type="text" 
+                     inputmode="numeric"
+                     pattern="[0-9]*"
+                     class="w-full text-center text-sm border-0 focus:outline-none focus:ring-0 student-count-input bg-transparent"
+                     style="appearance: textfield; -moz-appearance: textfield; box-shadow: none;"
+                     data-programme-id="{{ programme.id }}"
+                     data-semester="{{ semester }}"
+                     data-type="max"
+                     value="{{ student_counts.max|dict_get:semester|default:'' }}"
+                     onchange="updateStudentCount(this)"
+                     placeholder="0">
+            </td>
+          {% endfor %}
+        </tr>
+        <tr class="border-t-2 border-gray-300 border-b border-gray-200">
+          <td class="py-1 px-1 font-medium text-gray-900" style="width: 120px;">
+            ECTS Summe
+          </td>
+          {% for semester in semester_range %}
+            {% with ects_total=programme|semester_ects_total:semester target_ects=programme.programme_type|programme_target_ects_per_semester %}
+              <td class="py-1 px-1 border-l border-gray-200 text-center text-sm {% if ects_total != target_ects %}text-red-600 font-medium{% else %}text-gray-900{% endif %}">
+                {{ ects_total }}
+              </td>
+            {% endwith %}
+          {% endfor %}
+        </tr>
+        <tr>
+          <td class="py-1 px-1 font-medium text-gray-900" style="width: 120px;">
+            SWS Summe
+          </td>
+          {% for semester in semester_range %}
+            <td class="py-1 px-1 border-l border-gray-200 text-center text-sm text-gray-900">
+              {% semester_sws_calculation programme semester student_counts %}
+            </td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

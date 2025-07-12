@@ -1,0 +1,274 @@
+<!-- JavaScript Functions -->
+<script>
+// Module tray toggle functionality
+function toggleModuleTray(moduleId) {
+  const tray = document.getElementById(`module-tray-${moduleId}`);
+  const chevron = document.querySelector(`.module-chevron-${moduleId}`);
+  
+  if (tray.classList.contains('hidden')) {
+    tray.classList.remove('hidden');
+    chevron.style.transform = 'rotate(180deg)';
+  } else {
+    tray.classList.add('hidden');
+    chevron.style.transform = 'rotate(0deg)';
+  }
+}
+
+function openCreateModuleModal() {
+  document.getElementById('createModuleModal').classList.remove('hidden');
+  setupCourseSearch();
+}
+
+function closeCreateModuleModal() {
+  document.getElementById('createModuleModal').classList.add('hidden');
+  resetCourseSelection();
+}
+
+function openEditModuleModal(moduleId) {
+  const button = document.querySelector(`.edit-module-btn[data-module-id="${moduleId}"]`);
+  const moduleName = button.getAttribute('data-module-name');
+  const moduleDescription = button.getAttribute('data-module-description');
+  const moduleCertificate = button.getAttribute('data-module-certificate');
+  const moduleCourses = button.getAttribute('data-module-courses').split(',').filter(id => id !== '');
+  
+  // Populate the form
+  document.getElementById('edit_module_id').value = moduleId;
+  document.getElementById('edit_module_name').value = moduleName;
+  document.getElementById('edit_module_description').value = moduleDescription;
+  document.getElementById('edit_module_certificate').value = moduleCertificate || '';
+  
+  // Clear all checkboxes first
+  document.querySelectorAll('.edit-course-checkbox').forEach(checkbox => {
+    checkbox.checked = false;
+  });
+  
+  // Check the appropriate courses
+  moduleCourses.forEach(courseId => {
+    const checkbox = document.querySelector(`.edit-course-checkbox[value="${courseId}"]`);
+    if (checkbox) {
+      checkbox.checked = true;
+    }
+  });
+  
+  document.getElementById('editModuleModal').classList.remove('hidden');
+  setupEditCourseSearch();
+  updateEditSelectedCoursesCount();
+}
+
+function closeEditModuleModal() {
+  document.getElementById('editModuleModal').classList.add('hidden');
+  resetEditCourseSelection();
+}
+
+// Course search and filter functionality for create modal
+function setupCourseSearch() {
+  const searchInput = document.getElementById('courseSearch');
+  const typeFilter = document.getElementById('courseTypeFilter');
+  
+  searchInput.addEventListener('input', filterCourses);
+  typeFilter.addEventListener('change', filterCourses);
+  
+  // Setup course selection tracking
+  document.querySelectorAll('.course-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateSelectedCoursesCount);
+  });
+  
+  updateSelectedCoursesCount();
+}
+
+function filterCourses() {
+  const searchTerm = document.getElementById('courseSearch').value.toLowerCase();
+  const selectedType = document.getElementById('courseTypeFilter').value;
+  const courseItems = document.querySelectorAll('.course-item');
+  let visibleCount = 0;
+  
+  courseItems.forEach(item => {
+    const courseName = item.getAttribute('data-course-name');
+    const courseType = item.getAttribute('data-course-type');
+    
+    const matchesSearch = courseName.includes(searchTerm);
+    const matchesType = !selectedType || courseType === selectedType;
+    
+    if (matchesSearch && matchesType) {
+      item.style.display = 'flex';
+      visibleCount++;
+    } else {
+      item.style.display = 'none';
+    }
+  });
+  
+  // Show/hide "no results" message
+  const noResults = document.getElementById('noCourseResults');
+  if (visibleCount === 0) {
+    noResults.classList.remove('hidden');
+  } else {
+    noResults.classList.add('hidden');
+  }
+}
+
+function clearCourseFilters() {
+  document.getElementById('courseSearch').value = '';
+  document.getElementById('courseTypeFilter').value = '';
+  filterCourses();
+}
+
+function updateSelectedCoursesCount() {
+  const checkboxes = document.querySelectorAll('.course-checkbox:checked');
+  const count = checkboxes.length;
+  let totalECTS = 0;
+  let totalSWS = 0;
+  
+  checkboxes.forEach(checkbox => {
+    const item = checkbox.closest('.course-item');
+    totalECTS += parseInt(item.getAttribute('data-course-ects')) || 0;
+    totalSWS += parseInt(item.getAttribute('data-course-sws')) || 0;
+  });
+  
+  const countElement = document.getElementById('selectedCoursesCount');
+  if (count > 0) {
+    document.getElementById('selectedCount').textContent = count;
+    document.getElementById('selectedECTS').textContent = totalECTS;
+    document.getElementById('selectedSWS').textContent = totalSWS;
+    countElement.classList.remove('hidden');
+  } else {
+    countElement.classList.add('hidden');
+  }
+}
+
+function resetCourseSelection() {
+  document.querySelectorAll('.course-checkbox').forEach(checkbox => {
+    checkbox.checked = false;
+  });
+  clearCourseFilters();
+  updateSelectedCoursesCount();
+}
+
+// Course search and filter functionality for edit modal
+function setupEditCourseSearch() {
+  const searchInput = document.getElementById('editCourseSearch');
+  const typeFilter = document.getElementById('editCourseTypeFilter');
+  
+  searchInput.addEventListener('input', filterEditCourses);
+  typeFilter.addEventListener('change', filterEditCourses);
+  
+  // Setup course selection tracking
+  document.querySelectorAll('.edit-course-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateEditSelectedCoursesCount);
+  });
+}
+
+function filterEditCourses() {
+  const searchTerm = document.getElementById('editCourseSearch').value.toLowerCase();
+  const selectedType = document.getElementById('editCourseTypeFilter').value;
+  const courseItems = document.querySelectorAll('.edit-course-item');
+  let visibleCount = 0;
+  
+  courseItems.forEach(item => {
+    const courseName = item.getAttribute('data-course-name');
+    const courseType = item.getAttribute('data-course-type');
+    
+    const matchesSearch = courseName.includes(searchTerm);
+    const matchesType = !selectedType || courseType === selectedType;
+    
+    if (matchesSearch && matchesType) {
+      item.style.display = 'flex';
+      visibleCount++;
+    } else {
+      item.style.display = 'none';
+    }
+  });
+  
+  // Show/hide "no results" message
+  const noResults = document.getElementById('editNoCourseResults');
+  if (visibleCount === 0) {
+    noResults.classList.remove('hidden');
+  } else {
+    noResults.classList.add('hidden');
+  }
+}
+
+function clearEditCourseFilters() {
+  document.getElementById('editCourseSearch').value = '';
+  document.getElementById('editCourseTypeFilter').value = '';
+  filterEditCourses();
+}
+
+function updateEditSelectedCoursesCount() {
+  const checkboxes = document.querySelectorAll('.edit-course-checkbox:checked');
+  const count = checkboxes.length;
+  let totalECTS = 0;
+  let totalSWS = 0;
+  
+  checkboxes.forEach(checkbox => {
+    const item = checkbox.closest('.edit-course-item');
+    totalECTS += parseInt(item.getAttribute('data-course-ects')) || 0;
+    totalSWS += parseInt(item.getAttribute('data-course-sws')) || 0;
+  });
+  
+  const countElement = document.getElementById('editSelectedCoursesCount');
+  if (count > 0) {
+    document.getElementById('editSelectedCount').textContent = count;
+    document.getElementById('editSelectedECTS').textContent = totalECTS;
+    document.getElementById('editSelectedSWS').textContent = totalSWS;
+    countElement.classList.remove('hidden');
+  } else {
+    countElement.classList.add('hidden');
+  }
+}
+
+function resetEditCourseSelection() {
+  document.querySelectorAll('.edit-course-checkbox').forEach(checkbox => {
+    checkbox.checked = false;
+  });
+  clearEditCourseFilters();
+  updateEditSelectedCoursesCount();
+}
+
+// Student count update function
+function updateStudentCount(input) {
+  const programmeId = input.dataset.programmeId;
+  const semester = input.dataset.semester;
+  const type = input.dataset.type;  // 'min' or 'max'
+  const value = input.value;
+
+  // Prepare form data
+  const formData = new FormData();
+  formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+  formData.append('action', 'update_student_count');
+  formData.append('programme_id', programmeId);
+  formData.append('semester', semester);
+  formData.append('type', type);
+  formData.append('value', value);
+
+  // Send AJAX request
+  fetch(window.location.pathname, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.status === 'success') {
+      // Add visual feedback for successful save
+      input.classList.add('bg-green-50', 'border-green-300');
+      setTimeout(() => {
+        input.classList.remove('bg-green-50', 'border-green-300');
+      }, 1000);
+    } else {
+      console.error('Failed to update student count:', data.message || 'Unknown error');
+      // Add visual feedback for error
+      input.classList.add('bg-red-50', 'border-red-300');
+      setTimeout(() => {
+        input.classList.remove('bg-red-50', 'border-red-300');
+      }, 2000);
+    }
+  })
+  .catch(error => {
+    console.error('Error updating student count:', error);
+    // Add visual feedback for error
+    input.classList.add('bg-red-50', 'border-red-300');
+    setTimeout(() => {
+      input.classList.remove('bg-red-50', 'border-red-300');
+    }, 2000);
+  });
+}
+</script>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load dict_extras %}
+{% load v2_extras %}
 {% block content %}
 <style>
 /* Force override Tailwind CSS for form inputs */
@@ -310,6 +310,9 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
                 {% csrf_token %}
                 <input type="hidden" name="action" value="copy">
                 <input type="hidden" name="course_id" value="{{ course.id }}">
+                {% if return_url %}
+                  <input type="hidden" name="return_url" value="{{ return_url }}">
+                {% endif %}
                 <button type="submit" class="text-green-600 hover:text-green-900 transition-colors bg-transparent border-none cursor-pointer p-1 hover:bg-green-50 rounded" title="Kopieren">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
@@ -366,6 +369,9 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
         {% csrf_token %}
         {% if edit_course %}
           <input type="hidden" name="edit_course_id" value="{{ edit_course.id }}">
+        {% endif %}
+        {% if return_url %}
+          <input type="hidden" name="return_url" value="{{ return_url }}">
         {% endif %}
         
         <div class="space-y-6">
@@ -524,7 +530,11 @@ function openModal() {
   document.getElementById('courseModal').classList.remove('hidden');
 }
 function closeModal() {
-  document.getElementById('courseModal').classList.add('hidden');
+  {% if return_url %}
+    window.location.href = "{{ return_url }}";
+  {% else %}
+    document.getElementById('courseModal').classList.add('hidden');
+  {% endif %}
 }
 
 {% if edit_course %}

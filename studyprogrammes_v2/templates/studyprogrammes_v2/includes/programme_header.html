@@ -1,0 +1,22 @@
+{% load v2_extras %}
+
+<!-- Programme Header Section -->
+<div class="flex justify-between items-center">
+  <div>
+    <h2 class="text-3xl font-bold text-gray-900 flex items-center">
+      <span class="inline-flex items-center px-4 py-2 rounded-full text-base font-bold bg-white text-black border-2 border-black mr-4">
+        {{ programme.programme_type|programme_type_short }}
+      </span>
+      <span>{{ programme.name }}</span>
+    </h2>
+    {% if programme.comment %}
+      <p class="text-gray-500 mt-2">{{ programme.comment }}</p>
+    {% endif %}
+  </div>
+  <a href="{% url 'v2_programme_overview' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+    </svg>
+    <span>Zurück zur Übersicht</span>
+  </a>
+</div>

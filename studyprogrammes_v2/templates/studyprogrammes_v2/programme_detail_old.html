@@ -1,0 +1,1052 @@
+{% extends "base.html" %}
+{% load v2_extras %}
+
+{% block content %}
+<style>
+/* Force override Tailwind CSS for form inputs */
+input[type="text"], 
+textarea, 
+input[type="number"],
+select {
+  border: 2px solid #9ca3af !important;
+  border-radius: 0.5rem !important;
+  padding: 0.5rem !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+input[type="text"]:focus,
+textarea:focus,
+input[type="number"]:focus,
+select:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 1px #3b82f6 !important;
+  outline: none !important;
+}
+
+/* Hide number input spinners/increment buttons */
+.student-count-input::-webkit-outer-spin-button,
+.student-count-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.student-count-input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Override global input styles for student count inputs */
+input[type="text"].student-count-input {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+input[type="text"].student-count-input:focus {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border-color: transparent !important;
+}
+
+/* Custom button styling */
+.btn-add {
+  background-color: #10b981;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-add:hover {
+  background-color: #059669;
+}
+
+.btn-remove {
+  background-color: #ef4444;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-remove:hover {
+  background-color: #dc2626;
+}
+
+/* Drag and Drop Styling */
+.module-item {
+  cursor: grab;
+  transition: all 0.2s ease;
+}
+
+.module-item:active {
+  cursor: grabbing;
+}
+
+.module-item.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.module-item.drag-target {
+  background-color: #f3f4f6;
+  border-color: #3b82f6;
+  transform: scale(1.02);
+}
+
+.module-item.drag-over-top {
+  border-top: 3px solid #3b82f6;
+  box-shadow: 0 -2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.module-item.drag-over-bottom {
+  border-bottom: 3px solid #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.drag-placeholder {
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  border-radius: 2px;
+  margin: 4px 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.drag-placeholder.active {
+  opacity: 1;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.drag-handle {
+  cursor: grab;
+  transition: background-color 0.2s ease;
+}
+
+.drag-handle:hover {
+  background-color: #f3f4f6;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+</style>
+</style>
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <div>
+      <h2 class="text-3xl font-bold text-gray-900">{{ programme.name }}</h2>
+      <p class="text-lg text-gray-600 mt-2">{{ programme.get_programme_type_display }}</p>
+      {% if programme.comment %}
+        <p class="text-gray-500 mt-1">{{ programme.comment }}</p>
+      {% endif %}
+    </div>
+    <a href="{% url 'v2_programme_overview' %}" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      <span>Zurück zur Übersicht</span>
+    </a>
+  </div>
+
+  <!-- Student Count Management Section -->
+  <div class="mb-6">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="text-left py-1 px-1 text-sm font-medium text-gray-600"></th>
+            {% for semester in semester_range %}
+              <th class="text-center py-1 px-1 text-sm font-medium text-gray-600 min-w-[50px] border-l border-gray-200">
+                Sem {{ semester }}
+              </th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody class="text-sm">
+          <tr class="border-b border-gray-200">
+            <td class="py-1 px-1 font-medium text-gray-900" style="width: 120px;">
+              Min. Studierende
+            </td>
+            {% for semester in semester_range %}
+              <td class="py-1 px-1 border-l border-gray-200">
+                <input type="text" 
+                       inputmode="numeric"
+                       pattern="[0-9]*"
+                       class="w-full text-center text-sm border-0 focus:outline-none focus:ring-0 student-count-input bg-transparent"
+                       style="appearance: textfield; -moz-appearance: textfield; box-shadow: none;"
+                       data-programme-id="{{ programme.id }}"
+                       data-semester="{{ semester }}"
+                       data-type="min"
+                       value="{{ student_counts.min|dict_get:semester|default:'' }}"
+                       onchange="updateStudentCount(this)"
+                       placeholder="0">
+              </td>
+            {% endfor %}
+          </tr>
+          <tr>
+            <td class="py-1 px-1 font-medium text-gray-900" style="width: 120px;">
+              Max. Studierende
+            </td>
+            {% for semester in semester_range %}
+              <td class="py-1 px-1 border-l border-gray-200">
+                <input type="text" 
+                       inputmode="numeric"
+                       pattern="[0-9]*"
+                       class="w-full text-center text-sm border-0 focus:outline-none focus:ring-0 student-count-input bg-transparent"
+                       style="appearance: textfield; -moz-appearance: textfield; box-shadow: none;"
+                       data-programme-id="{{ programme.id }}"
+                       data-semester="{{ semester }}"
+                       data-type="max"
+                       value="{{ student_counts.max|dict_get:semester|default:'' }}"
+                       onchange="updateStudentCount(this)"
+                       placeholder="0">
+              </td>
+            {% endfor %}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div class="text-sm font-medium text-blue-600">Module</div>
+      <div class="text-2xl font-bold text-blue-900">{{ programme_modules.count }}</div>
+    </div>
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+      <div class="text-sm font-medium text-green-600">Gesamt ECTS</div>
+      <div class="text-2xl font-bold text-green-900">{{ programme.total_ects }}</div>
+    </div>
+    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+      <div class="text-sm font-medium text-purple-600">Gesamt SWS</div>
+      <div class="text-2xl font-bold text-purple-900">{{ programme.total_sws }}</div>
+    </div>
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+      <div class="text-sm font-medium text-yellow-600">Kurse</div>
+      <div class="text-2xl font-bold text-yellow-900">{{ programme.total_courses }}</div>
+    </div>
+  </div>
+
+  <!-- Current Modules Section -->
+  <div class="bg-white shadow-sm ring-1 ring-gray-900/5 rounded-xl overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900">Module im Studiengang</h3>
+        <p class="text-sm text-gray-500 mt-1">Module müssen 3-15 ECTS umfassen und sollten mehr als eine Veranstaltung beinhalten</p>
+      </div>
+      <button onclick="openCreateModuleModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        <span>Neues Modul erstellen</span>
+      </button>
+    </div>
+    
+    {% if programme_modules %}
+      <div id="modules-container" class="divide-y divide-gray-200">
+        {% for module in programme_modules %}
+        <div class="module-item px-6 py-4 hover:bg-gray-50" data-module-id="{{ module.id }}" draggable="true">
+          <!-- Module Header -->
+          <div class="flex items-center justify-between">
+            <!-- Drag Handle -->
+            <div class="drag-handle flex-shrink-0 mr-3 p-1 rounded transition-colors">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+              </svg>
+            </div>
+            
+            <div class="flex-1 cursor-pointer" onclick="toggleModuleTray({{ module.id }})">
+              <div class="flex items-center space-x-3">
+                <h4 class="text-base font-medium text-gray-900">{{ module.name }}</h4>
+                <button class="text-gray-400 hover:text-gray-600 transition-colors" onclick="event.stopPropagation(); toggleModuleTray({{ module.id }})">
+                  <svg class="w-5 h-5 transform transition-transform duration-200 module-chevron-{{ module.id }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </button>
+              </div>
+              {% if module.description %}
+                <p class="text-sm text-gray-500 mt-1">{{ module.description|truncatechars:100 }}</p>
+              {% endif %}
+              
+              <!-- Module Summary -->
+              <div class="flex space-x-4 mt-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {{ module.courses.count }} Kurse
+                </span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  {{ module.total_ects }} ECTS
+                </span>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                  {{ module.total_sws }} SWS
+                </span>
+              </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex items-center space-x-2 ml-4">
+              <button onclick="openEditModuleModal({{ module.id }})" class="text-primary-600 hover:text-primary-900 transition-colors p-1 hover:bg-primary-50 rounded edit-module-btn" 
+                      data-module-id="{{ module.id }}" 
+                      data-module-name="{{ module.name }}" 
+                      data-module-description="{{ module.description }}"
+                      data-module-courses="{% for course in module.courses.all %}{{ course.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                      title="Bearbeiten">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+              </button>
+              <form method="post" class="inline" onsubmit="return confirm('Modul {{ module.name }} aus dem Studiengang entfernen?')">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="remove_module">
+                <input type="hidden" name="module_id" value="{{ module.id }}">
+                <button type="submit" class="text-red-600 hover:text-red-900 transition-colors bg-transparent border-none cursor-pointer p-1 hover:bg-red-50 rounded" title="Entfernen">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </form>
+            </div>
+          </div>
+          
+          <!-- Collapsible Course Tray -->
+          <div id="module-tray-{{ module.id }}" class="module-tray hidden mt-4 pt-4 border-t border-gray-100">
+            {% if module.courses.all %}
+              <div class="space-y-3">
+                <h5 class="text-sm font-medium text-gray-700 flex items-center">
+                  <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
+                  Kurse in diesem Modul ({{ module.courses.count }})
+                </h5>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  {% for course in module.courses.all %}
+                    <div class="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-shadow">
+                      <div class="flex items-start justify-between">
+                        <div class="flex-1 min-w-0">
+                          <h6 class="font-medium text-gray-900 text-sm">
+                            <span class="text-blue-600 font-semibold mr-2">{{ course.course_type|course_type_short }}</span>{{ course.name }}
+                          </h6>
+                          {% if course.description %}
+                            <p class="text-xs text-gray-500 mt-1 line-clamp-2">{{ course.description|truncatechars:80 }}</p>
+                          {% endif %}
+                          <div class="flex flex-wrap gap-1 mt-2 items-center">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+                              {{ course.ects }} ECTS
+                            </span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">
+                              {{ course.sws }} SWS
+                            </span>
+                            {% if course|has_regional_lpo %}
+                              <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m20.893 13.393-1.135-1.135a2.252 2.252 0 0 1-.421-.585l-1.08-2.16a.414.414 0 0 0-.663-.107.827.827 0 0 1-.812.21l-1.273-.363a.89.89 0 0 0-.738 1.595l.587.39c.59.395.674 1.23.172 1.732l-.2.2c-.212.212-.33.498-.33.796v.41c0 .409-.11.809-.32 1.158l-1.315 2.191a2.11 2.11 0 0 1-1.81 1.025 1.055 1.055 0 0 1-1.055-1.055v-1.172c0-.92-.56-1.747-1.414-2.089l-.655-.261a2.25 2.25 0 0 1-1.383-2.46l.007-.042a2.25 2.25 0 0 1 .29-.787l.09-.15a2.25 2.25 0 0 1 2.37-1.048l1.178.236a1.125 1.125 0 0 0 1.302-.795l.208-.73a1.125 1.125 0 0 0-.578-1.315l-.665-.332-.091.091a2.25 2.25 0 0 1-1.591.659h-.18c-.249 0-.487.1-.662.274a.931.931 0 0 1-1.458-1.137l1.411-2.353a2.25 2.25 0 0 0 .286-.76m11.928 9.869A9 9 0 0 0 8.965 3.525m11.928 9.868A9 9 0 1 1 8.965 3.525"></path>
+                              </svg>
+                            {% endif %}
+                            {% if course|has_excursion_lpo %}
+                              <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z"></path>
+                              </svg>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% else %}
+              <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex items-center">
+                  <svg class="w-5 h-5 text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                  </svg>
+                  <div>
+                    <p class="text-sm font-medium text-yellow-800">Keine Kurse in diesem Modul</p>
+                    <p class="text-xs text-yellow-600 mt-1">Verwenden Sie "Bearbeiten", um Kurse hinzuzufügen</p>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="px-6 py-12 text-center text-gray-500">
+        <div class="flex flex-col items-center space-y-3">
+          <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+          <p class="text-lg font-medium">Keine Module im Studiengang</p>
+          <p class="text-sm">Fügen Sie Module aus der Liste unten hinzu</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+<!-- Modal for creating new module -->
+<div id="createModuleModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+  <div class="relative top-10 mx-auto p-6 border w-11/12 md:w-2/3 lg:w-1/2 shadow-2xl rounded-xl bg-white">
+    <div class="mt-3">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-bold text-gray-900">Neues Modul erstellen</h3>
+        <button onclick="closeCreateModuleModal()" class="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <form method="post" action="" class="space-y-6">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create_module">
+        
+        <div class="space-y-6">
+          <!-- Module Name -->
+          <div>
+            <label for="module_name" class="block text-sm font-semibold text-gray-700 mb-2">Modulname</label>
+            <input type="text" id="module_name" name="module_name" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500">
+          </div>
+
+          <!-- Module Description -->
+          <div>
+            <label for="module_description" class="block text-sm font-semibold text-gray-700 mb-2">Beschreibung (optional)</label>
+            <textarea id="module_description" name="module_description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"></textarea>
+          </div>
+
+          <!-- Course Selection -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Kurse hinzufügen (optional)</label>
+            
+            <!-- Search and Filter Controls -->
+            <div class="mb-3 space-y-2">
+              <div class="flex gap-2">
+                <input type="text" id="courseSearch" placeholder="Kurse durchsuchen..." class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500">
+                <select id="courseTypeFilter" class="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500">
+                  <option value="">Alle Typen</option>
+                  <option value="vorlesung">Vorlesung</option>
+                  <option value="uebung">Übung</option>
+                  <option value="seminar">Seminar</option>
+                  <option value="gelände">Geländeseminar</option>
+                  <option value="thesis">Thesis</option>
+                </select>
+                <button type="button" onclick="clearCourseFilters()" class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
+                  Zurücksetzen
+                </button>
+              </div>
+              
+              <!-- Selected courses summary -->
+              <div id="selectedCoursesCount" class="text-sm text-gray-600 hidden">
+                <span class="font-medium">Ausgewählte Kurse:</span> <span id="selectedCount">0</span>
+                <span class="ml-2 text-xs">(<span id="selectedECTS">0</span> ECTS, <span id="selectedSWS">0</span> SWS)</span>
+              </div>
+            </div>
+            
+            <div class="border border-gray-300 rounded-md max-h-60 overflow-y-auto">
+              {% if all_courses %}
+                <div class="p-3 space-y-2" id="courseList">
+                  {% for course in all_courses %}
+                  <label class="course-item flex items-start space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer" 
+                         data-course-name="{{ course.name|lower }}" 
+                         data-course-type="{{ course.course_type }}"
+                         data-course-ects="{{ course.ects }}"
+                         data-course-sws="{{ course.sws }}">
+                    <input type="checkbox" name="module_courses" value="{{ course.id }}" class="course-checkbox mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm font-medium text-gray-900">{{ course.name }}</div>
+                      <div class="text-xs text-gray-500 mt-1">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                          {{ course.get_course_type_display }}
+                        </span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mr-2">
+                          {{ course.ects }} ECTS
+                        </span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                          {{ course.sws }} SWS
+                        </span>
+                      </div>
+                      {% if course.description %}
+                        <div class="text-xs text-gray-400 mt-1">{{ course.description|truncatechars:80 }}</div>
+                      {% endif %}
+                    </div>
+                  </label>
+                  {% endfor %}
+                </div>
+                <div id="noCourseResults" class="p-4 text-center text-gray-500 hidden">
+                  <p class="text-sm">Keine Kurse gefunden. Versuchen Sie andere Suchbegriffe.</p>
+                </div>
+              {% else %}
+                <div class="p-4 text-center text-gray-500">
+                  <p class="text-sm">Keine Kurse verfügbar. <a href="{% url 'v2_course_overview' %}" class="text-primary-600 hover:text-primary-700">Kurse erstellen</a></p>
+                </div>
+              {% endif %}
+            </div>
+            <p class="mt-2 text-xs text-gray-500">Verwenden Sie die Suche und Filter, um Kurse schnell zu finden.</p>
+          </div>
+        </div>
+        
+        <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+          <button type="button" onclick="closeCreateModuleModal()" class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+            Abbrechen
+          </button>
+          <button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-colors duration-200 shadow-sm">
+            Modul erstellen
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for editing existing module -->
+<div id="editModuleModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+  <div class="relative top-10 mx-auto p-6 border w-11/12 md:w-2/3 lg:w-1/2 shadow-2xl rounded-xl bg-white">
+    <div class="mt-3">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-bold text-gray-900">Modul bearbeiten</h3>
+        <button onclick="closeEditModuleModal()" class="text-gray-400 hover:text-gray-600 transition-colors p-1 hover:bg-gray-100 rounded-full">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <form method="post" action="" class="space-y-6">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="edit_module">
+        <input type="hidden" name="module_id" id="edit_module_id">
+        
+        <div class="space-y-6">
+          <!-- Module Name -->
+          <div>
+            <label for="edit_module_name" class="block text-sm font-semibold text-gray-700 mb-2">Modulname</label>
+            <input type="text" id="edit_module_name" name="module_name" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500">
+          </div>
+
+          <!-- Module Description -->
+          <div>
+            <label for="edit_module_description" class="block text-sm font-semibold text-gray-700 mb-2">Beschreibung (optional)</label>
+            <textarea id="edit_module_description" name="module_description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"></textarea>
+          </div>
+
+          <!-- Course Selection -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Kurse hinzufügen (optional)</label>
+            
+            <!-- Search and Filter Controls -->
+            <div class="mb-3 space-y-2">
+              <div class="flex gap-2">
+                <input type="text" id="editCourseSearch" placeholder="Kurse durchsuchen..." class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500">
+                <select id="editCourseTypeFilter" class="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500">
+                  <option value="">Alle Typen</option>
+                  <option value="vorlesung">Vorlesung</option>
+                  <option value="uebung">Übung</option>
+                  <option value="seminar">Seminar</option>
+                  <option value="gelände">Geländeseminar</option>
+                  <option value="thesis">Thesis</option>
+                </select>
+                <button type="button" onclick="clearEditCourseFilters()" class="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
+                  Zurücksetzen
+                </button>
+              </div>
+              
+              <!-- Selected courses summary -->
+              <div id="editSelectedCoursesCount" class="text-sm text-gray-600 hidden">
+                <span class="font-medium">Ausgewählte Kurse:</span> <span id="editSelectedCount">0</span>
+                <span class="ml-2 text-xs">(<span id="editSelectedECTS">0</span> ECTS, <span id="editSelectedSWS">0</span> SWS)</span>
+              </div>
+            </div>
+            
+            <div class="border border-gray-300 rounded-md max-h-60 overflow-y-auto">
+              {% if all_courses %}
+                <div class="p-3 space-y-2" id="editCourseList">
+                  {% for course in all_courses %}
+                  <label class="edit-course-item flex items-start space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer" 
+                         data-course-name="{{ course.name|lower }}" 
+                         data-course-type="{{ course.course_type }}"
+                         data-course-ects="{{ course.ects }}"
+                         data-course-sws="{{ course.sws }}">
+                    <input type="checkbox" name="module_courses" value="{{ course.id }}" class="edit-course-checkbox mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                    <div class="flex-1 min-w-0">
+                      <div class="text-sm font-medium text-gray-900">{{ course.name }}</div>
+                      <div class="text-xs text-gray-500 mt-1">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                          {{ course.get_course_type_display }}
+                        </span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mr-2">
+                          {{ course.ects }} ECTS
+                        </span>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                          {{ course.sws }} SWS
+                        </span>
+                      </div>
+                      {% if course.description %}
+                        <div class="text-xs text-gray-400 mt-1">{{ course.description|truncatechars:80 }}</div>
+                      {% endif %}
+                    </div>
+                  </label>
+                  {% endfor %}
+                </div>
+                <div id="editNoCourseResults" class="p-4 text-center text-gray-500 hidden">
+                  <p class="text-sm">Keine Kurse gefunden. Versuchen Sie andere Suchbegriffe.</p>
+                </div>
+              {% else %}
+                <div class="p-4 text-center text-gray-500">
+                  <p class="text-sm">Keine Kurse verfügbar. <a href="{% url 'v2_course_overview' %}" class="text-primary-600 hover:text-primary-700">Kurse erstellen</a></p>
+                </div>
+              {% endif %}
+            </div>
+            <p class="mt-2 text-xs text-gray-500">Verwenden Sie die Suche und Filter, um Kurse schnell zu finden.</p>
+          </div>
+        </div>
+        
+        <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+          <button type="button" onclick="closeEditModuleModal()" class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+            Abbrechen
+          </button>
+          <button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors duration-200 shadow-sm">
+            Änderungen speichern
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// Module tray toggle functionality
+function toggleModuleTray(moduleId) {
+  const tray = document.getElementById(`module-tray-${moduleId}`);
+  const chevron = document.querySelector(`.module-chevron-${moduleId}`);
+  
+  if (tray.classList.contains('hidden')) {
+    tray.classList.remove('hidden');
+    chevron.style.transform = 'rotate(180deg)';
+  } else {
+    tray.classList.add('hidden');
+    chevron.style.transform = 'rotate(0deg)';
+  }
+}
+
+function openCreateModuleModal() {
+  document.getElementById('createModuleModal').classList.remove('hidden');
+  setupCourseSearch();
+}
+
+function closeCreateModuleModal() {
+  document.getElementById('createModuleModal').classList.add('hidden');
+  resetCourseSelection();
+}
+
+function openEditModuleModal(moduleId) {
+  const button = document.querySelector(`.edit-module-btn[data-module-id="${moduleId}"]`);
+  const moduleName = button.getAttribute('data-module-name');
+  const moduleDescription = button.getAttribute('data-module-description');
+  const moduleCourses = button.getAttribute('data-module-courses').split(',').filter(id => id !== '');
+  
+  // Populate the form
+  document.getElementById('edit_module_id').value = moduleId;
+  document.getElementById('edit_module_name').value = moduleName;
+  document.getElementById('edit_module_description').value = moduleDescription;
+  
+  // Clear all checkboxes first
+  document.querySelectorAll('.edit-course-checkbox').forEach(checkbox => {
+    checkbox.checked = false;
+  });
+  
+  // Check the appropriate courses
+  moduleCourses.forEach(courseId => {
+    const checkbox = document.querySelector(`.edit-course-checkbox[value="${courseId}"]`);
+    if (checkbox) {
+      checkbox.checked = true;
+    }
+  });
+  
+  document.getElementById('editModuleModal').classList.remove('hidden');
+  setupEditCourseSearch();
+  updateEditSelectedCoursesCount();
+}
+
+function closeEditModuleModal() {
+  document.getElementById('editModuleModal').classList.add('hidden');
+  resetEditCourseSelection();
+}
+
+// Course search and filter functionality for create modal
+function setupCourseSearch() {
+  const searchInput = document.getElementById('courseSearch');
+  const typeFilter = document.getElementById('courseTypeFilter');
+  
+  searchInput.addEventListener('input', filterCourses);
+  typeFilter.addEventListener('change', filterCourses);
+  
+  // Setup course selection tracking
+  document.querySelectorAll('.course-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateSelectedCoursesCount);
+  });
+  
+  updateSelectedCoursesCount();
+}
+
+function filterCourses() {
+  const searchTerm = document.getElementById('courseSearch').value.toLowerCase();
+  const selectedType = document.getElementById('courseTypeFilter').value;
+  const courseItems = document.querySelectorAll('.course-item');
+  let visibleCount = 0;
+  
+  courseItems.forEach(item => {
+    const courseName = item.getAttribute('data-course-name');
+    const courseType = item.getAttribute('data-course-type');
+    
+    const matchesSearch = courseName.includes(searchTerm);
+    const matchesType = !selectedType || courseType === selectedType;
+    
+    if (matchesSearch && matchesType) {
+      item.style.display = 'flex';
+      visibleCount++;
+    } else {
+      item.style.display = 'none';
+    }
+  });
+  
+  // Show/hide "no results" message
+  const noResults = document.getElementById('noCourseResults');
+  if (visibleCount === 0) {
+    noResults.classList.remove('hidden');
+  } else {
+    noResults.classList.add('hidden');
+  }
+}
+
+function clearCourseFilters() {
+  document.getElementById('courseSearch').value = '';
+  document.getElementById('courseTypeFilter').value = '';
+  filterCourses();
+}
+
+function updateSelectedCoursesCount() {
+  const checkboxes = document.querySelectorAll('.course-checkbox:checked');
+  const count = checkboxes.length;
+  let totalECTS = 0;
+  let totalSWS = 0;
+  
+  checkboxes.forEach(checkbox => {
+    const item = checkbox.closest('.course-item');
+    totalECTS += parseInt(item.getAttribute('data-course-ects')) || 0;
+    totalSWS += parseInt(item.getAttribute('data-course-sws')) || 0;
+  });
+  
+  const countElement = document.getElementById('selectedCoursesCount');
+  if (count > 0) {
+    document.getElementById('selectedCount').textContent = count;
+    document.getElementById('selectedECTS').textContent = totalECTS;
+    document.getElementById('selectedSWS').textContent = totalSWS;
+    countElement.classList.remove('hidden');
+  } else {
+    countElement.classList.add('hidden');
+  }
+}
+
+function resetCourseSelection() {
+  document.querySelectorAll('.course-checkbox').forEach(checkbox => {
+    checkbox.checked = false;
+  });
+  clearCourseFilters();
+  updateSelectedCoursesCount();
+}
+
+// Course search and filter functionality for edit modal
+function setupEditCourseSearch() {
+  const searchInput = document.getElementById('editCourseSearch');
+  const typeFilter = document.getElementById('editCourseTypeFilter');
+  
+  searchInput.addEventListener('input', filterEditCourses);
+  typeFilter.addEventListener('change', filterEditCourses);
+  
+  // Setup course selection tracking
+  document.querySelectorAll('.edit-course-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateEditSelectedCoursesCount);
+  });
+}
+
+function filterEditCourses() {
+  const searchTerm = document.getElementById('editCourseSearch').value.toLowerCase();
+  const selectedType = document.getElementById('editCourseTypeFilter').value;
+  const courseItems = document.querySelectorAll('.edit-course-item');
+  let visibleCount = 0;
+  
+  courseItems.forEach(item => {
+    const courseName = item.getAttribute('data-course-name');
+    const courseType = item.getAttribute('data-course-type');
+    
+    const matchesSearch = courseName.includes(searchTerm);
+    const matchesType = !selectedType || courseType === selectedType;
+    
+    if (matchesSearch && matchesType) {
+      item.style.display = 'flex';
+      visibleCount++;
+    } else {
+      item.style.display = 'none';
+    }
+  });
+  
+  // Show/hide "no results" message
+  const noResults = document.getElementById('editNoCourseResults');
+  if (visibleCount === 0) {
+    noResults.classList.remove('hidden');
+  } else {
+    noResults.classList.add('hidden');
+  }
+}
+
+function clearEditCourseFilters() {
+  document.getElementById('editCourseSearch').value = '';
+  document.getElementById('editCourseTypeFilter').value = '';
+  filterEditCourses();
+}
+
+function updateEditSelectedCoursesCount() {
+  const checkboxes = document.querySelectorAll('.edit-course-checkbox:checked');
+  const count = checkboxes.length;
+  let totalECTS = 0;
+  let totalSWS = 0;
+  
+  checkboxes.forEach(checkbox => {
+    const item = checkbox.closest('.edit-course-item');
+    totalECTS += parseInt(item.getAttribute('data-course-ects')) || 0;
+    totalSWS += parseInt(item.getAttribute('data-course-sws')) || 0;
+  });
+  
+  const countElement = document.getElementById('editSelectedCoursesCount');
+  if (count > 0) {
+    document.getElementById('editSelectedCount').textContent = count;
+    document.getElementById('editSelectedECTS').textContent = totalECTS;
+    document.getElementById('editSelectedSWS').textContent = totalSWS;
+    countElement.classList.remove('hidden');
+  } else {
+    countElement.classList.add('hidden');
+  }
+}
+
+function resetEditCourseSelection() {
+  document.querySelectorAll('.edit-course-checkbox').forEach(checkbox => {
+    checkbox.checked = false;
+  });
+  clearEditCourseFilters();
+  updateEditSelectedCoursesCount();
+}
+
+// Drag and Drop functionality for module reordering
+let draggedElement = null;
+let placeholder = null;
+
+// Student count update function
+function updateStudentCount(input) {
+  const programmeId = input.dataset.programmeId;
+  const semester = input.dataset.semester;
+  const type = input.dataset.type;  // 'min' or 'max'
+  const value = input.value;
+
+  // Prepare form data
+  const formData = new FormData();
+  formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+  formData.append('action', 'update_student_count');
+  formData.append('programme_id', programmeId);
+  formData.append('semester', semester);
+  formData.append('type', type);
+  formData.append('value', value);
+
+  // Send AJAX request
+  fetch(window.location.pathname, {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then data => {
+    if (data.status === 'success') {
+      // Add visual feedback for successful save
+      input.classList.add('bg-green-50', 'border-green-300');
+      setTimeout(() => {
+        input.classList.remove('bg-green-50', 'border-green-300');
+      }, 1000);
+    } else {
+      console.error('Failed to update student count:', data.message || 'Unknown error');
+      // Add visual feedback for error
+      input.classList.add('bg-red-50', 'border-red-300');
+      setTimeout(() => {
+        input.classList.remove('bg-red-50', 'border-red-300');
+      }, 2000);
+    }
+  })
+  .catch(error => {
+    console.error('Error updating student count:', error);
+    // Add visual feedback for error
+    input.classList.add('bg-red-50', 'border-red-300');
+    setTimeout(() => {
+      input.classList.remove('bg-red-50', 'border-red-300');
+    }, 2000);
+  });
+}
+
+// Existing drag and drop code
+document.addEventListener('DOMContentLoaded', function() {
+  const container = document.getElementById('modules-container');
+  if (!container) return;
+  
+  // Create a placeholder element
+  placeholder = document.createElement('div');
+  placeholder.className = 'drag-placeholder';
+  
+  const moduleItems = container.querySelectorAll('.module-item');
+  
+  moduleItems.forEach(item => {
+    item.addEventListener('dragstart', handleDragStart);
+    item.addEventListener('dragover', handleDragOver);
+    item.addEventListener('dragenter', handleDragEnter);
+    item.addEventListener('dragleave', handleDragLeave);
+    item.addEventListener('drop', handleDrop);
+    item.addEventListener('dragend', handleDragEnd);
+  });
+  
+  function handleDragStart(e) {
+    draggedElement = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.outerHTML);
+    
+    // Hide the original element while dragging
+    setTimeout(() => {
+      if (this.style) this.style.display = 'none';
+    }, 0);
+  }
+  
+  function handleDragEnter(e) {
+    e.preventDefault();
+    if (this !== draggedElement) {
+      this.classList.add('drag-target');
+    }
+  }
+  
+  function handleDragLeave(e) {
+    // Only remove classes if we're actually leaving the element
+    if (!this.contains(e.relatedTarget)) {
+      this.classList.remove('drag-target', 'drag-over-top', 'drag-over-bottom');
+    }
+  }
+  
+  function handleDragOver(e) {
+    if (e.preventDefault) {
+      e.preventDefault();
+    }
+    
+    if (this === draggedElement) return false;
+    
+    e.dataTransfer.dropEffect = 'move';
+    
+    // Determine if we should show indicator above or below
+    const rect = this.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    
+    // Remove existing classes
+    this.classList.remove('drag-over-top', 'drag-over-bottom');
+    
+    if (e.clientY < midpoint) {
+      this.classList.add('drag-over-top');
+      // Show placeholder above
+      if (!this.previousElementSibling || this.previousElementSibling !== placeholder) {
+        placeholder.classList.add('active');
+        this.parentNode.insertBefore(placeholder, this);
+      }
+    } else {
+      this.classList.add('drag-over-bottom');
+      // Show placeholder below
+      if (!this.nextElementSibling || this.nextElementSibling !== placeholder) {
+        placeholder.classList.add('active');
+        this.parentNode.insertBefore(placeholder, this.nextSibling);
+      }
+    }
+    
+    return false;
+  }
+  
+  function handleDrop(e) {
+    if (e.stopPropagation) {
+      e.stopPropagation();
+    }
+    
+    if (draggedElement !== this) {
+      // Replace placeholder with dragged element
+      if (placeholder.parentNode) {
+        placeholder.parentNode.replaceChild(draggedElement, placeholder);
+      }
+      
+      // Send AJAX request to update order
+      updateModuleOrder();
+    }
+    
+    return false;
+  }
+  
+  function handleDragEnd(e) {
+    // Clean up
+    this.style.display = '';
+    this.classList.remove('dragging');
+    
+    // Remove all drag-related classes from all items
+    container.querySelectorAll('.module-item').forEach(item => {
+      item.classList.remove('drag-target', 'drag-over-top', 'drag-over-bottom');
+    });
+    
+    // Remove placeholder
+    if (placeholder.parentNode) {
+      placeholder.classList.remove('active');
+      placeholder.parentNode.removeChild(placeholder);
+    }
+    
+    draggedElement = null;
+  }
+  
+  function updateModuleOrder() {
+    const moduleIds = Array.from(container.querySelectorAll('.module-item')).map(item => 
+      item.getAttribute('data-module-id')
+    );
+    
+    const formData = new FormData();
+    moduleIds.forEach(id => formData.append('module_ids[]', id));
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    fetch('{% url "v2_reorder_modules" programme.id %}', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status !== 'success') {
+        console.error('Failed to update module order');
+        // Could add user notification here
+      }
+    })
+    .catch(error => {
+      console.error('Error updating module order:', error);
+    });
+  }
+});
+</script>
+{% endblock %}
