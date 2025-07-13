@@ -64,6 +64,12 @@ class Course(models.Model):
     ects = models.PositiveIntegerField(default=6, help_text="ECTS")
     sws = models.PositiveIntegerField(default=2, help_text="Semesterwochenstunden")
     max_participants = models.PositiveIntegerField(null=True, blank=True)
+    
+    # Sharing functionality
+    is_shared = models.BooleanField(default=False, help_text="Whether this course is shared with other users")
+    shared_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='shared_courses_v2', null=True, blank=True, help_text="Original creator who shared this course")
+    shared_at = models.DateTimeField(null=True, blank=True, help_text="When this course was shared")
+    original_course = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='shared_copies', help_text="Reference to original course if this is a shared copy")
 
     class Meta:
         ordering = ['order', 'name']
@@ -217,6 +223,12 @@ class Programme(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='programmes_v2', null=True, blank=True)
     modules = models.ManyToManyField(Module, through='ProgrammeModule', related_name='programmes', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Sharing functionality
+    is_shared = models.BooleanField(default=False, help_text="Whether this programme is shared with other users")
+    shared_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='shared_programmes_v2', null=True, blank=True, help_text="Original creator who shared this programme")
+    shared_at = models.DateTimeField(null=True, blank=True, help_text="When this programme was shared")
+    original_programme = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='shared_copies', help_text="Reference to original programme if this is a shared copy")
 
     class Meta:
         ordering = ['name']

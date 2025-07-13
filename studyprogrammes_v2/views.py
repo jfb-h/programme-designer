@@ -9,7 +9,20 @@ from .forms import CourseForm, ModuleForm, ProgrammeForm, RevisionForm
 
 @login_required
 def course_overview(request):
-    """Overview of all courses with ability to add/edit."""
+    """Overview of all courses with ability to add/edit and share."""
+    from django.utils import timezone
+    
+    # Handle tab selection
+    current_tab = request.GET.get('tab', 'my')
+    
+    # Get courses based on tab
+    if current_tab == 'shared':
+        # Show shared courses (courses where is_shared=True)
+        courses = Course.objects.filter(is_shared=True)
+    else:
+        # Show user's own courses
+        courses = Course.objects.filter(user=request.user, is_shared=False)
+    
     # Handle sorting
     sort_by = request.GET.get('sort', 'name')
     sort_order = request.GET.get('order', 'asc')
@@ -23,7 +36,11 @@ def course_overview(request):
     if sort_order == 'desc':
         sort_by = f'-{sort_by}'
     
-    courses = Course.objects.all().order_by(sort_by)
+    courses = courses.order_by(sort_by)
+    
+    # Get counts for tab badges
+    my_courses_count = Course.objects.filter(user=request.user, is_shared=False).count()
+    shared_courses_count = Course.objects.filter(is_shared=True).count()
     
     form = CourseForm()
     edit_course = None
@@ -46,10 +63,13 @@ def course_overview(request):
                         ects=original_course.ects,
                         sws=original_course.sws,
                         max_participants=original_course.max_participants,
-                        discipline=original_course.discipline
+                        discipline=original_course.discipline,
+                        user=request.user,  # Set to current user
+                        is_shared=False,  # Copies are always private initially
                     )
                     # Copy many-to-many relationships (LPO relevance)
                     copied_course.lpo_relevance.set(original_course.lpo_relevance.all())
+                    messages.success(request, f'Kurs "{original_course.name}" wurde kopiert.')
                     
                 except Course.DoesNotExist:
                     messages.error(request, 'Kurs nicht gefunden!')
@@ -58,6 +78,39 @@ def course_overview(request):
                 return_url = request.POST.get('return_url') or request.GET.get('return_url')
                 if return_url:
                     return redirect(return_url)
+                return redirect('v2_course_overview')
+        
+        elif action == 'share':
+            # Handle course sharing
+            course_id = request.POST.get('course_id')
+            if course_id:
+                try:
+                    course = Course.objects.get(id=course_id, user=request.user)
+                    if not course.is_shared:
+                        # Create a shared copy
+                        shared_course = Course.objects.create(
+                            name=course.name,
+                            description=course.description,
+                            semester=course.semester,
+                            course_type=course.course_type,
+                            ects=course.ects,
+                            sws=course.sws,
+                            max_participants=course.max_participants,
+                            discipline=course.discipline,
+                            user=course.user,  # Keep original user
+                            is_shared=True,
+                            shared_by=request.user,
+                            shared_at=timezone.now(),
+                            original_course=course
+                        )
+                        # Copy many-to-many relationships
+                        shared_course.lpo_relevance.set(course.lpo_relevance.all())
+                        messages.success(request, f'Kurs "{course.name}" wurde geteilt.')
+                    else:
+                        messages.info(request, 'Dieser Kurs ist bereits geteilt.')
+                        
+                except Course.DoesNotExist:
+                    messages.error(request, 'Kurs nicht gefunden oder Sie haben keine Berechtigung!')
                 return redirect('v2_course_overview')
         
         else:
@@ -72,7 +125,14 @@ def course_overview(request):
                 form = CourseForm(request.POST)
             
             if form.is_valid():
-                form.save()
+                course = form.save(commit=False)
+                # Always set user for new courses (when pk is None)
+                if course.pk is None:
+                    course.user = request.user
+                    course.is_shared = False  # New courses are private by default
+                course.save()
+                # Save many-to-many relationships
+                form.save_m2m()
                 
                 # Check if there's a return URL
                 return_url = request.POST.get('return_url') or request.GET.get('return_url')
@@ -92,6 +152,9 @@ def course_overview(request):
         'edit_course': edit_course,
         'current_sort': request.GET.get('sort', 'name'),
         'current_order': request.GET.get('order', 'asc'),
+        'current_tab': current_tab,
+        'my_courses_count': my_courses_count,
+        'shared_courses_count': shared_courses_count,
         'return_url': request.GET.get('return_url'),
     })
 
@@ -132,15 +195,32 @@ def module_overview(request):
 
 @login_required
 def programme_overview(request):
-    """Overview of all programmes with ability to add/edit."""
-    # Handle sorting
-    sort_param = request.GET.get('sort', 'name')  # Default to name sorting
-    if sort_param == 'name':
-        programmes = Programme.objects.all().order_by('name')
-    elif sort_param == 'created':
-        programmes = Programme.objects.all().order_by('-created_at')  # Most recent first
+    """Overview of all programmes with ability to add/edit and share."""
+    from django.utils import timezone
+    
+    # Handle tab selection
+    current_tab = request.GET.get('tab', 'my')
+    
+    # Get programmes based on tab
+    if current_tab == 'shared':
+        # Show shared programmes (programmes where is_shared=True)
+        programmes = Programme.objects.filter(is_shared=True).order_by('name')
     else:
-        programmes = Programme.objects.all().order_by('name')  # Fallback to name
+        # Show user's own programmes
+        programmes = Programme.objects.filter(user=request.user, is_shared=False).order_by('name')
+    
+    # Handle sorting
+    sort_param = request.GET.get('sort', 'name')
+    if sort_param == 'name':
+        programmes = programmes.order_by('name')
+    elif sort_param == 'created':
+        programmes = programmes.order_by('-created_at')
+    else:
+        programmes = programmes.order_by('name')
+    
+    # Get counts for tab badges
+    my_programmes_count = Programme.objects.filter(user=request.user, is_shared=False).count()
+    shared_programmes_count = Programme.objects.filter(is_shared=True).count()
     
     form = ProgrammeForm()
     edit_programme = None
@@ -159,15 +239,43 @@ def programme_overview(request):
                         name=f"{original_programme.name} (Kopie)",
                         comment=original_programme.comment,
                         programme_type=original_programme.programme_type,
-                        user=request.user,  # Set to current user, not original
-                        is_public=original_programme.is_public,
-                        order=original_programme.order
+                        user=request.user,  # Set to current user
+                        is_shared=False,  # Copies are always private initially
                     )
                     # Copy many-to-many relationships (modules)
                     copied_programme.modules.set(original_programme.modules.all())
+                    messages.success(request, f'Studiengang "{original_programme.name}" wurde kopiert.')
                     
                 except Programme.DoesNotExist:
                     messages.error(request, 'Studiengang nicht gefunden!')
+                return redirect('v2_programme_overview')
+        
+        elif action == 'share':
+            # Handle programme sharing
+            programme_id = request.POST.get('programme_id')
+            if programme_id:
+                try:
+                    programme = Programme.objects.get(id=programme_id, user=request.user)
+                    if not programme.is_shared:
+                        # Create a shared copy
+                        shared_programme = Programme.objects.create(
+                            name=programme.name,
+                            comment=programme.comment,
+                            programme_type=programme.programme_type,
+                            user=programme.user,  # Keep original user
+                            is_shared=True,
+                            shared_by=request.user,
+                            shared_at=timezone.now(),
+                            original_programme=programme
+                        )
+                        # Copy many-to-many relationships (modules)
+                        shared_programme.modules.set(programme.modules.all())
+                        messages.success(request, f'Studiengang "{programme.name}" wurde geteilt.')
+                    else:
+                        messages.info(request, 'Dieser Studiengang ist bereits geteilt.')
+                        
+                except Programme.DoesNotExist:
+                    messages.error(request, 'Studiengang nicht gefunden oder Sie haben keine Berechtigung!')
                 return redirect('v2_programme_overview')
         
         else:
@@ -186,6 +294,7 @@ def programme_overview(request):
                 # Always set user for new programmes (when pk is None)
                 if programme.pk is None:
                     programme.user = request.user
+                    programme.is_shared = False  # New programmes are private by default
                 programme.save()
                 return redirect('v2_programme_overview')
 
@@ -199,6 +308,9 @@ def programme_overview(request):
         'programmes': programmes,
         'form': form,
         'edit_programme': edit_programme,
+        'current_tab': current_tab,
+        'my_programmes_count': my_programmes_count,
+        'shared_programmes_count': shared_programmes_count,
     })
 
 

@@ -159,8 +159,14 @@ class RevisionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Order programmes by name
-        self.fields['programmes'].queryset = Programme.objects.all().order_by('name')
+        # Allow selection of both private and shared programmes
+        user = kwargs.get('initial', {}).get('user')
+        if user:
+            self.fields['programmes'].queryset = Programme.objects.filter(
+                models.Q(user=user) | models.Q(is_shared=True)
+            ).order_by('name')
+        else:
+            self.fields['programmes'].queryset = Programme.objects.all().order_by('name')
 
 
 # Additional form for quick course creation in modules
