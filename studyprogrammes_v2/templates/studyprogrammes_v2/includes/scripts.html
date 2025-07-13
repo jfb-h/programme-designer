@@ -1,5 +1,19 @@
 <!-- JavaScript Functions -->
 <script>
+// Detailed view toggle functionality  
+function toggleDetailedView() {
+  const content = document.getElementById('detailed-view');
+  const chevron = document.getElementById('detailed-view-chevron');
+  
+  if (content.classList.contains('hidden')) {
+    content.classList.remove('hidden');
+    chevron.style.transform = 'rotate(180deg)';
+  } else {
+    content.classList.add('hidden');
+    chevron.style.transform = 'rotate(0deg)';
+  }
+}
+
 // Module tray toggle functionality
 function toggleModuleTray(moduleId) {
   const tray = document.getElementById(`module-tray-${moduleId}`);

@@ -29,51 +29,50 @@
           </div>
           
           <div class="flex-1 cursor-pointer" onclick="toggleModuleTray({{ module.id }})">
-            <div class="flex items-center space-x-3">
-              <h4 class="text-base font-medium text-gray-900">{{ module.name }}</h4>
-              <button class="text-gray-400 hover:text-gray-600 transition-colors" onclick="event.stopPropagation(); toggleModuleTray({{ module.id }})">
-                <svg class="w-5 h-5 transform transition-transform duration-200 module-chevron-{{ module.id }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-              </button>
-            </div>
-            {% if module.description %}
-              <p class="text-sm text-gray-500 mt-1">{{ module.description|truncatechars:100 }}</p>
-            {% endif %}
-            
-            <!-- Module Summary -->
-            <div class="flex space-x-4 mt-2 items-center">
-              {% with semester_range=module|module_semester_range %}
-                {% if semester_range %}
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                    {{ semester_range }}
-                  </span>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <h4 class="text-base font-medium text-gray-900">{{ module.name }}</h4>
+                <button class="text-gray-400 hover:text-gray-600 transition-colors" onclick="event.stopPropagation(); toggleModuleTray({{ module.id }})">
+                  <svg class="w-5 h-5 transform transition-transform duration-200 module-chevron-{{ module.id }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </button>
+              </div>
+              
+              <!-- Pills in folded state -->
+              <div class="flex items-center space-x-2">
+                {% if module|module_has_regional_lpo %}
+                  <svg class="w-4 h-4 text-orange-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" title="Regional">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m20.893 13.393-1.135-1.135a2.252 2.252 0 0 1-.421-.585l-1.08-2.16a.414.414 0 0 0-.663-.107.827.827 0 0 1-.812.21l-1.273-.363a.89.89 0 0 0-.738 1.595l.587.39c.59.395.674 1.23.172 1.732l-.2.2c-.212.212-.33.498-.33.796v.41c0 .409-.11.809-.32 1.158l-1.315 2.191a2.11 2.11 0 0 1-1.81 1.025 1.055 1.055 0 0 1-1.055-1.055v-1.172c0-.92-.56-1.747-1.414-2.089l-.655-.261a2.25 2.25 0 0 1-1.383-2.46l.007-.042a2.25 2.25 0 0 1 .29-.787l.09-.15a2.25 2.25 0 0 1 2.37-1.048l1.178.236a1.125 1.125 0 0 0 1.302-.795l.208-.73a1.125 1.125 0 0 0-.578-1.315l-.665-.332-.091.091a2.25 2.25 0 0 1-1.591.659h-.18c-.249 0-.487.1-.662.274a.931.931 0 0 1-1.458-1.137l1.411-2.353a2.25 2.25 0 0 0 .286-.76m11.928 9.869A9 9 0 0 0 8.965 3.525m11.928 9.868A9 9 0 1 1 8.965 3.525"></path>
+                  </svg>
                 {% endif %}
-              {% endwith %}
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                {{ module.courses.count }} Kurse
-              </span>
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                {{ module.total_ects }} ECTS
-              </span>
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                {{ module|module_sws_range:student_counts }} SWS
-              </span>
-              {% if module|module_has_regional_lpo %}
-                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" title="Regional">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m20.893 13.393-1.135-1.135a2.252 2.252 0 0 1-.421-.585l-1.08-2.16a.414.414 0 0 0-.663-.107.827.827 0 0 1-.812.21l-1.273-.363a.89.89 0 0 0-.738 1.595l.587.39c.59.395.674 1.23.172 1.732l-.2.2c-.212.212-.33.498-.33.796v.41c0 .409-.11.809-.32 1.158l-1.315 2.191a2.11 2.11 0 0 1-1.81 1.025 1.055 1.055 0 0 1-1.055-1.055v-1.172c0-.92-.56-1.747-1.414-2.089l-.655-.261a2.25 2.25 0 0 1-1.383-2.46l.007-.042a2.25 2.25 0 0 1 .29-.787l.09-.15a2.25 2.25 0 0 1 2.37-1.048l1.178.236a1.125 1.125 0 0 0 1.302-.795l.208-.73a1.125 1.125 0 0 0-.578-1.315l-.665-.332-.091.091a2.25 2.25 0 0 1-1.591.659h-.18c-.249 0-.487.1-.662.274a.931.931 0 0 1-1.458-1.137l1.411-2.353a2.25 2.25 0 0 0 .286-.76m11.928 9.869A9 9 0 0 0 8.965 3.525m11.928 9.868A9 9 0 1 1 8.965 3.525"></path>
-                </svg>
-              {% endif %}
-              {% if module|module_has_excursion_lpo %}
-                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" title="Exkursion">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z"></path>
-                </svg>
-              {% endif %}
+                {% if module|module_has_excursion_lpo %}
+                  <svg class="w-4 h-4 text-orange-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5" title="Exkursion">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z"></path>
+                  </svg>
+                {% endif %}
+                {% with semester_range=module|module_semester_range %}
+                  {% if semester_range %}
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 min-w-0">
+                      {{ semester_range }}
+                    </span>
+                  {% endif %}
+                {% endwith %}
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 min-w-0">
+                  {{ module.courses.count }} Kurse
+                </span>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 min-w-0">
+                  {{ module.total_ects }} ECTS
+                </span>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 min-w-0">
+                  {{ module|module_sws_range:student_counts }} SWS
+                </span>
+              </div>
             </div>
           </div>
           
           <!-- Action Buttons -->
-          <div class="flex items-center space-x-2 ml-4">
+          <div class="flex items-center space-x-2 ml-6">
             <button onclick="openEditModuleModal({{ module.id }})" class="text-primary-600 hover:text-primary-900 transition-colors p-1 hover:bg-primary-50 rounded edit-module-btn" 
                     data-module-id="{{ module.id }}" 
                     data-module-name="{{ module.name }}" 
@@ -98,17 +97,46 @@
           </div>
         </div>
         
-        <!-- Collapsible Course Tray -->
+        <!-- Collapsible Module Tray -->
         <div id="module-tray-{{ module.id }}" class="module-tray hidden mt-4 pt-4 border-t border-gray-100">
-          {% if module.courses.all %}
+          <div class="space-y-4">
+            <!-- Module Details Section -->
             <div class="space-y-3">
-              <h5 class="text-sm font-medium text-gray-700 flex items-center">
-                <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                </svg>
-                Kurse in diesem Modul ({{ module.courses.count }})
-              </h5>
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {% if module.description %}
+                <div>
+                  <h6 class="text-sm font-bold text-gray-700 mb-2 flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Beschreibung
+                  </h6>
+                  <p class="text-sm text-gray-600">{{ module.description }}</p>
+                </div>
+              {% endif %}
+              
+              {% if module.certificate %}
+                <div>
+                  <h6 class="text-sm font-bold text-gray-700 mb-2 flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                    </svg>
+                    Leistungsnachweis
+                  </h6>
+                  <p class="text-sm text-gray-600">{{ module.certificate }}</p>
+                </div>
+              {% endif %}
+            </div>
+            
+            <!-- Courses Section -->
+            {% if module.courses.all %}
+              <div>
+                <h5 class="text-sm font-bold text-gray-700 flex items-center mb-3">
+                  <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
+                  Kurse in diesem Modul
+                </h5>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 {% for course in module.courses.all %}
                   <div class="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-shadow">
                     <div class="flex items-start justify-between">
@@ -178,21 +206,22 @@
                     </div>
                   </div>
                 {% endfor %}
-              </div>
-            </div>
-          {% else %}
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div class="flex items-center">
-                <svg class="w-5 h-5 text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                </svg>
-                <div>
-                  <p class="text-sm font-medium text-yellow-800">Keine Kurse in diesem Modul</p>
-                  <p class="text-xs text-yellow-600 mt-1">Verwenden Sie "Bearbeiten", um Kurse hinzuzufügen</p>
                 </div>
               </div>
-            </div>
-          {% endif %}
+            {% else %}
+              <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex items-center">
+                  <svg class="w-5 h-5 text-yellow-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                  </svg>
+                  <div>
+                    <p class="text-sm font-medium text-yellow-800">Keine Kurse in diesem Modul</p>
+                    <p class="text-xs text-yellow-600 mt-1">Verwenden Sie "Bearbeiten", um Kurse hinzuzufügen</p>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          </div>
         </div>
       </div>
       {% endfor %}

@@ -1,135 +1,28 @@
 {% load v2_extras %}
-<!-- Compact Summary Statistics -->
-<div class="grid grid-cols-1 lg:grid-cols-5 gap-12">
-  <!-- Basic Information Pills -->
-  <div class="space-y-1.5">
-    <!-- First row: Module and ECTS Pills -->
-    <div class="grid grid-cols-2 gap-1.5">
-      <!-- Module Pill -->
-      <div class="bg-blue-50 border border-blue-200 rounded-xl p-2.5 shadow-sm hover:shadow-md transition-shadow">
-        <div class="flex justify-center items-center space-x-1">
-          <div class="text-xl font-bold text-blue-700">{{ programme_modules.count }}</div>
-          <div class="text-xs font-medium text-blue-600">Module</div>
-        </div>
-      </div>
-      
-      <!-- ECTS Pill -->
-      <div class="bg-green-50 border border-green-200 rounded-xl p-2.5 shadow-sm hover:shadow-md transition-shadow">
-        <div class="flex justify-center items-center space-x-1">
-          <div class="text-xl font-bold text-green-700">{{ programme.total_ects }}</div>
-          <div class="text-xs font-medium text-green-600">ECTS</div>
-        </div>
+<!-- Basic Information Pills - All in One Row -->
+<div class="flex justify-center lg:justify-start">
+  <div class="grid grid-cols-3 gap-3">
+    <!-- Module Pill -->
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex justify-center items-center space-x-2">
+        <div class="text-2xl font-bold text-blue-700">{{ programme_modules.count }}</div>
+        <div class="text-sm font-medium text-blue-600">Module</div>
       </div>
     </div>
     
-    <!-- Second row: SWS Pill -->
-    <div class="bg-purple-50 border border-purple-200 rounded-xl p-2.5 shadow-sm hover:shadow-md transition-shadow">
+    <!-- ECTS Pill -->
+    <div class="bg-green-50 border border-green-200 rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow">
       <div class="flex justify-center items-center space-x-2">
-        <div class="text-xl font-bold text-purple-700">{{ programme|programme_sws_range_total:student_counts }}</div>
-        <div class="text-xs font-medium text-purple-600">SWS</div>
+        <div class="text-2xl font-bold text-green-700">{{ programme.total_ects }}</div>
+        <div class="text-sm font-medium text-green-600">ECTS</div>
       </div>
     </div>
-  </div>
-
-  <!-- ECTS Distribution Card -->
-  <div class="lg:col-span-2">
-    <h3 class="text-sm font-semibold text-gray-900 mb-2 pb-1 border-b border-gray-200">ECTS-Verteilung</h3>
-    <div class="space-y-2">
-      <!-- ECTS by Course Type -->
-      <div class="flex items-center flex-wrap gap-2">
-        <div class="text-xs font-semibold text-gray-800 uppercase tracking-wide w-16 text-right border-r border-gray-200 pr-3">
-          Kurstyp
-        </div>
-        {% with ects_by_type=programme|programme_ects_by_course_type %}
-          {% for course_type, ects in ects_by_type.items %}
-            <span class="inline-flex items-center rounded-full text-xs overflow-hidden">
-              <span class="px-2 py-0.5 bg-gray-200 text-gray-700 font-bold">{{ course_type|course_type_short }}</span>
-              <span class="px-2 py-0.5 bg-green-100 text-green-800">{{ ects }}</span>
-            </span>
-          {% endfor %}
-        {% endwith %}
-      </div>
-      
-      <!-- ECTS by Discipline -->
-      <div class="flex items-center flex-wrap gap-2">
-        <div class="text-xs font-semibold text-gray-800 uppercase tracking-wide w-16 text-right border-r border-gray-200 pr-3">
-          Fach
-        </div>
-        {% with ects_by_discipline=programme|programme_ects_by_discipline %}
-          {% for discipline, ects in ects_by_discipline.items %}
-            <span class="inline-flex items-center rounded-full text-xs overflow-hidden">
-              <span class="px-2 py-0.5 bg-gray-200 text-gray-700 font-bold">{{ discipline|discipline_short }}</span>
-              <span class="px-2 py-0.5 bg-green-100 text-green-800">{{ ects }}</span>
-            </span>
-          {% endfor %}
-        {% endwith %}
-      </div>
-      
-      <!-- ECTS by LPO Category -->
-      {% with lpo_ects=programme|programme_ects_by_lpo %}
-        <div class="flex items-center flex-wrap gap-2">
-          <div class="text-xs font-semibold text-gray-800 uppercase tracking-wide w-16 text-right border-r border-gray-200 pr-3">
-            LPO
-          </div>
-          {% if lpo_ects.regional %}
-            <span class="inline-flex items-center rounded-full text-xs overflow-hidden">
-              <span class="px-2 py-0.5 bg-gray-200 text-gray-700 font-bold flex items-center space-x-1">
-                <svg class="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m20.893 13.393-1.135-1.135a2.252 2.252 0 0 1-.421-.585l-1.08-2.16a.414.414 0 0 0-.663-.107.827.827 0 0 1-.812.21l-1.273-.363a.89.89 0 0 0-.738 1.595l.587.39c.59.395.674 1.23.172 1.732l-.2.2c-.212.212-.33.498-.33.796v.41c0 .409-.11.809-.32 1.158l-1.315 2.191a2.11 2.11 0 0 1-1.81 1.025 1.055 1.055 0 0 1-1.055-1.055v-1.172c0-.92-.56-1.747-1.414-2.089l-.655-.261a2.25 2.25 0 0 1-1.383-2.46l.007-.042a2.25 2.25 0 0 1 .29-.787l.09-.15a2.25 2.25 0 0 1 2.37-1.048l1.178.236a1.125 1.125 0 0 0 1.302-.795l.208-.73a1.125 1.125 0 0 0-.578-1.315l-.665-.332-.091.091a2.25 2.25 0 0 1-1.591.659h-.18c-.249 0-.487.1-.662.274a.931.931 0 0 1-1.458-1.137l1.411-2.353a2.25 2.25 0 0 0 .286-.76m11.928 9.869A9 9 0 0 0 8.965 3.525m11.928 9.868A9 9 0 1 1 8.965 3.525"></path>
-                </svg>
-                <span>Regional</span>
-              </span>
-              <span class="px-2 py-0.5 bg-green-100 text-green-800">{{ lpo_ects.regional }}</span>
-            </span>
-          {% endif %}
-          {% if lpo_ects.exkursion %}
-            <span class="inline-flex items-center rounded-full text-xs overflow-hidden">
-              <span class="px-2 py-0.5 bg-gray-200 text-gray-700 font-bold flex items-center space-x-1">
-                <svg class="w-3 h-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z"></path>
-                </svg>
-                <span>Exkursion</span>
-              </span>
-              <span class="px-2 py-0.5 bg-green-100 text-green-800">{{ lpo_ects.exkursion }}</span>
-            </span>
-          {% endif %}
-        </div>
-      {% endwith %}
-    </div>
-  </div>
-
-  <!-- SWS Distribution Card -->
-  <div class="lg:col-span-2">
-    <h3 class="text-sm font-semibold text-gray-900 mb-2 pb-1 border-b border-gray-200">SWS-Verteilung</h3>
-    <div class="space-y-2">
-      <!-- SWS by Course Type -->
-      <div class="flex items-center flex-wrap gap-2">
-        <div class="text-xs font-semibold text-gray-800 uppercase tracking-wide w-16 text-right border-r border-gray-200 pr-3">
-          Kurstyp
-        </div>
-        {% with sws_by_type=programme|programme_sws_range_by_course_type:student_counts %}
-          {% for course_type, sws_range in sws_by_type.items %}
-            <span class="inline-flex items-center rounded-full text-xs overflow-hidden">
-              <span class="px-2 py-0.5 bg-gray-200 text-gray-700 font-bold">{{ course_type|course_type_short }}</span>
-              <span class="px-2 py-0.5 bg-purple-100 text-purple-800">{{ sws_range }}</span>
-            </span>
-          {% endfor %}
-        {% endwith %}
-      </div>
-      
-      <!-- SWS by Discipline -->
-      <div class="flex items-center flex-wrap gap-2">
-        <div class="text-xs font-semibold text-gray-800 uppercase tracking-wide w-16 text-right border-r border-gray-200 pr-3">
-          Fach
-        </div>
-        {% with sws_by_discipline=programme|programme_sws_range_by_discipline:student_counts %}
-          {% for discipline, sws_range in sws_by_discipline.items %}
-            <span class="inline-flex items-center rounded-full text-xs overflow-hidden">
-              <span class="px-2 py-0.5 bg-gray-200 text-gray-700 font-bold">{{ discipline|discipline_short }}</span>
-              <span class="px-2 py-0.5 bg-purple-100 text-purple-800">{{ sws_range }}</span>
-            </span>
-          {% endfor %}
-        {% endwith %}
+    
+    <!-- SWS Pill -->
+    <div class="bg-purple-50 border border-purple-200 rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex justify-center items-center space-x-2">
+        <div class="text-2xl font-bold text-purple-700">{{ programme|programme_sws_range_total:student_counts }}</div>
+        <div class="text-sm font-medium text-purple-600">SWS</div>
       </div>
     </div>
   </div>
