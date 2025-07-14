@@ -184,7 +184,7 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
             </span>
           </td>
           <td class="px-6 py-4 text-sm text-gray-500 text-center font-medium w-16">{{ programme.total_ects }}</td>
-          <td class="px-6 py-4 text-sm text-gray-500 text-center font-medium w-16">{{ programme.total_sws }}</td>
+          <td class="px-6 py-4 text-sm text-gray-500 text-center font-medium w-16">{{ programme|programme_sws_range }}</td>
           <td class="px-6 py-4 text-sm font-medium w-32">
             <div class="flex space-x-2 justify-center">
               <!-- Detail/Edit Button -->

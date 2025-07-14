@@ -151,17 +151,37 @@ def calculate_sws_range(course, student_counts):
     if not course.max_participants or not course.sws:
         return course.sws
     
-    min_students = student_counts.get('min', {}).get(course.semester, 0) if student_counts else 0
-    max_students = student_counts.get('max', {}).get(course.semester, 0) if student_counts else 0
+    # Note: This filter no longer has semester context since courses don't have a direct semester field
+    # The semester information is now in CourseModule through model
+    # For now, we'll return the base SWS since we don't have semester context
+    return course.sws
+
+@register.filter
+def calculate_course_module_sws_range(course_module, student_counts):
+    """Calculate SWS range for a course module based on number of classes needed."""
+    if not course_module or not hasattr(course_module, 'course') or not hasattr(course_module, 'semester'):
+        return 0
+    
+    course = course_module.course
+    semester = course_module.semester
+    
+    if not course.max_participants or not course.sws:
+        return course.sws
+    
+    # Get student counts for this specific semester
+    min_students = student_counts.get('min', {}).get(semester, 0) if student_counts else 0
+    max_students = student_counts.get('max', {}).get(semester, 0) if student_counts else 0
     
     if min_students == 0 and max_students == 0:
         return course.sws
     
+    # Calculate required classes
     min_classes = calculate_classes(min_students, course.max_participants)
     max_classes = calculate_classes(max_students, course.max_participants)
     
-    min_sws = course.sws * min_classes
-    max_sws = course.sws * max_classes
+    # Calculate SWS range
+    min_sws = course.sws * min_classes if min_classes > 0 else course.sws
+    max_sws = course.sws * max_classes if max_classes > 0 else course.sws
     
     if min_sws == max_sws:
         return min_sws
@@ -239,13 +259,48 @@ def get_display_name(value, choices_class):
 def semester_ects_total(programme, semester):
     """Get total ECTS for a specific semester in a programme."""
     if not hasattr(programme, 'get_semester_ects_total'):
-        # Fallback calculation
+        # Fallback calculation using CourseModule through model
         total = 0
         for module in programme.modules.all():
-            for course in module.courses.filter(semester=semester):
-                total += course.ects or 0
+            for course_module in module.coursemodule_set.filter(semester=semester):
+                total += course_module.course.ects or 0
         return total
     return programme.get_semester_ects_total(semester)
+
+@register.filter
+def semester_ects_total_with_nebenfach(programme, args):
+    """Get total ECTS for a specific semester including Nebenfach ECTS."""
+    # Parse args as "semester:nebenfach_ects_dict"
+    if ':' in str(args):
+        semester_str, nebenfach_dict_str = str(args).split(':', 1)
+        try:
+            semester = int(semester_str)
+        except (ValueError, TypeError):
+            return 0
+    else:
+        semester = int(args)
+        nebenfach_dict_str = None
+    
+    # Get base ECTS from courses
+    base_ects = semester_ects_total(programme, semester)
+    
+    # Try to get nebenfach ECTS from context
+    if nebenfach_dict_str and 'nebenfach_ects' in nebenfach_dict_str:
+        # This is a bit tricky - we'll need to pass nebenfach_ects separately
+        return base_ects
+    
+    return base_ects
+
+@register.simple_tag
+def semester_ects_with_nebenfach(programme, semester, nebenfach_ects):
+    """Get total ECTS for a specific semester including Nebenfach ECTS."""
+    # Get base ECTS from courses
+    base_ects = semester_ects_total(programme, semester)
+    
+    # Add nebenfach ECTS if available
+    nebenfach = nebenfach_ects.get(semester, 0) if nebenfach_ects else 0
+    
+    return base_ects + nebenfach
 
 @register.filter
 def semester_sws_range(programme, semester):
@@ -255,9 +310,10 @@ def semester_sws_range(programme, semester):
         min_total = 0
         max_total = 0
         
-        # Get all courses for this semester
+        # Get all courses for this semester using CourseModule through model
         for module in programme.modules.all():
-            for course in module.courses.filter(semester=semester):
+            for course_module in module.coursemodule_set.filter(semester=semester):
+                course = course_module.course
                 course_sws = course.sws or 0
                 
                 if course.max_participants:
@@ -301,9 +357,10 @@ def semester_sws_with_students(programme, args):
         min_total = 0
         max_total = 0
         
-        # Get all courses for this semester
+        # Get all courses for this semester using CourseModule through model
         for module in programme.modules.all():
-            for course in module.courses.filter(semester=semester):
+            for course_module in module.coursemodule_set.filter(semester=semester):
+                course = course_module.course
                 course_sws = course.sws or 0
                 
                 if course.max_participants and min_students > 0 and max_students > 0:
@@ -351,9 +408,10 @@ def semester_sws_calculation(programme, semester, student_counts):
         min_total = 0
         max_total = 0
         
-        # Get all courses for this semester
+        # Get all courses for this semester using CourseModule through model
         for module in programme.modules.all():
-            for course in module.courses.filter(semester=semester):
+            for course_module in module.coursemodule_set.filter(semester=semester):
+                course = course_module.course
                 course_sws = course.sws or 0
                 
                 if course.max_participants and min_students > 0 and max_students > 0:
@@ -383,15 +441,32 @@ def get_programme_type_display(programme_type_code):
 
 @register.filter
 def programme_sws_range_with_revision_counts(programme, revision):
-    """Get SWS range for a programme using the revision's aggregated student counts."""
-    if not programme or not revision:
+    """Get SWS range for a programme using the programme's own student counts."""
+    if not programme:
         return "—"
     
-    # Get aggregated student counts from the revision
-    student_counts_data = revision.get_aggregate_student_counts()
+    # Get the programme's own student counts (same as programme detail page)
+    from ..models import ProgrammeStudentCount
+    existing_counts = ProgrammeStudentCount.objects.filter(programme=programme)
     student_counts = {
-        'min': {sem: data['min_students'] for sem, data in student_counts_data.items()},
-        'max': {sem: data['max_students'] for sem, data in student_counts_data.items()}
+        'min': {int(sc.semester): int(sc.min_students) for sc in existing_counts},
+        'max': {int(sc.semester): int(sc.max_students) for sc in existing_counts}
+    }
+    
+    return programme.get_sws_range_total(student_counts)
+
+@register.filter
+def programme_sws_range(programme):
+    """Get SWS range for a programme using the programme's own student counts."""
+    if not programme:
+        return "—"
+    
+    # Get the programme's own student counts (same as programme detail page)
+    from ..models import ProgrammeStudentCount
+    existing_counts = ProgrammeStudentCount.objects.filter(programme=programme)
+    student_counts = {
+        'min': {int(sc.semester): int(sc.min_students) for sc in existing_counts},
+        'max': {int(sc.semester): int(sc.max_students) for sc in existing_counts}
     }
     
     return programme.get_sws_range_total(student_counts)

@@ -2,6 +2,28 @@
 
 <!-- Student Count Management Section -->
 <div class="mb-6 mt-8">
+  <!-- Edit Controls -->
+  <div class="flex justify-between items-center mb-4">
+    <div></div>
+    <div class="flex items-center space-x-1">
+      <button id="edit-table-btn" onclick="toggleEditMode()" class="inline-flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors duration-200" title="Bearbeiten">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+        </svg>
+      </button>
+      <button id="save-changes-btn" onclick="saveChanges()" class="hidden inline-flex items-center justify-center w-8 h-8 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors duration-200" title="Speichern">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+      </button>
+      <button id="discard-changes-btn" onclick="discardChanges()" class="hidden inline-flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors duration-200" title="Verwerfen">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+  
   <div class="overflow-x-auto">
     <table class="w-full">
       <thead>
@@ -15,7 +37,7 @@
         </tr>
       </thead>
       <tbody class="text-sm">
-        <tr class="border-b border-gray-200">
+        <tr class="border-b border-gray-200" style="height: 32px;">
           <td class="py-1 px-1 font-medium text-gray-900" style="width: 120px;">
             Min. Studierende
           </td>
@@ -31,11 +53,12 @@
                      data-type="min"
                      value="{{ student_counts.min|dict_get:semester|default:'' }}"
                      onchange="updateStudentCount(this)"
-                     placeholder="0">
+                     placeholder="0"
+                     disabled>
             </td>
           {% endfor %}
         </tr>
-        <tr class="border-b border-gray-200">
+        <tr class="border-b border-gray-200" style="height: 32px;">
           <td class="py-1 px-1 font-medium text-gray-900" style="width: 120px;">
             Max. Studierende
           </td>
@@ -51,23 +74,45 @@
                      data-type="max"
                      value="{{ student_counts.max|dict_get:semester|default:'' }}"
                      onchange="updateStudentCount(this)"
-                     placeholder="0">
+                     placeholder="0"
+                     disabled>
             </td>
           {% endfor %}
         </tr>
-        <tr class="border-t-2 border-gray-300 border-b border-gray-200">
+        <tr class="border-b border-gray-200" style="height: 32px;">
+          <td class="py-1 px-1 font-medium text-gray-900" style="width: 120px;">
+            Nebenfach
+          </td>
+          {% for semester in semester_range %}
+            <td class="py-1 px-1 border-l border-gray-200">
+              <input type="text" 
+                     inputmode="numeric"
+                     pattern="[0-9]*"
+                     class="w-full text-center text-sm border-0 focus:outline-none focus:ring-0 nebenfach-input bg-transparent"
+                     style="appearance: textfield; -moz-appearance: textfield; box-shadow: none;"
+                     data-programme-id="{{ programme.id }}"
+                     data-semester="{{ semester }}"
+                     value="{{ nebenfach_ects|dict_get:semester|default:'' }}"
+                     onchange="updateNebenfach(this)"
+                     placeholder="0"
+                     disabled>
+            </td>
+          {% endfor %}
+        </tr>
+        <tr class="border-t-2 border-gray-300 border-b border-gray-200" style="height: 32px;">
           <td class="py-1 px-1 font-medium text-gray-900" style="width: 120px;">
             ECTS Summe
           </td>
           {% for semester in semester_range %}
-            {% with ects_total=programme|semester_ects_total:semester target_ects=programme.programme_type|programme_target_ects_per_semester %}
+            {% semester_ects_with_nebenfach programme semester nebenfach_ects as ects_total %}
+            {% with target_ects=programme.programme_type|programme_target_ects_per_semester %}
               <td class="py-1 px-1 border-l border-gray-200 text-center text-sm {% if ects_total != target_ects %}text-red-600 font-medium{% else %}text-gray-900{% endif %}">
                 {{ ects_total }}
               </td>
             {% endwith %}
           {% endfor %}
         </tr>
-        <tr>
+        <tr style="height: 32px;">
           <td class="py-1 px-1 font-medium text-gray-900" style="width: 120px;">
             SWS Summe
           </td>

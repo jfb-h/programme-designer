@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db import models
-from .models import Course, Module, Programme, Revision, ProgrammeType, ProgrammeModule, ProgrammeStudentCount, CourseType, Discipline
+from .models import Course, Module, Programme, Revision, ProgrammeType, ProgrammeModule, ProgrammeStudentCount, ProgrammeNebenfach, CourseType, Discipline, CourseModule
 from .forms import CourseForm, ModuleForm, ProgrammeForm, RevisionForm
 
 
@@ -28,7 +28,7 @@ def course_overview(request):
     sort_order = request.GET.get('order', 'asc')
     
     # Valid sortable fields
-    valid_sorts = ['name', 'semester', 'course_type', 'discipline']
+    valid_sorts = ['name', 'course_type', 'discipline']
     if sort_by not in valid_sorts:
         sort_by = 'name'
     
@@ -58,7 +58,6 @@ def course_overview(request):
                     copied_course = Course.objects.create(
                         name=f"{original_course.name} (Kopie)",
                         description=original_course.description,
-                        semester=original_course.semester,
                         course_type=original_course.course_type,
                         ects=original_course.ects,
                         sws=original_course.sws,
@@ -91,7 +90,6 @@ def course_overview(request):
                         shared_course = Course.objects.create(
                             name=course.name,
                             description=course.description,
-                            semester=course.semester,
                             course_type=course.course_type,
                             ects=course.ects,
                             sws=course.sws,
@@ -569,6 +567,29 @@ def programme_detail(request, programme_id):
             except (ValueError, TypeError):
                 return JsonResponse({'status': 'error', 'message': 'Invalid data'})
         
+        elif action == 'update_nebenfach':
+            # Handle AJAX nebenfach ECTS updates
+            semester = request.POST.get('semester')
+            value = request.POST.get('value')
+            
+            try:
+                semester = int(semester)
+                value = int(value) if value else 0
+                
+                # Get or create the nebenfach record
+                nebenfach, created = ProgrammeNebenfach.objects.get_or_create(
+                    programme=programme,
+                    semester=semester,
+                    defaults={'ects': 0}
+                )
+                
+                nebenfach.ects = value
+                nebenfach.save()
+                return JsonResponse({'status': 'success'})
+                
+            except (ValueError, TypeError):
+                return JsonResponse({'status': 'error', 'message': 'Invalid data'})
+        
         elif action == 'remove_module':
             module_id = request.POST.get('module_id')
             if module_id:
@@ -592,12 +613,17 @@ def programme_detail(request, programme_id):
                     certificate=module_certificate.strip()
                 )
                 
-                # Add selected courses to the module
+                # Add selected courses to the module with semester
                 if selected_courses:
                     for course_id in selected_courses:
                         try:
                             course = Course.objects.get(id=course_id)
-                            new_module.courses.add(course)
+                            semester_val = request.POST.get(f'semester_for_{course_id}')
+                            try:
+                                semester = int(semester_val)
+                            except (TypeError, ValueError):
+                                semester = 1
+                            CourseModule.objects.create(module=new_module, course=course, semester=semester, order=0)
                         except Course.DoesNotExist:
                             pass
                 
@@ -628,13 +654,18 @@ def programme_detail(request, programme_id):
                     module.certificate = module_certificate.strip()
                     module.save()
                     
-                    # Update courses - first clear all, then add selected ones
-                    module.courses.clear()
+                    # Update courses - first clear all CourseModule links, then add selected ones with semester
+                    module.coursemodule_set.all().delete()
                     if selected_courses:
                         for course_id in selected_courses:
                             try:
                                 course = Course.objects.get(id=course_id)
-                                module.courses.add(course)
+                                semester_val = request.POST.get(f'semester_for_{course_id}')
+                                try:
+                                    semester = int(semester_val)
+                                except (TypeError, ValueError):
+                                    semester = 1
+                                CourseModule.objects.create(module=module, course=course, semester=semester, order=0)
                             except Course.DoesNotExist:
                                 pass
                 except Module.DoesNotExist:
@@ -653,6 +684,10 @@ def programme_detail(request, programme_id):
         'max': {int(sc.semester): int(sc.max_students) for sc in existing_counts}
     }
     
+    # Get existing nebenfach ECTS
+    existing_nebenfach = ProgrammeNebenfach.objects.filter(programme=programme)
+    nebenfach_ects = {int(nf.semester): int(nf.ects) for nf in existing_nebenfach}
+    
     programme_modules = programme.get_ordered_modules()
     
     return render(request, 'studyprogrammes_v2/programme_detail.html', {
@@ -661,6 +696,7 @@ def programme_detail(request, programme_id):
         'all_courses': all_courses,
         'semester_range': semester_range,
         'student_counts': student_counts,
+        'nebenfach_ects': nebenfach_ects,
     })
 
 

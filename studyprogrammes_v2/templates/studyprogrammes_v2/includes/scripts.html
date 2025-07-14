@@ -240,49 +240,418 @@ function resetEditCourseSelection() {
 
 // Student count update function
 function updateStudentCount(input) {
-  const programmeId = input.dataset.programmeId;
-  const semester = input.dataset.semester;
-  const type = input.dataset.type;  // 'min' or 'max'
-  const value = input.value;
+  // Only update immediately if not in edit mode (for backward compatibility)
+  if (!isEditMode) {
+    console.log('Updating student count immediately (not in edit mode)');
+    const programmeId = input.dataset.programmeId;
+    const semester = input.dataset.semester;
+    const type = input.dataset.type;  // 'min' or 'max'
+    const value = input.value;
 
-  // Prepare form data
-  const formData = new FormData();
-  formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-  formData.append('action', 'update_student_count');
-  formData.append('programme_id', programmeId);
-  formData.append('semester', semester);
-  formData.append('type', type);
-  formData.append('value', value);
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    formData.append('action', 'update_student_count');
+    formData.append('programme_id', programmeId);
+    formData.append('semester', semester);
+    formData.append('type', type);
+    formData.append('value', value);
 
-  // Send AJAX request
-  fetch(window.location.pathname, {
-    method: 'POST',
-    body: formData
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.status === 'success') {
-      // Add visual feedback for successful save
-      input.classList.add('bg-green-50', 'border-green-300');
-      setTimeout(() => {
-        input.classList.remove('bg-green-50', 'border-green-300');
-      }, 1000);
-    } else {
-      console.error('Failed to update student count:', data.message || 'Unknown error');
+    // Send AJAX request
+    fetch(window.location.pathname, {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        // Add visual feedback for successful save
+        input.classList.add('bg-green-50');
+        setTimeout(() => {
+          input.classList.remove('bg-green-50');
+        }, 1000);
+      } else {
+        console.error('Failed to update student count:', data.message || 'Unknown error');
+        // Add visual feedback for error
+        input.classList.add('bg-red-50');
+        setTimeout(() => {
+          input.classList.remove('bg-red-50');
+        }, 2000);
+      }
+    })
+    .catch(error => {
+      console.error('Error updating student count:', error);
       // Add visual feedback for error
-      input.classList.add('bg-red-50', 'border-red-300');
+      input.classList.add('bg-red-50');
       setTimeout(() => {
-        input.classList.remove('bg-red-50', 'border-red-300');
+        input.classList.remove('bg-red-50');
       }, 2000);
-    }
-  })
-  .catch(error => {
-    console.error('Error updating student count:', error);
-    // Add visual feedback for error
-    input.classList.add('bg-red-50', 'border-red-300');
-    setTimeout(() => {
-      input.classList.remove('bg-red-50', 'border-red-300');
-    }, 2000);
+    });
+  }
+  // In edit mode, changes are batched and saved when "Save" is clicked
+}
+
+// Nebenfach update function
+function updateNebenfach(input) {
+  // Only update immediately if not in edit mode (for backward compatibility)
+  if (!isEditMode) {
+    console.log('Updating nebenfach immediately (not in edit mode)');
+    const programmeId = input.dataset.programmeId;
+    const semester = input.dataset.semester;
+    const value = input.value;
+
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    formData.append('action', 'update_nebenfach');
+    formData.append('programme_id', programmeId);
+    formData.append('semester', semester);
+    formData.append('value', value);
+
+    // Send AJAX request
+    fetch(window.location.pathname, {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        // Add visual feedback for successful save
+        input.classList.add('bg-green-50');
+        setTimeout(() => {
+          input.classList.remove('bg-green-50');
+          // Reload page to update ECTS totals
+          window.location.reload();
+        }, 500);
+      } else {
+        console.error('Failed to update nebenfach:', data.message || 'Unknown error');
+        // Add visual feedback for error
+        input.classList.add('bg-red-50');
+        setTimeout(() => {
+          input.classList.remove('bg-red-50');
+        }, 2000);
+      }
+    })
+    .catch(error => {
+      console.error('Error updating nebenfach:', error);
+      // Add visual feedback for error
+      input.classList.add('bg-red-50');
+      setTimeout(() => {
+        input.classList.remove('bg-red-50');
+      }, 2000);
+    });
+  }
+  // In edit mode, changes are batched and saved when "Save" is clicked
+}
+
+// Batch update function for edit mode
+function batchUpdateNebenfach(input) {
+  return new Promise((resolve, reject) => {
+    const programmeId = input.dataset.programmeId;
+    const semester = input.dataset.semester;
+    const value = input.value;
+
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    formData.append('action', 'update_nebenfach');
+    formData.append('programme_id', programmeId);
+    formData.append('semester', semester);
+    formData.append('value', value);
+
+    // Send AJAX request
+    fetch(window.location.pathname, {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        resolve();
+      } else {
+        reject(data.message || 'Unknown error');
+      }
+    })
+    .catch(error => {
+      reject(error);
+    });
   });
 }
+
+// Batch update function for student counts
+function batchUpdateStudentCount(input) {
+  return new Promise((resolve, reject) => {
+    const programmeId = input.dataset.programmeId;
+    const semester = input.dataset.semester;
+    const type = input.dataset.type;
+    const value = input.value;
+
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    formData.append('action', 'update_student_count');
+    formData.append('programme_id', programmeId);
+    formData.append('semester', semester);
+    formData.append('type', type);
+    formData.append('value', value);
+
+    // Send AJAX request
+    fetch(window.location.pathname, {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        resolve();
+      } else {
+        reject(data.message || 'Unknown error');
+      }
+    })
+    .catch(error => {
+      reject(error);
+    });
+  });
+}
+
+// Edit mode functionality
+let isEditMode = false;
+let originalValues = {};
+
+// Initialize edit mode state on page load
+function initializeEditMode() {
+  const editBtn = document.getElementById('edit-table-btn');
+  const saveBtn = document.getElementById('save-changes-btn');
+  const discardBtn = document.getElementById('discard-changes-btn');
+  const studentInputs = document.querySelectorAll('.student-count-input');
+  const nebenfachInputs = document.querySelectorAll('.nebenfach-input');
+  
+  // Ensure we start in non-edit mode
+  isEditMode = false;
+  originalValues = {};
+  
+  // Reset button states
+  if (editBtn) {
+    editBtn.classList.remove('hidden');
+    editBtn.disabled = false;
+  }
+  if (saveBtn) {
+    saveBtn.classList.add('hidden');
+    saveBtn.disabled = false;
+  }
+  if (discardBtn) {
+    discardBtn.classList.add('hidden');
+    discardBtn.disabled = false;
+  }
+  
+  // Ensure all inputs are disabled initially and remove any edit styling
+  studentInputs.forEach(input => {
+    input.disabled = true;
+    input.classList.remove('bg-blue-50');
+    input.classList.remove('bg-green-50');
+    input.classList.remove('bg-red-50');
+  });
+  nebenfachInputs.forEach(input => {
+    input.disabled = true;
+    input.classList.remove('bg-blue-50');
+    input.classList.remove('bg-green-50');
+    input.classList.remove('bg-red-50');
+  });
+  
+  console.log('Edit mode initialized - isEditMode:', isEditMode);
+}
+
+function toggleEditMode() {
+  console.log('toggleEditMode called, current isEditMode:', isEditMode);
+  
+  const editBtn = document.getElementById('edit-table-btn');
+  const saveBtn = document.getElementById('save-changes-btn');
+  const discardBtn = document.getElementById('discard-changes-btn');
+  const studentInputs = document.querySelectorAll('.student-count-input');
+  const nebenfachInputs = document.querySelectorAll('.nebenfach-input');
+
+  if (!isEditMode) {
+    // Enter edit mode
+    isEditMode = true;
+    console.log('Entering edit mode');
+    
+    // Store original values
+    originalValues = {};
+    studentInputs.forEach(input => {
+      const key = `${input.dataset.semester}-${input.dataset.type}`;
+      originalValues[key] = input.value;
+    });
+    nebenfachInputs.forEach(input => {
+      const key = `nebenfach-${input.dataset.semester}`;
+      originalValues[key] = input.value;
+    });
+    
+    // Enable inputs
+    studentInputs.forEach(input => input.disabled = false);
+    nebenfachInputs.forEach(input => input.disabled = false);
+    
+    // Update button states
+    editBtn.classList.add('hidden');
+    saveBtn.classList.remove('hidden');
+    discardBtn.classList.remove('hidden');
+    
+    // Add visual indicator (subtle background change instead of borders)
+    studentInputs.forEach(input => input.classList.add('bg-blue-50'));
+    nebenfachInputs.forEach(input => input.classList.add('bg-blue-50'));
+  }
+}
+
+async function saveChanges() {
+  // Remember the state of the details fold
+  const detailsView = document.getElementById('detailed-view');
+  const wasDetailsOpen = !detailsView.classList.contains('hidden');
+  
+  // Store the state in sessionStorage to preserve it across reload
+  if (wasDetailsOpen) {
+    sessionStorage.setItem('detailsViewOpen', 'true');
+  } else {
+    sessionStorage.removeItem('detailsViewOpen');
+  }
+  
+  // Collect all modified inputs
+  const studentInputs = document.querySelectorAll('.student-count-input');
+  const nebenfachInputs = document.querySelectorAll('.nebenfach-input');
+  
+  const updates = [];
+  
+  // Check for modified student count inputs
+  studentInputs.forEach(input => {
+    const key = `${input.dataset.semester}-${input.dataset.type}`;
+    if (originalValues[key] !== input.value) {
+      updates.push(batchUpdateStudentCount(input));
+    }
+  });
+  
+  // Check for modified nebenfach inputs
+  nebenfachInputs.forEach(input => {
+    const key = `nebenfach-${input.dataset.semester}`;
+    if (originalValues[key] !== input.value) {
+      updates.push(batchUpdateNebenfach(input));
+    }
+  });
+  
+  // If no changes, just exit edit mode
+  if (updates.length === 0) {
+    exitEditMode();
+    return;
+  }
+  
+  // Disable save button to prevent double-saves
+  const saveBtn = document.getElementById('save-changes-btn');
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+  saveBtn.title = 'Speichere...';
+  
+  try {
+    // Execute all updates in parallel
+    await Promise.all(updates);
+    
+    // Show success feedback
+    saveBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+    saveBtn.title = 'Gespeichert!';
+    saveBtn.classList.remove('text-green-600', 'hover:text-green-700', 'hover:bg-green-50');
+    saveBtn.classList.add('text-green-700', 'bg-green-100');
+    
+    // Wait a moment then reload to show updated totals
+    setTimeout(() => {
+      window.location.reload();
+    }, 800);
+    
+  } catch (error) {
+    console.error('Error saving changes:', error);
+    saveBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+    saveBtn.title = 'Fehler beim Speichern';
+    saveBtn.classList.remove('text-green-600', 'hover:text-green-700', 'hover:bg-green-50');
+    saveBtn.classList.add('text-red-600', 'hover:text-red-700', 'hover:bg-red-50');
+    saveBtn.disabled = false;
+    
+    // Reset button after error
+    setTimeout(() => {
+      saveBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+      saveBtn.title = 'Speichern';
+      saveBtn.classList.remove('text-red-600', 'hover:text-red-700', 'hover:bg-red-50');
+      saveBtn.classList.add('text-green-600', 'hover:text-green-700', 'hover:bg-green-50');
+    }, 2000);
+  }
+}
+
+function discardChanges() {
+  // Restore original values
+  document.querySelectorAll('.student-count-input').forEach(input => {
+    const key = `${input.dataset.semester}-${input.dataset.type}`;
+    input.value = originalValues[key] || '';
+  });
+  
+  document.querySelectorAll('.nebenfach-input').forEach(input => {
+    const key = `nebenfach-${input.dataset.semester}`;
+    input.value = originalValues[key] || '';
+  });
+  
+  exitEditMode();
+}
+
+function exitEditMode() {
+  isEditMode = false;
+  originalValues = {}; // Clear stored values
+  
+  const editBtn = document.getElementById('edit-table-btn');
+  const saveBtn = document.getElementById('save-changes-btn');
+  const discardBtn = document.getElementById('discard-changes-btn');
+  const studentInputs = document.querySelectorAll('.student-count-input');
+  const nebenfachInputs = document.querySelectorAll('.nebenfach-input');
+  
+  // Disable inputs
+  studentInputs.forEach(input => {
+    input.disabled = true;
+    input.classList.remove('bg-blue-50');
+  });
+  nebenfachInputs.forEach(input => {
+    input.disabled = true;
+    input.classList.remove('bg-blue-50');
+  });
+  
+  // Update button states
+  if (editBtn) {
+    editBtn.classList.remove('hidden');
+    editBtn.disabled = false;
+  }
+  if (saveBtn) {
+    saveBtn.classList.add('hidden');
+    saveBtn.disabled = false;
+    // Reset save button to original state
+    saveBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+    saveBtn.title = 'Speichern';
+    saveBtn.className = 'hidden inline-flex items-center justify-center w-8 h-8 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors duration-200';
+  }
+  if (discardBtn) {
+    discardBtn.classList.add('hidden');
+    discardBtn.disabled = false;
+  }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize edit mode state
+  initializeEditMode();
+  
+  // Restore details view state after page load
+  const shouldOpenDetails = sessionStorage.getItem('detailsViewOpen');
+  if (shouldOpenDetails === 'true') {
+    const detailsView = document.getElementById('detailed-view');
+    const chevron = document.getElementById('detailed-view-chevron');
+    if (detailsView && detailsView.classList.contains('hidden')) {
+      detailsView.classList.remove('hidden');
+      if (chevron) {
+        chevron.style.transform = 'rotate(180deg)';
+      }
+    }
+    // Clear the flag after restoring
+    sessionStorage.removeItem('detailsViewOpen');
+  }
+});
 </script>
