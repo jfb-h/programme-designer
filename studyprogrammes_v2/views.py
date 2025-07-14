@@ -133,11 +133,11 @@ def course_overview(request):
                 course.save()
                 # Save many-to-many relationships
                 form.save_m2m()
-                
-                # Check if there's a return URL
+                # Always redirect after successful save (Post/Redirect/Get)
                 return_url = request.POST.get('return_url') or request.GET.get('return_url')
                 if return_url:
                     return redirect(return_url)
+                # Remove edit_course from context by redirecting to overview
                 return redirect('v2_course_overview')
 
     # Handle edit mode (GET with ?edit=<id>)
@@ -175,9 +175,27 @@ def module_overview(request):
         else:
             # Create new module
             form = ModuleForm(request.POST)
-        
+
         if form.is_valid():
-            form.save()
+            module = form.save(commit=False)
+            module.save()
+            form.save_m2m()
+
+            # Remove existing CourseModule links for this module (if editing)
+            if module_id:
+                module.coursemodule_set.all().delete()
+
+            # For each selected course, create CourseModule with semester
+            selected_courses = form.cleaned_data['courses']
+            for course in selected_courses:
+                semester_val = request.POST.get(f'semester_for_{course.id}')
+                try:
+                    semester = int(semester_val)
+                except (TypeError, ValueError):
+                    semester = 1
+                # Order can be set to 0 or incremented if needed
+                CourseModule.objects.create(module=module, course=course, semester=semester, order=0)
+
             return redirect('v2_module_overview')
 
     # Handle edit mode (GET with ?edit=<id>)
@@ -698,15 +716,29 @@ def get_available_programmes(request, revision_id, programme_type):
     if current_programme and current_programme not in all_programmes:
         all_programmes.insert(0, current_programme)
     
+    # Get aggregate student counts for this revision
+    student_counts_data = revision.get_aggregate_student_counts()
+    student_counts = {
+        'min': {sem: data['min_students'] for sem, data in student_counts_data.items()},
+        'max': {sem: data['max_students'] for sem, data in student_counts_data.items()}
+    }
+
     programmes_data = []
     for programme in all_programmes:
+        sws_range = programme.get_sws_range_total(student_counts)
         programmes_data.append({
             'id': programme.id,
             'name': programme.name,
             'modules_count': programme.modules.count(),
             'total_ects': programme.total_ects,
+            'total_sws': programme.total_sws,
+            'sws_range': sws_range,
             'total_courses': programme.total_courses,
-            'author': programme.user.get_full_name() if programme.user else 'System',
+            'author': (programme.user.get_full_name() or programme.user.username) if programme.user else 'System',
+            'created': programme.created_at.strftime('%d.%m.%Y') if programme.created_at else '',
+            'is_shared': programme.is_shared,
+            'programme_type_display': programme.get_programme_type_display() if hasattr(programme, 'get_programme_type_display') else str(programme.programme_type),
+            'description': programme.comment,
         })
     
     return JsonResponse({

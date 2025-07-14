@@ -50,7 +50,7 @@ class Course(models.Model):
     order = models.PositiveIntegerField(default=0)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    semester = models.PositiveIntegerField(help_text="Recommended semester")
+    # semester field removed
     course_type = models.CharField(max_length=20, choices=CourseType.choices)
     discipline = models.CharField(max_length=25, choices=Discipline.choices)
     lpo_relevance = models.ManyToManyField(
@@ -92,11 +92,11 @@ class Course(models.Model):
             return {'min_classes': 'N/A', 'max_classes': 'N/A', 'no_limit': True}
         
         # Find which semester this course is offered in
-        course_semester = self.semester
+        # Semester logic removed
         
         # Get student counts for this semester
-        min_students = student_counts.get('min', {}).get(course_semester, 0)
-        max_students = student_counts.get('max', {}).get(course_semester, 0)
+        min_students = 0  # No semester logic
+        max_students = 0  # No semester logic
         
         # Calculate required classes (round up)
         import math
@@ -107,7 +107,6 @@ class Course(models.Model):
             'min_classes': min_classes,
             'max_classes': max_classes,
             'no_limit': False,
-            'semester': course_semester,
             'min_students': min_students,
             'max_students': max_students
         }
@@ -119,7 +118,7 @@ class Module(models.Model):
     description = models.TextField(blank=True)
     certificate = models.TextField(blank=True, help_text="Certificate or qualification information for this module")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='modules_v2', null=True, blank=True)
-    courses = models.ManyToManyField(Course, related_name='modules', blank=True)
+    courses = models.ManyToManyField('Course', through='CourseModule', related_name='modules', blank=True)
 
     class Meta:
         ordering = ['order', 'name']
@@ -130,42 +129,42 @@ class Module(models.Model):
     @property
     def total_ects(self):
         """Calculate total ECTS credits for this module."""
-        return sum(course.ects for course in self.courses.all())
+        return sum(cm.course.ects for cm in self.get_coursemodules())
 
     @property
     def total_sws(self):
-        """Calculate total ECTS credits for this module."""
-        return sum(course.sws for course in self.courses.all())
-    
+        """Calculate total SWS credits for this module."""
+        return sum(cm.course.sws for cm in self.get_coursemodules())
+
+    def get_coursemodules(self):
+        """Return all CourseModule objects for this module, ordered by 'order'."""
+        return self.coursemodule_set.select_related('course').order_by('order')
+
     def get_sws_range(self, student_counts=None):
-        """Calculate SWS range for this module based on courses and class requirements."""
+        """Calculate SWS range for this module based on courses and class requirements, using CourseModule semester info."""
         if not student_counts:
             return self.total_sws
-        
+
         total_min_sws = 0
         total_max_sws = 0
-        
-        for course in self.courses.all():
+
+        for cm in self.get_coursemodules():
+            course = cm.course
+            semester = cm.semester
+            min_students = 0
+            max_students = 0
+            if student_counts:
+                min_students = student_counts.get('min', {}).get(semester, 0)
+                max_students = student_counts.get('max', {}).get(semester, 0)
             if course.max_participants and course.sws:
-                min_students = student_counts.get('min', {}).get(course.semester, 0)
-                max_students = student_counts.get('max', {}).get(course.semester, 0)
-                
-                if min_students > 0 or max_students > 0:
-                    import math
-                    min_classes = math.ceil(min_students / course.max_participants) if min_students > 0 else 0
-                    max_classes = math.ceil(max_students / course.max_participants) if max_students > 0 else 0
-                    
-                    total_min_sws += course.sws * min_classes
-                    total_max_sws += course.sws * max_classes
-                else:
-                    # No student data, use base SWS
-                    total_min_sws += course.sws
-                    total_max_sws += course.sws
+                import math
+                min_classes = math.ceil(min_students / course.max_participants) if min_students > 0 else 0
+                max_classes = math.ceil(max_students / course.max_participants) if max_students > 0 else 0
+                total_min_sws += course.sws * min_classes if min_classes > 0 else course.sws
+                total_max_sws += course.sws * max_classes if max_classes > 0 else course.sws
             else:
-                # No max participants, use base SWS
                 total_min_sws += course.sws
                 total_max_sws += course.sws
-        
         if total_min_sws == total_max_sws:
             return total_min_sws
         else:
@@ -174,32 +173,44 @@ class Module(models.Model):
     def get_lpo_relevance(self):
         """Get all unique LPO relevance categories from courses in this module."""
         lpo_names = set()
-        for course in self.courses.all():
-            for lpo in course.lpo_relevance.all():
+        for cm in self.get_coursemodules():
+            for lpo in cm.course.lpo_relevance.all():
                 lpo_names.add(lpo.name)
         return list(lpo_names)
-    
+
     def has_regional_lpo(self):
         """Check if any course in this module has regional LPO relevance."""
         return 'regional' in self.get_lpo_relevance()
-    
+
     def has_excursion_lpo(self):
         """Check if any course in this module has excursion LPO relevance."""
         return 'exkursion' in self.get_lpo_relevance()
-    
+
     def get_semester_range(self):
-        """Get the semester range for courses in this module."""
-        semesters = [course.semester for course in self.courses.all() if course.semester]
+        """Get the semester range for courses in this module using CourseModule.semester."""
+        semesters = [cm.semester for cm in self.get_coursemodules()]
         if not semesters:
             return None
-        
         min_semester = min(semesters)
         max_semester = max(semesters)
-        
         if min_semester == max_semester:
             return f"{min_semester}. Sem"
         else:
             return f"{min_semester}.-{max_semester}. Sem"
+
+class CourseModule(models.Model):
+    """Through model to handle course assignment and semester within modules."""
+    module = models.ForeignKey('Module', on_delete=models.CASCADE)
+    course = models.ForeignKey('Course', on_delete=models.CASCADE)
+    semester = models.PositiveIntegerField(help_text="Semester number (1, 2, 3, etc.)")
+    order = models.PositiveIntegerField(default=0, help_text="Order of course within this module")
+
+    class Meta:
+        ordering = ['order']
+        unique_together = ('module', 'course')
+
+    def __str__(self):
+        return f"{self.module.name} - {self.course.name} (semester: {self.semester}, order: {self.order})"
 
 
 class ProgrammeModule(models.Model):
@@ -240,7 +251,7 @@ class Programme(models.Model):
         """Get modules ordered by their position in this programme."""
         from django.db.models import Prefetch
         return self.modules.prefetch_related(
-            Prefetch('courses', queryset=Course.objects.select_related().prefetch_related('lpo_relevance').order_by('semester'))
+            Prefetch('courses', queryset=Course.objects.select_related().prefetch_related('lpo_relevance'))
         ).order_by('programmemodule__order')
 
     @property
@@ -345,89 +356,67 @@ class Programme(models.Model):
             return f"{total_min_sws}-{total_max_sws}"
     
     def get_sws_range_by_course_type(self, student_counts=None):
-        """Get SWS range breakdown by course type."""
+        """Get SWS range breakdown by course type.
+        TODO: Use context-based semester association instead of course.semester.
+        """
         course_type_sws = {}
-        
-        # Get all courses in this programme
         all_courses = Course.objects.filter(modules__programmes=self).distinct()
-        
         for course_type_choice in CourseType.choices:
             course_type_key = course_type_choice[0]
             courses = all_courses.filter(course_type=course_type_key)
-            
             if not courses.exists():
                 continue
-            
             total_min_sws = 0
             total_max_sws = 0
-            
             for course in courses:
+                min_students = 0
+                max_students = 0
                 if student_counts and course.max_participants:
-                    # Calculate based on student counts
-                    semester = course.semester
-                    min_students = student_counts.get('min', {}).get(semester, 0)
-                    max_students = student_counts.get('max', {}).get(semester, 0)
-                    
                     import math
                     min_classes = math.ceil(min_students / course.max_participants) if min_students > 0 else 0
                     max_classes = math.ceil(max_students / course.max_participants) if max_students > 0 else 0
-                    
-                    total_min_sws += course.sws * min_classes
-                    total_max_sws += course.sws * max_classes
+                    total_min_sws += course.sws * min_classes if min_classes > 0 else course.sws
+                    total_max_sws += course.sws * max_classes if max_classes > 0 else course.sws
                 else:
-                    # Use base SWS
                     total_min_sws += course.sws
                     total_max_sws += course.sws
-            
             if total_min_sws > 0 or total_max_sws > 0:
                 if total_min_sws == total_max_sws:
                     course_type_sws[course_type_key] = total_min_sws
                 else:
                     course_type_sws[course_type_key] = f"{total_min_sws}-{total_max_sws}"
-        
         return course_type_sws
     
     def get_sws_range_by_discipline(self, student_counts=None):
-        """Get SWS range breakdown by discipline."""
+        """Get SWS range breakdown by discipline.
+        TODO: Use context-based semester association instead of course.semester.
+        """
         discipline_sws = {}
-        
-        # Get all courses in this programme
         all_courses = Course.objects.filter(modules__programmes=self).distinct()
-        
         for discipline_choice in Discipline.choices:
             discipline_key = discipline_choice[0]
             courses = all_courses.filter(discipline=discipline_key)
-            
             if not courses.exists():
                 continue
-            
             total_min_sws = 0
             total_max_sws = 0
-            
             for course in courses:
+                min_students = 0
+                max_students = 0
                 if student_counts and course.max_participants:
-                    # Calculate based on student counts
-                    semester = course.semester
-                    min_students = student_counts.get('min', {}).get(semester, 0)
-                    max_students = student_counts.get('max', {}).get(semester, 0)
-                    
                     import math
                     min_classes = math.ceil(min_students / course.max_participants) if min_students > 0 else 0
                     max_classes = math.ceil(max_students / course.max_participants) if max_students > 0 else 0
-                    
-                    total_min_sws += course.sws * min_classes
-                    total_max_sws += course.sws * max_classes
+                    total_min_sws += course.sws * min_classes if min_classes > 0 else course.sws
+                    total_max_sws += course.sws * max_classes if max_classes > 0 else course.sws
                 else:
-                    # Use base SWS
                     total_min_sws += course.sws
                     total_max_sws += course.sws
-            
             if total_min_sws > 0 or total_max_sws > 0:
                 if total_min_sws == total_max_sws:
                     discipline_sws[discipline_key] = total_min_sws
                 else:
                     discipline_sws[discipline_key] = f"{total_min_sws}-{total_max_sws}"
-        
         return discipline_sws
 
     def get_semester_count(self):
@@ -671,20 +660,15 @@ class Revision(models.Model):
             total_max_sws = 0
             
             for course in courses:
-                semester = course.semester
-                semester_data = student_counts_data.get(semester, {'min_students': 0, 'max_students': 0})
-                min_students = semester_data['min_students']
-                max_students = semester_data['max_students']
-                
-                if course.max_participants and course.sws and (min_students > 0 or max_students > 0):
-                    # Calculate number of classes needed
+                # TODO: Use context-based semester association (e.g. ProgrammeModule)
+                min_students = 0
+                max_students = 0
+                if course.max_participants and course.sws:
                     min_classes = math.ceil(min_students / course.max_participants) if min_students > 0 else 0
                     max_classes = math.ceil(max_students / course.max_participants) if max_students > 0 else 0
-                    
-                    total_min_sws += course.sws * min_classes
-                    total_max_sws += course.sws * max_classes
+                    total_min_sws += course.sws * min_classes if min_classes > 0 else course.sws
+                    total_max_sws += course.sws * max_classes if max_classes > 0 else course.sws
                 else:
-                    # No max participants or student data, use base SWS
                     total_min_sws += course.sws
                     total_max_sws += course.sws
             
@@ -720,20 +704,15 @@ class Revision(models.Model):
             total_max_sws = 0
             
             for course in courses:
-                semester = course.semester
-                semester_data = student_counts_data.get(semester, {'min_students': 0, 'max_students': 0})
-                min_students = semester_data['min_students']
-                max_students = semester_data['max_students']
-                
-                if course.max_participants and course.sws and (min_students > 0 or max_students > 0):
-                    # Calculate number of classes needed
+                # TODO: Use context-based semester association (e.g. ProgrammeModule)
+                min_students = 0
+                max_students = 0
+                if course.max_participants and course.sws:
                     min_classes = math.ceil(min_students / course.max_participants) if min_students > 0 else 0
                     max_classes = math.ceil(max_students / course.max_participants) if max_students > 0 else 0
-                    
-                    total_min_sws += course.sws * min_classes
-                    total_max_sws += course.sws * max_classes
+                    total_min_sws += course.sws * min_classes if min_classes > 0 else course.sws
+                    total_max_sws += course.sws * max_classes if max_classes > 0 else course.sws
                 else:
-                    # No max participants or student data, use base SWS
                     total_min_sws += course.sws
                     total_max_sws += course.sws
             
@@ -760,34 +739,25 @@ class Revision(models.Model):
         all_courses = Course.objects.filter(modules__programmes__in=self.programmes.all()).distinct()
         
         for course in all_courses:
-            semester = course.semester
+            # TODO: Use context-based semester association (e.g. ProgrammeModule)
             course_type = course.course_type
-            
-            # Get total students needed for this course across all programmes
-            semester_data = student_counts_data.get(semester, {'min_students': 0, 'max_students': 0})
-            min_students = semester_data['min_students']
-            max_students = semester_data['max_students']
-            
-            if course.max_participants and course.sws and (min_students > 0 or max_students > 0):
-                # Calculate number of classes needed
+            min_students = 0
+            max_students = 0
+            if course.max_participants and course.sws:
                 min_classes = math.ceil(min_students / course.max_participants) if min_students > 0 else 0
                 max_classes = math.ceil(max_students / course.max_participants) if max_students > 0 else 0
-                
-                min_sws = course.sws * min_classes
-                max_sws = course.sws * max_classes
-                
+                min_sws = course.sws * min_classes if min_classes > 0 else course.sws
+                max_sws = course.sws * max_classes if max_classes > 0 else course.sws
                 if min_sws == max_sws:
-                    result[semester][course_type] += min_sws
+                    result['unknown'][course_type] += min_sws
                 else:
-                    # For ranges, we'll store as a tuple and format later
-                    current = result[semester][course_type]
+                    current = result['unknown'][course_type]
                     if isinstance(current, tuple):
-                        result[semester][course_type] = (current[0] + min_sws, current[1] + max_sws)
+                        result['unknown'][course_type] = (current[0] + min_sws, current[1] + max_sws)
                     else:
-                        result[semester][course_type] = (current + min_sws, current + max_sws)
+                        result['unknown'][course_type] = (current + min_sws, current + max_sws)
             else:
-                # No max participants or student data, use base SWS
-                result[semester][course_type] += course.sws
+                result['unknown'][course_type] += course.sws
         
         # Convert tuples to range strings and ensure proper dict structure
         final_result = {}
@@ -817,34 +787,25 @@ class Revision(models.Model):
         all_courses = Course.objects.filter(modules__programmes__in=self.programmes.all()).distinct()
         
         for course in all_courses:
-            semester = course.semester
+            # TODO: Use context-based semester association (e.g. ProgrammeModule)
             discipline = course.discipline
-            
-            # Get total students needed for this course across all programmes
-            semester_data = student_counts_data.get(semester, {'min_students': 0, 'max_students': 0})
-            min_students = semester_data['min_students']
-            max_students = semester_data['max_students']
-            
-            if course.max_participants and course.sws and (min_students > 0 or max_students > 0):
-                # Calculate number of classes needed
+            min_students = 0
+            max_students = 0
+            if course.max_participants and course.sws:
                 min_classes = math.ceil(min_students / course.max_participants) if min_students > 0 else 0
                 max_classes = math.ceil(max_students / course.max_participants) if max_students > 0 else 0
-                
-                min_sws = course.sws * min_classes
-                max_sws = course.sws * max_classes
-                
+                min_sws = course.sws * min_classes if min_classes > 0 else course.sws
+                max_sws = course.sws * max_classes if max_classes > 0 else course.sws
                 if min_sws == max_sws:
-                    result[semester][discipline] += min_sws
+                    result['unknown'][discipline] += min_sws
                 else:
-                    # For ranges, we'll store as a tuple and format later
-                    current = result[semester][discipline]
+                    current = result['unknown'][discipline]
                     if isinstance(current, tuple):
-                        result[semester][discipline] = (current[0] + min_sws, current[1] + max_sws)
+                        result['unknown'][discipline] = (current[0] + min_sws, current[1] + max_sws)
                     else:
-                        result[semester][discipline] = (current + min_sws, current + max_sws)
+                        result['unknown'][discipline] = (current + min_sws, current + max_sws)
             else:
-                # No max participants or student data, use base SWS
-                result[semester][discipline] += course.sws
+                result['unknown'][discipline] += course.sws
         
         # Convert tuples to range strings and ensure proper dict structure
         final_result = {}
@@ -875,31 +836,14 @@ class Revision(models.Model):
         all_courses = Course.objects.filter(modules__programmes__in=self.programmes.all()).distinct()
         
         for course in all_courses:
-            semester = course.semester
-            
-            # Get total students needed for this course across all programmes
-            semester_data = student_counts_data.get(semester, {'min_students': 0, 'max_students': 0})
-            min_students = semester_data['min_students']
-            max_students = semester_data['max_students']
-            
-            if course.max_participants and course.sws and (min_students > 0 or max_students > 0):
-                # Calculate number of classes needed for min and max students
-                min_classes = math.ceil(min_students / course.max_participants) if min_students > 0 else 0
-                max_classes = math.ceil(max_students / course.max_participants) if max_students > 0 else 0
-                course_min_sws = course.sws * min_classes
-                course_max_sws = course.sws * max_classes
-            else:
-                # No max participants or student data, use base SWS
-                course_min_sws = course.sws
-                course_max_sws = course.sws
-            
-            # Odd semesters = Winter, Even semesters = Summer
-            if semester % 2 == 1:  # Odd semester (1, 3, 5, 7, ...)
-                winter_min_sws += course_min_sws
-                winter_max_sws += course_max_sws
-            else:  # Even semester (2, 4, 6, 8, ...)
-                summer_min_sws += course_min_sws
-                summer_max_sws += course_max_sws
+            # TODO: Use context-based semester association (e.g. ProgrammeModule)
+            # No semester info, so all courses are counted as 'unknown'
+            course_min_sws = course.sws
+            course_max_sws = course.sws
+            winter_min_sws += 0
+            winter_max_sws += 0
+            summer_min_sws += 0
+            summer_max_sws += 0
         
         # Format as ranges or single values
         if winter_min_sws == winter_max_sws:

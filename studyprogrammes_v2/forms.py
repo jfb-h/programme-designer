@@ -6,13 +6,12 @@ class CourseForm(forms.ModelForm):
     class Meta:
         model = Course
         fields = [
-            'name', 'description', 'semester', 'course_type', 
+            'name', 'description', 'course_type', 
             'discipline', 'lpo_relevance', 'ects', 'sws', 'max_participants'
         ]
         labels = {
             'name': 'Kursname',
             'description': 'Beschreibung',
-            'semester': 'Semester',
             'course_type': 'Typ',
             'discipline': 'Fachrichtung',
             'lpo_relevance': 'LPO-Relevanz',
@@ -58,10 +57,6 @@ class CourseForm(forms.ModelForm):
         # Remove the empty choice option for radio buttons by setting choices directly
         self.fields['course_type'].choices = CourseType.choices
         self.fields['discipline'].choices = Discipline.choices
-        
-        # Set up semester choices (1-10 for maximum flexibility)
-        semester_choices = [(i, f'Semester {i}') for i in range(1, 11)]
-        self.fields['semester'].choices = semester_choices
         
         # Ensure LPO categories exist and set up the queryset
         for value, label in LPO.choices:

@@ -162,7 +162,7 @@
 
 <!-- Programme Selection Modal -->
 <div id="programmeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-  <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+  <div class="relative top-20 mx-auto p-5 border w-[36rem] shadow-lg rounded-md bg-white">
     <div class="mt-3">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-medium text-gray-900" id="modalTitle">Studiengang auswählen</h3>
@@ -179,9 +179,11 @@
         
         <div class="mb-4">
           <label class="block text-sm font-medium text-gray-700 mb-2">Verfügbare Programme:</label>
-          <select id="programmeSelect" name="programme_id" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="">-- Kein Programm --</option>
-          </select>
+          <input type="text" id="programmeSearch" placeholder="Programme durchsuchen..." class="w-full mb-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <div id="programmeList" class="border border-gray-300 rounded-md max-h-60 overflow-y-auto bg-white"></div>
+          <div id="noProgrammeResults" class="p-4 text-center text-gray-500 hidden">
+            <p class="text-sm">Keine Programme gefunden.</p>
+          </div>
         </div>
         
         <div class="flex justify-end space-x-3">
@@ -202,17 +204,15 @@
 <script>
 let currentProgrammeType = '';
 let currentProgrammeTypeName = '';
+let currentProgrammeId = null;
+let loadedProgrammes = [];
 
 function openProgrammeModal(programmeType, programmeTypeName) {
   currentProgrammeType = programmeType;
   currentProgrammeTypeName = programmeTypeName;
-  
   document.getElementById('modalTitle').textContent = `${programmeTypeName} auswählen`;
   document.getElementById('selectedProgrammeType').value = programmeType;
-  
-  // Load available programmes for this type
   loadAvailableProgrammes(programmeType);
-  
   document.getElementById('programmeModal').classList.remove('hidden');
 }
 
@@ -220,61 +220,86 @@ function closeModal() {
   document.getElementById('programmeModal').classList.add('hidden');
 }
 
+function renderProgrammeList(programmes, currentProgrammeId) {
+  const list = document.getElementById('programmeList');
+  list.innerHTML = '';
+  if (programmes.length === 0) {
+    document.getElementById('noProgrammeResults').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('noProgrammeResults').classList.add('hidden');
+  programmes.forEach(programme => {
+    const card = document.createElement('div');
+    card.className = 'flex items-start space-x-3 p-2 hover:bg-blue-50 rounded cursor-pointer programme-item transition-colors';
+    card.setAttribute('data-programme-name', programme.name.toLowerCase());
+    card.setAttribute('data-programme-type', programme.programme_type_display);
+    card.onclick = function() {
+      selectProgramme(programme.id);
+    };
+    // Defensive: fallback to 0 if undefined/null
+    const ects = programme.total_ects != null ? programme.total_ects : 0;
+    const sws = programme.sws_range ? programme.sws_range : (programme.total_sws != null ? programme.total_sws : 0);
+    const modules = programme.modules_count != null ? programme.modules_count : 0;
+    const author = programme.author || '';
+    const created = programme.created ? programme.created : '';
+    card.innerHTML = `
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-medium text-gray-900 flex items-center">
+          <span>${programme.name}</span>
+          ${created ? `<span class="mx-2 text-gray-400">•</span><span class="text-xs text-gray-500">${created}</span>` : ''}
+          ${programme.author ? `<span class="mx-2 text-gray-400">•</span><span class="text-xs text-gray-500">${programme.author}</span>` : ''}
+        </div>
+        ${programme.description ? `<div class="text-xs text-gray-400 mt-1">${programme.description}</div>` : ''}
+        <div class="text-xs text-gray-500 mt-1">
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">${modules} Module</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 mr-2">${ects} ECTS</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 mr-2">${sws} SWS</span>
+          ${programme.is_shared ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 ml-2">Geteilt</span>' : ''}
+        </div>
+      </div>
+    `;
+    if (currentProgrammeId === programme.id) {
+      card.classList.add('bg-blue-100');
+    }
+    list.appendChild(card);
+  });
+}
+
 function loadAvailableProgrammes(programmeType) {
-  const select = document.getElementById('programmeSelect');
-  select.innerHTML = '<option value="">-- Kein Programm --</option>';
-  
-  // Make AJAX request to get available programmes
   fetch(`/v2/revisions/{{ revision.id }}/available-programmes/${programmeType}/`)
     .then(response => response.json())
     .then(data => {
-      data.programmes.forEach(programme => {
-        const option = document.createElement('option');
-        option.value = programme.id;
-        
-        // Create descriptive text with programme details
-        let optionText = programme.name;
-        if (programme.total_ects > 0 || programme.modules_count > 0) {
-          const details = [];
-          if (programme.modules_count > 0) {
-            details.push(`${programme.modules_count} Module`);
-          }
-          if (programme.total_ects > 0) {
-            details.push(`${programme.total_ects} ECTS`);
-          }
-          if (programme.total_courses > 0) {
-            details.push(`${programme.total_courses} Kurse`);
-          }
-          optionText += ` (${details.join(', ')})`;
-        }
-        if (programme.author && programme.author !== 'System') {
-          optionText += ` - ${programme.author}`;
-        }
-        
-        option.textContent = optionText;
-        if (data.current_programme_id && programme.id === data.current_programme_id) {
-          option.selected = true;
-        }
-        select.appendChild(option);
-      });
+      loadedProgrammes = data.programmes;
+      currentProgrammeId = data.current_programme_id;
+      renderProgrammeList(loadedProgrammes, currentProgrammeId);
     })
     .catch(error => {
       console.error('Error loading programmes:', error);
-      // Add error option
-      const errorOption = document.createElement('option');
-      errorOption.value = '';
-      errorOption.textContent = 'Fehler beim Laden der Programme';
-      errorOption.disabled = true;
-      select.appendChild(errorOption);
+      document.getElementById('programmeList').innerHTML = '';
+      document.getElementById('noProgrammeResults').classList.remove('hidden');
     });
 }
 
-// Handle form submission
-document.getElementById('programmeSelectionForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  
-  const formData = new FormData(this);
-  
+document.getElementById('programmeSearch').addEventListener('input', function() {
+  const search = this.value.toLowerCase();
+  const filtered = loadedProgrammes.filter(p => p.name.toLowerCase().includes(search));
+  renderProgrammeList(filtered, currentProgrammeId);
+});
+
+function selectProgramme(programmeId) {
+  // Set hidden input value and submit form
+  const form = document.getElementById('programmeSelectionForm');
+  // Remove any previous hidden input
+  let input = form.querySelector('input[name="programme_id"]');
+  if (!input) {
+    input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'programme_id';
+    form.appendChild(input);
+  }
+  input.value = programmeId;
+  // Submit via AJAX
+  const formData = new FormData(form);
   fetch(`/v2/revisions/{{ revision.id }}/update-programme/`, {
     method: 'POST',
     body: formData,
@@ -285,7 +310,7 @@ document.getElementById('programmeSelectionForm').addEventListener('submit', fun
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      location.reload(); // Reload page to show updated data
+      location.reload();
     } else {
       alert('Fehler beim Speichern: ' + (data.error || 'Unbekannter Fehler'));
     }
@@ -294,7 +319,7 @@ document.getElementById('programmeSelectionForm').addEventListener('submit', fun
     console.error('Error updating programme:', error);
     alert('Fehler beim Speichern');
   });
-});
+}
 
 // Close modal when clicking outside
 document.getElementById('programmeModal').addEventListener('click', function(e) {
