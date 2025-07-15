@@ -109,11 +109,12 @@ class ModuleCertificateForm(forms.ModelForm):
     
     class Meta:
         model = ModuleCertificate
-        fields = ['selected_options', 'logic_operator', 'comment']
+        fields = ['selected_options', 'logic_operator', 'comment', 'is_graded']
         labels = {
             'selected_options': 'Leistungsnachweis-Optionen',
             'logic_operator': 'Verknüpfung',
             'comment': 'Zusätzliche Angaben',
+            'is_graded': 'Benotet',
         }
         widgets = {
             'selected_options': forms.CheckboxSelectMultiple(attrs={

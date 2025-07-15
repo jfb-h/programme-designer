@@ -231,7 +231,14 @@ class Module(models.Model):
             if module_cert.comment:
                 parts.append(module_cert.comment)
             
-            return ' - '.join(parts) if parts else self.certificate
+            result = ' - '.join(parts) if parts else self.certificate
+            
+            # Add graded/ungraded status in parentheses
+            if result:
+                graded_status = "benotet" if module_cert.is_graded else "unbenotet"
+                result = f"{result} ({graded_status})"
+            
+            return result
             
         except ModuleCertificate.DoesNotExist:
             return self.certificate
@@ -249,6 +256,7 @@ class ModuleCertificate(models.Model):
     selected_options = models.ManyToManyField('CertificateOption', blank=True, help_text="Select multiple certificate options")
     logic_operator = models.CharField(max_length=3, choices=LOGIC_CHOICES, default='or', help_text="How selected options should be combined")
     comment = models.TextField(blank=True, help_text="Additional certificate details or comments")
+    is_graded = models.BooleanField(default=True, help_text="Whether this module is graded (benotet) or ungraded (unbenotet)")
     
     class Meta:
         verbose_name = "Module Certificate"

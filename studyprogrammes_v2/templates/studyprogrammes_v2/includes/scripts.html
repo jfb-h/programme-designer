@@ -61,11 +61,13 @@ function openEditModuleModal(moduleId) {
   const moduleDescription = button.getAttribute('data-module-description');
   const moduleCertificate = button.getAttribute('data-module-certificate');
   const moduleCourses = button.getAttribute('data-module-courses').split(',').filter(id => id !== '');
+  const courseSemesters = button.getAttribute('data-course-semesters').split(',').filter(item => item !== '');
   
   // New certificate system fields
   const certificateOptions = button.getAttribute('data-certificate-options').split(',').filter(id => id !== '');
   const logicOperator = button.getAttribute('data-logic-operator') || 'or';
   const certificateComment = button.getAttribute('data-certificate-comment') || '';
+  const isGraded = button.getAttribute('data-is-graded') === 'true';
   
   // Populate the form
   document.getElementById('edit_module_id').value = moduleId;
@@ -74,6 +76,9 @@ function openEditModuleModal(moduleId) {
   
   // Populate certificate fields
   document.getElementById('edit_certificate_comment').value = certificateComment;
+  
+  // Set graded checkbox
+  document.getElementById('edit_is_graded').checked = isGraded;
   
   // Handle legacy certificate field if it exists (fallback case)
   const legacyField = document.getElementById('edit_module_certificate');
@@ -98,16 +103,39 @@ function openEditModuleModal(moduleId) {
   // Load selected certificate options into searchable select
   loadSelectedCertificateOptions('edit', certificateOptions);
   
-  // Clear all checkboxes first
+  // Clear all checkboxes and semester inputs first
   document.querySelectorAll('.edit-course-checkbox').forEach(checkbox => {
     checkbox.checked = false;
   });
+  document.querySelectorAll('.semester-input').forEach(input => {
+    input.value = '';
+    input.style.borderColor = '#d1d5db';
+    input.removeAttribute('title');
+  });
   
-  // Check the appropriate courses
+  // Parse semester data
+  const semesterMap = {};
+  courseSemesters.forEach(item => {
+    const [courseId, semester] = item.split(':');
+    if (courseId && semester) {
+      semesterMap[courseId] = semester;
+    }
+  });
+  
+  // Check the appropriate courses and set semester values
   moduleCourses.forEach(courseId => {
     const checkbox = document.querySelector(`.edit-course-checkbox[value="${courseId}"]`);
     if (checkbox) {
       checkbox.checked = true;
+      
+      // Set semester value if available
+      const semesterInput = document.querySelector(`input[name="semester_for_${courseId}"]`);
+      if (semesterInput && semesterMap[courseId]) {
+        semesterInput.value = semesterMap[courseId];
+      }
+      
+      // Validate semester field
+      validateSemesterField(checkbox);
     }
   });
   
@@ -866,5 +894,80 @@ function handleCertificateKeydown(event, mode) {
     hideCertificateDropdown(mode);
   }
 }
+
+// Validation for semester fields when course is selected
+function validateSemesterField(courseCheckbox) {
+  const courseId = courseCheckbox.value;
+  const semesterInput = document.querySelector(`input[name="semester_for_${courseId}"]`);
+  
+  if (courseCheckbox.checked) {
+    // Course is selected, semester is required
+    semesterInput.setAttribute('required', 'required');
+    semesterInput.style.borderColor = '#d1d5db'; // Reset border color
+    
+    // If empty, highlight as required
+    if (!semesterInput.value) {
+      semesterInput.style.borderColor = '#ef4444'; // Red border
+      semesterInput.setAttribute('title', 'Semester ist erforderlich für ausgewählte Kurse');
+    }
+  } else {
+    // Course is not selected, semester is not required
+    semesterInput.removeAttribute('required');
+    semesterInput.style.borderColor = '#d1d5db'; // Reset border color
+    semesterInput.removeAttribute('title');
+  }
+}
+
+// Validate all semester fields on form submission
+function validateModuleForm(form) {
+  const checkedCourses = form.querySelectorAll('input[name="module_courses"]:checked');
+  let isValid = true;
+  
+  checkedCourses.forEach(courseCheckbox => {
+    const courseId = courseCheckbox.value;
+    const semesterInput = form.querySelector(`input[name="semester_for_${courseId}"]`);
+    
+    if (!semesterInput.value || semesterInput.value < 1) {
+      isValid = false;
+      semesterInput.style.borderColor = '#ef4444'; // Red border
+      semesterInput.setAttribute('title', 'Semester ist erforderlich für ausgewählte Kurse');
+      
+      // Focus on first invalid field
+      if (isValid === false) {
+        semesterInput.focus();
+      }
+    } else {
+      semesterInput.style.borderColor = '#d1d5db'; // Reset border color
+      semesterInput.removeAttribute('title');
+    }
+  });
+  
+  if (!isValid) {
+    alert('Bitte geben Sie ein gültiges Semester für alle ausgewählten Kurse an.');
+  }
+  
+  return isValid;
+}
+
+// Add event listener for semester input changes
+document.addEventListener('DOMContentLoaded', function() {
+  // Add validation to semester inputs
+  document.querySelectorAll('.semester-input').forEach(input => {
+    input.addEventListener('input', function() {
+      const courseId = this.dataset.courseId;
+      const courseCheckbox = document.querySelector(`input[name="module_courses"][value="${courseId}"]`);
+      
+      if (courseCheckbox && courseCheckbox.checked) {
+        if (this.value && this.value >= 1) {
+          this.style.borderColor = '#d1d5db'; // Reset border color
+          this.removeAttribute('title');
+        } else {
+          this.style.borderColor = '#ef4444'; // Red border
+          this.setAttribute('title', 'Semester ist erforderlich für ausgewählte Kurse');
+        }
+      }
+    });
+  });
+});
 
 </script>

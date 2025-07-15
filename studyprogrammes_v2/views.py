@@ -609,6 +609,7 @@ def programme_detail(request, programme_id):
             selected_options = request.POST.getlist('certificate_options')
             logic_operator = request.POST.get('logic_operator', 'or')
             certificate_comment = request.POST.get('certificate_comment', '')
+            is_graded = request.POST.get('is_graded') == 'on'
             
             if module_name:
                 # Create the new module and automatically add it to this programme
@@ -619,17 +620,19 @@ def programme_detail(request, programme_id):
                 )
                 
                 # Create or update module certificate if new system is used
-                if selected_options or certificate_comment:
+                if selected_options or certificate_comment or is_graded is not None:
                     module_cert, created = ModuleCertificate.objects.get_or_create(
                         module=new_module,
                         defaults={
                             'logic_operator': logic_operator,
-                            'comment': certificate_comment.strip()
+                            'comment': certificate_comment.strip(),
+                            'is_graded': is_graded
                         }
                     )
                     if not created:
                         module_cert.logic_operator = logic_operator
                         module_cert.comment = certificate_comment.strip()
+                        module_cert.is_graded = is_graded
                         module_cert.save()
                     
                     # Set selected options
@@ -672,6 +675,7 @@ def programme_detail(request, programme_id):
             selected_options = request.POST.getlist('certificate_options')
             logic_operator = request.POST.get('logic_operator', 'or')
             certificate_comment = request.POST.get('certificate_comment', '')
+            is_graded = request.POST.get('is_graded') == 'on'
             
             if module_id and module_name:
                 try:
@@ -683,17 +687,19 @@ def programme_detail(request, programme_id):
                     module.save()
                     
                     # Create or update module certificate if new system is used
-                    if selected_options or certificate_comment:
+                    if selected_options or certificate_comment or is_graded is not None:
                         module_cert, created = ModuleCertificate.objects.get_or_create(
                             module=module,
                             defaults={
                                 'logic_operator': logic_operator,
-                                'comment': certificate_comment.strip()
+                                'comment': certificate_comment.strip(),
+                                'is_graded': is_graded
                             }
                         )
                         if not created:
                             module_cert.logic_operator = logic_operator
                             module_cert.comment = certificate_comment.strip()
+                            module_cert.is_graded = is_graded
                             module_cert.save()
                         
                         # Set selected options
