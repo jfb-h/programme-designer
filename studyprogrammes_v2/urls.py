@@ -3,16 +3,19 @@ from django.shortcuts import redirect
 from . import views
 from . import auth_views
 
-def redirect_to_programmes(request):
-    """Redirect root V2 URL to programmes overview"""
+def redirect_to_landing(request):
+    """Redirect root V2 URL to landing page"""
     if request.user.is_authenticated:
-        return redirect('v2_programme_overview')
+        return redirect('v2_landing')
     else:
         return redirect('v2_login')
 
 urlpatterns = [
     # Root redirect
-    path('', redirect_to_programmes, name='v2_home'),
+    path('', redirect_to_landing, name='v2_home'),
+    
+    # Landing page
+    path('landing/', views.landing_page, name='v2_landing'),
     
     # Authentication URLs
     path('login/', auth_views.login_view, name='v2_login'),

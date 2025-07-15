@@ -29,7 +29,7 @@
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center space-x-6">
-                    <h1 class="text-white text-xl font-semibold">ProgrammeDesigner</h1>
+                    <a href="{% url 'v2_landing' %}" class="text-white text-xl font-semibold hover:text-gray-200 transition-colors">ProgrammeDesigner</a>
                     {% if user.is_authenticated %}
                         <div class="flex space-x-1">
                             <a href="{% url 'v2_programme_overview' %}" class="text-gray-300 hover:text-white hover:bg-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-colors">

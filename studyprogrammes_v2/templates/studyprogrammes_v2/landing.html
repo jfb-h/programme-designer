@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-12">
+    <!-- Hero Section -->
+    <div class="text-center mb-16">
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">
+        ProgrammeDesigner
+      </h1>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        Ein Tool für die Studiengangsplanung im Rahmen der Lehrnovellierung
+      </p>
+      <div class="mt-8">
+        <a href="{% url 'v2_programme_overview' %}" class="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200 inline-flex items-center space-x-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+          </svg>
+          <span>Zu den Studiengängen</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Steps Section -->
+    <div class="mb-16">
+      <h2 class="text-2xl font-bold text-center text-gray-900 mb-12">
+        Lehrplanung in drei Schritten:
+      </h2>
+      
+      <div class="grid md:grid-cols-3 gap-12">
+        <!-- Step 1: Courses -->
+        <div class="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow duration-200">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">1. Kurse erstellen</h3>
+          <p class="text-gray-600 mb-6">
+            Definition von Lehrveranstaltungen mit ECTS-Punkten, SWS, Teilnehmerzahlen und fachlichen Zuordnungen.
+          </p>
+          <a href="{% url 'v2_course_overview' %}" class="inline-flex items-center text-green-600 hover:text-green-700 font-medium">
+            <span>Kurse verwalten</span>
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </a>
+        </div>
+
+        <!-- Step 2: Programmes -->
+        <div class="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow duration-200">
+          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">2. Studiengänge planen</h3>
+          <p class="text-gray-600 mb-6">
+            Kombination von Kursen zu Modulen, Erstellen vollständiger Studiengänge und Machbarkeitsprüfung.
+          </p>
+          <a href="{% url 'v2_programme_overview' %}" class="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium">
+            <span>Studiengänge verwalten</span>
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </a>
+        </div>
+
+        <!-- Step 3: Revisions -->
+        <div class="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition-shadow duration-200">
+          <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-4">3. Revisionen erstellen</h3>
+          <p class="text-gray-600 mb-6">
+            Auswahl von Studiengängen und Erstellen von Gesamtstatistiken für die integrative Planung im Rahmen der Novellierung.
+            
+          </p>
+          <a href="{% url 'v2_revision_overview' %}" class="inline-flex items-center text-purple-600 hover:text-purple-700 font-medium">
+            <span>Revisionen verwalten</span>
+            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+</div>
+{% endblock %}

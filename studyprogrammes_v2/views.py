@@ -837,6 +837,12 @@ def update_revision_programme(request, revision_id):
 
 
 @login_required
+def landing_page(request):
+    """Landing page with usage information and navigation."""
+    return render(request, 'studyprogrammes_v2/landing.html')
+
+
+@login_required
 def download_programme(request, programme_id):
     """Download a programme as JSON file."""
     programme = get_object_or_404(Programme, id=programme_id)
