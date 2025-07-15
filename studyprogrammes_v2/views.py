@@ -763,11 +763,27 @@ def get_available_programmes(request, revision_id, programme_type):
     # Get current programme of this type in the revision
     current_programme = revision.programmes.filter(programme_type=programme_type).first()
     
+    # Debug information
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Get all programmes of this type for debugging
+    all_programmes_of_type = Programme.objects.filter(programme_type=programme_type)
+    logger.info(f"DEBUG: Total programmes of type {programme_type}: {all_programmes_of_type.count()}")
+    for p in all_programmes_of_type:
+        logger.info(f"DEBUG: Programme {p.id} '{p.name}' - user: {p.user}, user_id: {p.user.id if p.user else None}")
+    
+    logger.info(f"DEBUG: Revision author: {revision.author}, author_id: {revision.author.id if revision.author else None}")
+    
     # Get all available programmes of this type
     # Include programmes without user assignment (user=None) and programmes belonging to the revision author
     available_programmes = Programme.objects.filter(programme_type=programme_type).filter(
         models.Q(user=revision.author) | models.Q(user__isnull=True)
     )
+    
+    logger.info(f"DEBUG: Available programmes count: {available_programmes.count()}")
+    for p in available_programmes:
+        logger.info(f"DEBUG: Available programme {p.id} '{p.name}' - user: {p.user}")
     
     # Include currently selected programme in options
     all_programmes = list(available_programmes)

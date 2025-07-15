@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Course, Module, Programme, ProgrammeModule, ProgrammeStudentCount,
-    ProgrammeType, DefaultStudentCount
+    ProgrammeType, DefaultStudentCount, Revision
 )
 
 @admin.register(Course)
@@ -50,3 +50,16 @@ class DefaultStudentCountAdmin(admin.ModelAdmin):
         if 'programme_type' in form.base_fields:
             form.base_fields['programme_type'].help_text = "Select the programme type for these default student counts"
         return form
+
+
+@admin.register(Revision)
+class RevisionAdmin(admin.ModelAdmin):
+    list_display = ['name', 'author', 'date', 'programme_count']
+    list_filter = ['author', 'date']
+    search_fields = ['name']
+    filter_horizontal = ['programmes']
+    ordering = ['-date', '-order']
+    
+    def programme_count(self, obj):
+        return obj.programmes.count()
+    programme_count.short_description = 'Programme Count'
