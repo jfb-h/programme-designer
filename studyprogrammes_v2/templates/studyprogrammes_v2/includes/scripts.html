@@ -41,12 +41,23 @@ function closeCreateModuleModal() {
 
 function resetCertificateFields() {
   // Reset create modal certificate fields
-  document.getElementById('certificate_comment').value = '';
-  document.querySelector('[name="logic_operator"][value="or"]').checked = true;
+  const commentField = document.getElementById('certificate_comment');
+  if (commentField) {
+    commentField.value = '';
+  }
+  
+  const orRadio = document.querySelector('[name="logic_operator"][value="or"]');
+  if (orRadio) {
+    orRadio.checked = true;
+  }
   
   // Reset searchable select
   clearSelectedCertificateOptions('create');
-  document.getElementById('create-cert-search').value = '';
+  
+  const searchField = document.getElementById('create-cert-search');
+  if (searchField) {
+    searchField.value = '';
+  }
   
   // Reset legacy field if it exists (fallback case)
   const legacyField = document.getElementById('module_certificate');
@@ -900,6 +911,11 @@ function validateSemesterField(courseCheckbox) {
   const courseId = courseCheckbox.value;
   const semesterInput = document.querySelector(`input[name="semester_for_${courseId}"]`);
   
+  // Check if semester input exists (it should exist in both create and edit modals)
+  if (!semesterInput) {
+    return;
+  }
+  
   if (courseCheckbox.checked) {
     // Course is selected, semester is required
     semesterInput.setAttribute('required', 'required');
@@ -922,19 +938,25 @@ function validateSemesterField(courseCheckbox) {
 function validateModuleForm(form) {
   const checkedCourses = form.querySelectorAll('input[name="module_courses"]:checked');
   let isValid = true;
+  let firstInvalidField = null;
   
   checkedCourses.forEach(courseCheckbox => {
     const courseId = courseCheckbox.value;
     const semesterInput = form.querySelector(`input[name="semester_for_${courseId}"]`);
+    
+    // Skip if semester input doesn't exist
+    if (!semesterInput) {
+      return;
+    }
     
     if (!semesterInput.value || semesterInput.value < 1) {
       isValid = false;
       semesterInput.style.borderColor = '#ef4444'; // Red border
       semesterInput.setAttribute('title', 'Semester ist erforderlich für ausgewählte Kurse');
       
-      // Focus on first invalid field
-      if (isValid === false) {
-        semesterInput.focus();
+      // Remember first invalid field
+      if (!firstInvalidField) {
+        firstInvalidField = semesterInput;
       }
     } else {
       semesterInput.style.borderColor = '#d1d5db'; // Reset border color
@@ -944,6 +966,10 @@ function validateModuleForm(form) {
   
   if (!isValid) {
     alert('Bitte geben Sie ein gültiges Semester für alle ausgewählten Kurse an.');
+    // Focus on first invalid field
+    if (firstInvalidField) {
+      firstInvalidField.focus();
+    }
   }
   
   return isValid;
