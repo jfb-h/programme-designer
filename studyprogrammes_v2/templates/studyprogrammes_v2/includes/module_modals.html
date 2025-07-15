@@ -1,3 +1,86 @@
+<!-- Styles for searchable select -->
+<style>
+.certificate-selector {
+  position: relative;
+}
+
+.selected-options-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.selected-option-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.selected-option-tag button {
+  margin-left: 0.25rem;
+  color: #2563eb;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  transition: color 0.15s ease-in-out;
+}
+
+.selected-option-tag button:hover {
+  color: #1d4ed8;
+}
+
+.certificate-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  margin-top: 0.25rem;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  max-height: 12rem;
+  overflow-y: auto;
+}
+
+.certificate-option {
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.certificate-option:hover {
+  background-color: #f3f4f6;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 120px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.875rem;
+}
+
+.search-input:focus {
+  outline: none;
+}
+</style>
+
 <!-- Modal for creating new module -->
 <div id="createModuleModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
   <div class="relative top-10 mx-auto p-6 border w-11/12 md:w-2/3 lg:w-1/2 shadow-2xl rounded-xl bg-white">
@@ -30,8 +113,71 @@
 
           <!-- Module Certificate -->
           <div>
-            <label for="module_certificate" class="block text-sm font-semibold text-gray-700 mb-2">Leistungsnachweis (optional)</label>
-            <textarea id="module_certificate" name="module_certificate" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500" placeholder="z.B. Klausur und Übungsmappe"></textarea>
+            {% if certificate_options %}
+            <div class="space-y-3 mb-4">
+              <!-- Header with Radio Buttons -->
+              <div class="flex items-center justify-between">
+                <label class="block text-sm font-semibold text-gray-700">Leistungsnachweis (optional)</label>
+                <div class="flex gap-4">
+                  <label class="flex items-center">
+                    <input type="radio" name="logic_operator" value="or" checked class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                    <span class="ml-2 text-sm text-gray-700">ODER</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="radio" name="logic_operator" value="and" class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                    <span class="ml-2 text-sm text-gray-700">UND</span>
+                  </label>
+                </div>
+              </div>
+              
+              <!-- Searchable Select -->
+              <div class="certificate-selector" id="create-certificate-selector">
+                <!-- Selected Options Display -->
+                <div class="selected-options-container min-h-[2.5rem] border border-gray-300 rounded-md p-2 bg-white cursor-text" onclick="focusSearchInput('create-cert-search')">
+                  <div class="selected-options-wrapper flex flex-wrap gap-2" id="create-selected-options">
+                    <!-- Selected options will be displayed here as tags -->
+                  </div>
+                  <input type="text" 
+                         id="create-cert-search" 
+                         class="search-input border-none outline-none bg-transparent text-sm flex-1 min-w-[120px]" 
+                         placeholder="Optionen suchen und auswählen..."
+                         autocomplete="off"
+                         onkeyup="filterCertificateOptions('create', this.value)"
+                         onkeydown="handleCertificateKeydown(event, 'create')"
+                         onfocus="showCertificateDropdown('create')"
+                         onblur="hideCertificateDropdown('create')">
+                </div>
+                
+                <!-- Dropdown Options -->
+                <div class="certificate-dropdown absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto hidden" id="create-cert-dropdown">
+                  {% for option in certificate_options %}
+                  <div class="certificate-option px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm" 
+                       data-option-id="{{ option.id }}" 
+                       data-option-name="{{ option.name }}"
+                       onclick="selectCertificateOption('create', {{ option.id }}, '{{ option.name|escapejs }}')">
+                    {{ option.name }}
+                  </div>
+                  {% endfor %}
+                </div>
+                
+                <!-- Hidden inputs for form submission -->
+                <div id="create-cert-hidden-inputs">
+                  <!-- Hidden inputs will be generated here -->
+                </div>
+              </div>
+              
+              <!-- Certificate Comment -->
+              <div>
+                <textarea id="certificate_comment" name="certificate_comment" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500" placeholder="Weitere Details zum Leistungsnachweis..."></textarea>
+              </div>
+            </div>
+            {% else %}
+            <!-- Fallback for when no certificate options exist -->
+            <div>
+              <label for="module_certificate" class="block text-sm font-semibold text-gray-700 mb-2">Leistungsnachweis (optional)</label>
+              <textarea id="module_certificate" name="module_certificate" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500" placeholder="z.B. Klausur und Übungsmappe"></textarea>
+            </div>
+            {% endif %}
           </div>
 
           <!-- Course Selection -->
@@ -167,8 +313,71 @@
 
           <!-- Module Certificate -->
           <div>
-            <label for="edit_module_certificate" class="block text-sm font-semibold text-gray-700 mb-2">Leistungsnachweis (optional)</label>
-            <textarea id="edit_module_certificate" name="module_certificate" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500" placeholder="z.B. Klausur und Übungsmappe"></textarea>
+            {% if certificate_options %}
+            <div class="space-y-3 mb-4">
+              <!-- Header with Radio Buttons -->
+              <div class="flex items-center justify-between">
+                <label class="block text-sm font-semibold text-gray-700">Leistungsnachweis (optional)</label>
+                <div class="flex gap-4">
+                  <label class="flex items-center">
+                    <input type="radio" name="logic_operator" value="or" id="edit_logic_or" checked class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                    <span class="ml-2 text-sm text-gray-700">ODER</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="radio" name="logic_operator" value="and" id="edit_logic_and" class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                    <span class="ml-2 text-sm text-gray-700">UND</span>
+                  </label>
+                </div>
+              </div>
+              
+              <!-- Searchable Select -->
+              <div class="certificate-selector" id="edit-certificate-selector">
+                <!-- Selected Options Display -->
+                <div class="selected-options-container min-h-[2.5rem] border border-gray-300 rounded-md p-2 bg-white cursor-text" onclick="focusSearchInput('edit-cert-search')">
+                  <div class="selected-options-wrapper flex flex-wrap gap-2" id="edit-selected-options">
+                    <!-- Selected options will be displayed here as tags -->
+                  </div>
+                  <input type="text" 
+                         id="edit-cert-search" 
+                         class="search-input border-none outline-none bg-transparent text-sm flex-1 min-w-[120px]" 
+                         placeholder="Optionen suchen und auswählen..."
+                         autocomplete="off"
+                         onkeyup="filterCertificateOptions('edit', this.value)"
+                         onkeydown="handleCertificateKeydown(event, 'edit')"
+                         onfocus="showCertificateDropdown('edit')"
+                         onblur="hideCertificateDropdown('edit')">
+                </div>
+                
+                <!-- Dropdown Options -->
+                <div class="certificate-dropdown absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto hidden" id="edit-cert-dropdown">
+                  {% for option in certificate_options %}
+                  <div class="certificate-option px-3 py-2 cursor-pointer hover:bg-gray-100 text-sm" 
+                       data-option-id="{{ option.id }}" 
+                       data-option-name="{{ option.name }}"
+                       onclick="selectCertificateOption('edit', {{ option.id }}, '{{ option.name|escapejs }}')">
+                    {{ option.name }}
+                  </div>
+                  {% endfor %}
+                </div>
+                
+                <!-- Hidden inputs for form submission -->
+                <div id="edit-cert-hidden-inputs">
+                  <!-- Hidden inputs will be generated here -->
+                </div>
+              </div>
+              
+              <!-- Certificate Comment -->
+              <div>
+                <textarea id="edit_certificate_comment" name="certificate_comment" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500" placeholder="Weitere Details zum Leistungsnachweis..."></textarea>
+              </div>
+            </div>
+            {% else %}
+            <!-- Fallback for when no certificate options exist -->
+            <div>
+              <label for="edit_module_certificate" class="block text-sm font-semibold text-gray-700 mb-2">Leistungsnachweis (optional)</label>
+              <textarea id="edit_module_certificate" name="module_certificate" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500" placeholder="z.B. Klausur und Übungsmappe"></textarea>
+            </div>
+            {% endif %}
           </div>
 
           <!-- Course Selection -->

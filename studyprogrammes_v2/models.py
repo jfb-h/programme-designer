@@ -46,6 +46,21 @@ class ProgrammeType(models.TextChoices):
     MASTER_PG = 'master_pg', 'Master Physische Geographie'
 
 
+class CertificateOption(models.Model):
+    """Predefined certificate options that can be selected for modules."""
+    name = models.CharField(max_length=200, unique=True, help_text="Name of the certificate option")
+    description = models.TextField(blank=True, help_text="Optional description of this certificate option")
+    order = models.PositiveIntegerField(default=0, help_text="Display order in selection lists")
+    
+    class Meta:
+        ordering = ['order', 'name']
+        verbose_name = "Certificate Option"
+        verbose_name_plural = "Certificate Options"
+    
+    def __str__(self):
+        return self.name
+
+
 class Course(models.Model):
     order = models.PositiveIntegerField(default=0)
     name = models.CharField(max_length=200)
@@ -197,6 +212,66 @@ class Module(models.Model):
             return f"{min_semester}. Sem"
         else:
             return f"{min_semester}.-{max_semester}. Sem"
+
+    def get_certificate_display(self):
+        """Get formatted certificate display string."""
+        try:
+            module_cert = self.module_certificate
+            if not module_cert.selected_options.exists() and not module_cert.comment:
+                return self.certificate  # Fallback to old certificate field
+            
+            parts = []
+            if module_cert.selected_options.exists():
+                option_names = [opt.name for opt in module_cert.selected_options.all()]
+                if module_cert.logic_operator == 'and':
+                    parts.append(' UND '.join(option_names))
+                else:
+                    parts.append(' ODER '.join(option_names))
+            
+            if module_cert.comment:
+                parts.append(module_cert.comment)
+            
+            return ' - '.join(parts) if parts else self.certificate
+            
+        except ModuleCertificate.DoesNotExist:
+            return self.certificate
+
+
+class ModuleCertificate(models.Model):
+    """Certificate configuration for a module with multiple options and operator."""
+    
+    LOGIC_CHOICES = [
+        ('and', 'UND'),
+        ('or', 'ODER'),
+    ]
+    
+    module = models.OneToOneField('Module', on_delete=models.CASCADE, related_name='module_certificate')
+    selected_options = models.ManyToManyField('CertificateOption', blank=True, help_text="Select multiple certificate options")
+    logic_operator = models.CharField(max_length=3, choices=LOGIC_CHOICES, default='or', help_text="How selected options should be combined")
+    comment = models.TextField(blank=True, help_text="Additional certificate details or comments")
+    
+    class Meta:
+        verbose_name = "Module Certificate"
+        verbose_name_plural = "Module Certificates"
+    
+    def __str__(self):
+        return f"Certificate for {self.module.name}"
+    
+    def get_display_text(self):
+        """Get formatted display text for this certificate configuration."""
+        parts = []
+        if self.selected_options.exists():
+            option_names = [opt.name for opt in self.selected_options.all()]
+            if self.logic_operator == 'and':
+                parts.append(' UND '.join(option_names))
+            else:
+                parts.append(' ODER '.join(option_names))
+        
+        if self.comment:
+            parts.append(self.comment)
+        
+        return ' - '.join(parts) if parts else ''
+
 
 class CourseModule(models.Model):
     """Through model to handle course assignment and semester within modules."""
@@ -464,11 +539,31 @@ class Programme(models.Model):
                 'name': module.name,
                 'description': module.description,
                 'certificate': module.certificate,
+                'certificate_display': module.get_certificate_display(),
                 'order': programme_module.order,
                 'total_ects': module.total_ects,
                 'total_sws': module.total_sws,
                 'courses': []
             }
+            
+            # Add new certificate system data if available
+            try:
+                module_cert = module.module_certificate
+                module_data['certificate_config'] = {
+                    'selected_options': [
+                        {
+                            'id': option.id,
+                            'name': option.name,
+                            'description': option.description,
+                            'order': option.order
+                        } for option in module_cert.selected_options.all().order_by('order')
+                    ],
+                    'logic_operator': module_cert.logic_operator,
+                    'logic_operator_display': module_cert.get_logic_operator_display(),
+                    'comment': module_cert.comment
+                }
+            except ModuleCertificate.DoesNotExist:
+                module_data['certificate_config'] = None
             
             # Add courses within this module
             for course_module in module.coursemodule_set.all().order_by('semester', 'order'):

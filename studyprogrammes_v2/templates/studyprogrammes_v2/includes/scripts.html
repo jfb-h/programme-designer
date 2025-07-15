@@ -36,6 +36,23 @@ function openCreateModuleModal() {
 function closeCreateModuleModal() {
   document.getElementById('createModuleModal').classList.add('hidden');
   resetCourseSelection();
+  resetCertificateFields();
+}
+
+function resetCertificateFields() {
+  // Reset create modal certificate fields
+  document.getElementById('certificate_comment').value = '';
+  document.querySelector('[name="logic_operator"][value="or"]').checked = true;
+  
+  // Reset searchable select
+  clearSelectedCertificateOptions('create');
+  document.getElementById('create-cert-search').value = '';
+  
+  // Reset legacy field if it exists (fallback case)
+  const legacyField = document.getElementById('module_certificate');
+  if (legacyField) {
+    legacyField.value = '';
+  }
 }
 
 function openEditModuleModal(moduleId) {
@@ -45,11 +62,41 @@ function openEditModuleModal(moduleId) {
   const moduleCertificate = button.getAttribute('data-module-certificate');
   const moduleCourses = button.getAttribute('data-module-courses').split(',').filter(id => id !== '');
   
+  // New certificate system fields
+  const certificateOptions = button.getAttribute('data-certificate-options').split(',').filter(id => id !== '');
+  const logicOperator = button.getAttribute('data-logic-operator') || 'or';
+  const certificateComment = button.getAttribute('data-certificate-comment') || '';
+  
   // Populate the form
   document.getElementById('edit_module_id').value = moduleId;
   document.getElementById('edit_module_name').value = moduleName;
   document.getElementById('edit_module_description').value = moduleDescription;
-  document.getElementById('edit_module_certificate').value = moduleCertificate || '';
+  
+  // Populate certificate fields
+  document.getElementById('edit_certificate_comment').value = certificateComment;
+  
+  // Handle legacy certificate field if it exists (fallback case)
+  const legacyField = document.getElementById('edit_module_certificate');
+  if (legacyField) {
+    legacyField.value = moduleCertificate || '';
+  }
+  
+  // Set logic operator
+  if (logicOperator === 'and') {
+    document.getElementById('edit_logic_and').checked = true;
+  } else {
+    document.getElementById('edit_logic_or').checked = true;
+  }
+  
+  // Clear all certificate option checkboxes first
+  document.querySelectorAll('[name="certificate_options"]').forEach(checkbox => {
+    if (checkbox.id.startsWith('edit_cert_option_')) {
+      checkbox.checked = false;
+    }
+  });
+  
+  // Load selected certificate options into searchable select
+  loadSelectedCertificateOptions('edit', certificateOptions);
   
   // Clear all checkboxes first
   document.querySelectorAll('.edit-course-checkbox').forEach(checkbox => {
@@ -686,4 +733,138 @@ document.addEventListener('DOMContentLoaded', function() {
     sessionStorage.removeItem('detailsViewOpen');
   }
 });
+
+// Searchable Certificate Select Functions
+let selectedCertificateOptions = {
+  create: {},
+  edit: {}
+};
+
+function focusSearchInput(inputId) {
+  document.getElementById(inputId).focus();
+}
+
+function showCertificateDropdown(mode) {
+  const dropdown = document.getElementById(`${mode}-cert-dropdown`);
+  dropdown.classList.remove('hidden');
+}
+
+function hideCertificateDropdown(mode) {
+  setTimeout(() => {
+    const dropdown = document.getElementById(`${mode}-cert-dropdown`);
+    dropdown.classList.add('hidden');
+  }, 150);
+}
+
+function filterCertificateOptions(mode, searchTerm) {
+  const dropdown = document.getElementById(`${mode}-cert-dropdown`);
+  const options = dropdown.querySelectorAll('.certificate-option');
+  
+  options.forEach(option => {
+    const optionName = option.getAttribute('data-option-name').toLowerCase();
+    const optionId = option.getAttribute('data-option-id');
+    
+    if (optionName.includes(searchTerm.toLowerCase()) && !selectedCertificateOptions[mode][optionId]) {
+      option.style.display = 'block';
+    } else {
+      option.style.display = 'none';
+    }
+  });
+}
+
+function selectCertificateOption(mode, optionId, optionName) {
+  if (selectedCertificateOptions[mode][optionId]) {
+    return; // Already selected
+  }
+  
+  // Add to selected options
+  selectedCertificateOptions[mode][optionId] = optionName;
+  
+  // Create tag element
+  const tag = document.createElement('div');
+  tag.className = 'selected-option-tag inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full';
+  tag.innerHTML = `
+    <span>${optionName}</span>
+    <button type="button" class="ml-1 text-blue-600 hover:text-blue-800" onclick="removeCertificateOption('${mode}', ${optionId})">
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  `;
+  
+  // Add to selected options container
+  document.getElementById(`${mode}-selected-options`).appendChild(tag);
+  
+  // Update hidden inputs
+  updateCertificateHiddenInputs(mode);
+  
+  // Clear search
+  document.getElementById(`${mode}-cert-search`).value = '';
+  
+  // Hide dropdown
+  hideCertificateDropdown(mode);
+  
+  // Update filter
+  filterCertificateOptions(mode, '');
+}
+
+function removeCertificateOption(mode, optionId) {
+  // Remove from selected options
+  delete selectedCertificateOptions[mode][optionId];
+  
+  // Remove tag element
+  const container = document.getElementById(`${mode}-selected-options`);
+  const tags = container.querySelectorAll('.selected-option-tag');
+  tags.forEach(tag => {
+    const button = tag.querySelector('button');
+    if (button && button.getAttribute('onclick').includes(optionId)) {
+      tag.remove();
+    }
+  });
+  
+  // Update hidden inputs
+  updateCertificateHiddenInputs(mode);
+  
+  // Update filter
+  filterCertificateOptions(mode, document.getElementById(`${mode}-cert-search`).value);
+}
+
+function updateCertificateHiddenInputs(mode) {
+  const container = document.getElementById(`${mode}-cert-hidden-inputs`);
+  container.innerHTML = '';
+  
+  Object.keys(selectedCertificateOptions[mode]).forEach(optionId => {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'certificate_options';
+    input.value = optionId;
+    container.appendChild(input);
+  });
+}
+
+function clearSelectedCertificateOptions(mode) {
+  selectedCertificateOptions[mode] = {};
+  document.getElementById(`${mode}-selected-options`).innerHTML = '';
+  document.getElementById(`${mode}-cert-hidden-inputs`).innerHTML = '';
+}
+
+function loadSelectedCertificateOptions(mode, optionIds) {
+  clearSelectedCertificateOptions(mode);
+  
+  optionIds.forEach(optionId => {
+    const dropdown = document.getElementById(`${mode}-cert-dropdown`);
+    const option = dropdown.querySelector(`[data-option-id="${optionId}"]`);
+    if (option) {
+      const optionName = option.getAttribute('data-option-name');
+      selectCertificateOption(mode, optionId, optionName);
+    }
+  });
+}
+
+function handleCertificateKeydown(event, mode) {
+  if (event.key === 'Escape') {
+    hideCertificateDropdown(mode);
+  }
+}
+
 </script>

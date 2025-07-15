@@ -3,8 +3,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.db import models
-from .models import Course, Module, Programme, Revision, ProgrammeType, ProgrammeModule, ProgrammeStudentCount, ProgrammeNebenfach, DefaultStudentCount, CourseType, Discipline, CourseModule
-from .forms import CourseForm, ModuleForm, ProgrammeForm, RevisionForm
+from .models import Course, Module, Programme, Revision, ProgrammeType, ProgrammeModule, ProgrammeStudentCount, ProgrammeNebenfach, DefaultStudentCount, CourseType, Discipline, CourseModule, CertificateOption, ModuleCertificate
+from .forms import CourseForm, ModuleForm, ProgrammeForm, RevisionForm, ModuleCertificateForm
 
 
 @login_required
@@ -605,6 +605,11 @@ def programme_detail(request, programme_id):
             module_certificate = request.POST.get('module_certificate', '')
             selected_courses = request.POST.getlist('module_courses')
             
+            # Certificate form data
+            selected_options = request.POST.getlist('certificate_options')
+            logic_operator = request.POST.get('logic_operator', 'or')
+            certificate_comment = request.POST.get('certificate_comment', '')
+            
             if module_name:
                 # Create the new module and automatically add it to this programme
                 new_module = Module.objects.create(
@@ -612,6 +617,24 @@ def programme_detail(request, programme_id):
                     description=module_description.strip(),
                     certificate=module_certificate.strip()
                 )
+                
+                # Create or update module certificate if new system is used
+                if selected_options or certificate_comment:
+                    module_cert, created = ModuleCertificate.objects.get_or_create(
+                        module=new_module,
+                        defaults={
+                            'logic_operator': logic_operator,
+                            'comment': certificate_comment.strip()
+                        }
+                    )
+                    if not created:
+                        module_cert.logic_operator = logic_operator
+                        module_cert.comment = certificate_comment.strip()
+                        module_cert.save()
+                    
+                    # Set selected options
+                    if selected_options:
+                        module_cert.selected_options.set(selected_options)
                 
                 # Add selected courses to the module with semester
                 if selected_courses:
@@ -645,6 +668,11 @@ def programme_detail(request, programme_id):
             module_certificate = request.POST.get('module_certificate', '')
             selected_courses = request.POST.getlist('module_courses')
             
+            # Certificate form data
+            selected_options = request.POST.getlist('certificate_options')
+            logic_operator = request.POST.get('logic_operator', 'or')
+            certificate_comment = request.POST.get('certificate_comment', '')
+            
             if module_id and module_name:
                 try:
                     module = Module.objects.get(id=module_id)
@@ -653,6 +681,29 @@ def programme_detail(request, programme_id):
                     module.description = module_description.strip()
                     module.certificate = module_certificate.strip()
                     module.save()
+                    
+                    # Create or update module certificate if new system is used
+                    if selected_options or certificate_comment:
+                        module_cert, created = ModuleCertificate.objects.get_or_create(
+                            module=module,
+                            defaults={
+                                'logic_operator': logic_operator,
+                                'comment': certificate_comment.strip()
+                            }
+                        )
+                        if not created:
+                            module_cert.logic_operator = logic_operator
+                            module_cert.comment = certificate_comment.strip()
+                            module_cert.save()
+                        
+                        # Set selected options
+                        if selected_options:
+                            module_cert.selected_options.set(selected_options)
+                        else:
+                            module_cert.selected_options.clear()
+                    else:
+                        # If no new certificate data, remove ModuleCertificate if it exists
+                        ModuleCertificate.objects.filter(module=module).delete()
                     
                     # Update courses - first clear all CourseModule links, then add selected ones with semester
                     module.coursemodule_set.all().delete()
@@ -712,6 +763,9 @@ def programme_detail(request, programme_id):
     
     programme_modules = programme.get_ordered_modules()
     
+    # Get certificate options for the forms
+    certificate_options = CertificateOption.objects.all().order_by('order', 'name')
+    
     return render(request, 'studyprogrammes_v2/programme_detail.html', {
         'programme': programme,
         'programme_modules': programme_modules,
@@ -719,6 +773,7 @@ def programme_detail(request, programme_id):
         'semester_range': semester_range,
         'student_counts': student_counts,
         'nebenfach_ects': nebenfach_ects,
+        'certificate_options': certificate_options,
     })
 
 
@@ -763,27 +818,11 @@ def get_available_programmes(request, revision_id, programme_type):
     # Get current programme of this type in the revision
     current_programme = revision.programmes.filter(programme_type=programme_type).first()
     
-    # Debug information
-    import logging
-    logger = logging.getLogger(__name__)
-    
-    # Get all programmes of this type for debugging
-    all_programmes_of_type = Programme.objects.filter(programme_type=programme_type)
-    logger.info(f"DEBUG: Total programmes of type {programme_type}: {all_programmes_of_type.count()}")
-    for p in all_programmes_of_type:
-        logger.info(f"DEBUG: Programme {p.id} '{p.name}' - user: {p.user}, user_id: {p.user.id if p.user else None}")
-    
-    logger.info(f"DEBUG: Revision author: {revision.author}, author_id: {revision.author.id if revision.author else None}")
-    
     # Get all available programmes of this type
     # Include programmes without user assignment (user=None) and programmes belonging to the revision author
     available_programmes = Programme.objects.filter(programme_type=programme_type).filter(
         models.Q(user=revision.author) | models.Q(user__isnull=True)
     )
-    
-    logger.info(f"DEBUG: Available programmes count: {available_programmes.count()}")
-    for p in available_programmes:
-        logger.info(f"DEBUG: Available programme {p.id} '{p.name}' - user: {p.user}")
     
     # Include currently selected programme in options
     all_programmes = list(available_programmes)

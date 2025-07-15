@@ -79,6 +79,15 @@
                     data-module-description="{{ module.description }}"
                     data-module-certificate="{{ module.certificate }}"
                     data-module-courses="{% for course in module.courses.all %}{{ course.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                    {% if module.module_certificate %}
+                    data-certificate-options="{% for option in module.module_certificate.selected_options.all %}{{ option.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+                    data-logic-operator="{{ module.module_certificate.logic_operator }}"
+                    data-certificate-comment="{{ module.module_certificate.comment }}"
+                    {% else %}
+                    data-certificate-options=""
+                    data-logic-operator="or"
+                    data-certificate-comment=""
+                    {% endif %}
                     title="Bearbeiten">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -114,7 +123,7 @@
                 </div>
               {% endif %}
               
-              {% if module.certificate %}
+              {% if module.get_certificate_display %}
                 <div>
                   <h6 class="text-sm font-bold text-gray-700 mb-2 flex items-center">
                     <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,7 +131,7 @@
                     </svg>
                     Leistungsnachweis
                   </h6>
-                  <p class="text-sm text-gray-600">{{ module.certificate }}</p>
+                  <p class="text-sm text-gray-600">{{ module.get_certificate_display }}</p>
                 </div>
               {% endif %}
             </div>

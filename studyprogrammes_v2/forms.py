@@ -1,5 +1,5 @@
 from django import forms
-from .models import Course, Module, Programme, Revision, CourseType, Discipline, LPO, LPOCategory, ProgrammeType
+from .models import Course, Module, Programme, Revision, CourseType, Discipline, LPO, LPOCategory, ProgrammeType, CertificateOption, ModuleCertificate
 
 
 class CourseForm(forms.ModelForm):
@@ -102,6 +102,40 @@ class ModuleForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # Order courses by semester then by name
         self.fields['courses'].queryset = Course.objects.all().order_by('semester', 'name')
+
+
+class ModuleCertificateForm(forms.ModelForm):
+    """Form for handling module certificate configuration with selection and logic operator."""
+    
+    class Meta:
+        model = ModuleCertificate
+        fields = ['selected_options', 'logic_operator', 'comment']
+        labels = {
+            'selected_options': 'Leistungsnachweis-Optionen',
+            'logic_operator': 'Verknüpfung',
+            'comment': 'Zusätzliche Angaben',
+        }
+        widgets = {
+            'selected_options': forms.CheckboxSelectMultiple(attrs={
+                'class': 'space-y-2'
+            }),
+            'logic_operator': forms.RadioSelect(attrs={
+                'class': 'flex gap-4'
+            }),
+            'comment': forms.Textarea(attrs={
+                'rows': 2,
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500',
+                'placeholder': 'Zusätzliche Details zum Leistungsnachweis...'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Order certificate options by their order field
+        self.fields['selected_options'].queryset = CertificateOption.objects.all().order_by('order', 'name')
+        
+        # Set help text for logic operator
+        self.fields['logic_operator'].help_text = 'Wählen Sie, ob die ausgewählten Optionen mit UND oder ODER verknüpft werden sollen.'
 
 
 class ProgrammeForm(forms.ModelForm):

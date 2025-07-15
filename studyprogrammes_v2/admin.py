@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Course, Module, Programme, ProgrammeModule, ProgrammeStudentCount,
-    ProgrammeType, DefaultStudentCount, Revision
+    ProgrammeType, DefaultStudentCount, Revision, CertificateOption, ModuleCertificate
 )
 
 @admin.register(Course)
@@ -10,10 +10,17 @@ class CourseAdmin(admin.ModelAdmin):
     list_filter = ['course_type', 'discipline']
     search_fields = ['name', 'description']
 
+class ModuleCertificateInline(admin.StackedInline):
+    model = ModuleCertificate
+    extra = 0
+    max_num = 1
+    filter_horizontal = ['selected_options']
+
 @admin.register(Module)
 class ModuleAdmin(admin.ModelAdmin):
-    list_display = ['name', 'total_ects', 'total_sws']
+    list_display = ['name', 'total_ects', 'total_sws', 'get_certificate_display']
     search_fields = ['name', 'description']
+    inlines = [ModuleCertificateInline]
 
 class ProgrammeModuleInline(admin.TabularInline):
     model = ProgrammeModule
@@ -63,3 +70,23 @@ class RevisionAdmin(admin.ModelAdmin):
     def programme_count(self, obj):
         return obj.programmes.count()
     programme_count.short_description = 'Programme Count'
+
+
+@admin.register(CertificateOption)
+class CertificateOptionAdmin(admin.ModelAdmin):
+    list_display = ['name', 'order', 'description']
+    list_editable = ['order']
+    ordering = ['order', 'name']
+    search_fields = ['name', 'description']
+
+
+@admin.register(ModuleCertificate)
+class ModuleCertificateAdmin(admin.ModelAdmin):
+    list_display = ['module', 'logic_operator', 'get_selected_options', 'comment']
+    list_filter = ['logic_operator']
+    search_fields = ['module__name', 'comment']
+    filter_horizontal = ['selected_options']
+    
+    def get_selected_options(self, obj):
+        return ', '.join([opt.name for opt in obj.selected_options.all()])
+    get_selected_options.short_description = 'Selected Options'
