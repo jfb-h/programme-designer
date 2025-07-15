@@ -767,7 +767,7 @@ def get_available_programmes(request, revision_id, programme_type):
     # Include programmes without user assignment (user=None) and programmes belonging to the revision author
     available_programmes = Programme.objects.filter(programme_type=programme_type).filter(
         models.Q(user=revision.author) | models.Q(user__isnull=True)
-    ).exclude(revisions=revision)
+    )
     
     # Include currently selected programme in options
     all_programmes = list(available_programmes)
