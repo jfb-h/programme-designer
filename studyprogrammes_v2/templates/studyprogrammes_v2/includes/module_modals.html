@@ -55,6 +55,12 @@
                 </button>
               </div>
               
+              <!-- Shared courses filter -->
+              <div class="flex items-center">
+                <input type="checkbox" id="showSharedCourses" checked class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2">
+                <label for="showSharedCourses" class="ml-2 text-sm font-medium text-gray-700">Geteilte zeigen</label>
+              </div>
+              
               <!-- Selected courses summary -->
               <div id="selectedCoursesCount" class="text-sm text-gray-600 hidden">
                 <span class="font-medium">Ausgewählte Kurse:</span> <span id="selectedCount">0</span>
@@ -74,7 +80,8 @@
                          data-course-name="{{ course.name|lower }}" 
                          data-course-type="{{ course.course_type }}"
                          data-course-ects="{{ course.ects }}"
-                         data-course-sws="{{ course.sws }}">
+                         data-course-sws="{{ course.sws }}"
+                         data-course-shared="{{ course.is_shared }}">
                     <div class="col-span-1 flex items-center">
                       <input type="number" name="semester_for_{{ course.id }}" min="1" max="10" class="w-16 px-1 py-0.5 border border-gray-300 rounded focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-xs" placeholder="Sem">
                     </div>
@@ -185,6 +192,12 @@
                 </button>
               </div>
               
+              <!-- Shared courses filter -->
+              <div class="flex items-center">
+                <input type="checkbox" id="editShowSharedCourses" checked class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2">
+                <label for="editShowSharedCourses" class="ml-2 text-sm font-medium text-gray-700">Geteilte zeigen</label>
+              </div>
+              
               <!-- Selected courses summary -->
               <div id="editSelectedCoursesCount" class="text-sm text-gray-600 hidden">
                 <span class="font-medium">Ausgewählte Kurse:</span> <span id="editSelectedCount">0</span>
@@ -200,7 +213,8 @@
                          data-course-name="{{ course.name|lower }}" 
                          data-course-type="{{ course.course_type }}"
                          data-course-ects="{{ course.ects }}"
-                         data-course-sws="{{ course.sws }}">
+                         data-course-sws="{{ course.sws }}"
+                         data-course-shared="{{ course.is_shared }}">
                     <input type="checkbox" name="module_courses" value="{{ course.id }}" class="edit-course-checkbox mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
                     <div class="flex-1 min-w-0">
                       <div class="text-sm font-medium text-gray-900">{{ course.name }}</div>

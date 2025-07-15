@@ -78,9 +78,11 @@ function closeEditModuleModal() {
 function setupCourseSearch() {
   const searchInput = document.getElementById('courseSearch');
   const typeFilter = document.getElementById('courseTypeFilter');
+  const sharedFilter = document.getElementById('showSharedCourses');
   
   searchInput.addEventListener('input', filterCourses);
   typeFilter.addEventListener('change', filterCourses);
+  sharedFilter.addEventListener('change', filterCourses);
   
   // Setup course selection tracking
   document.querySelectorAll('.course-checkbox').forEach(checkbox => {
@@ -93,17 +95,21 @@ function setupCourseSearch() {
 function filterCourses() {
   const searchTerm = document.getElementById('courseSearch').value.toLowerCase();
   const selectedType = document.getElementById('courseTypeFilter').value;
+  const showShared = document.getElementById('showSharedCourses').checked;
   const courseItems = document.querySelectorAll('.course-item');
   let visibleCount = 0;
   
   courseItems.forEach(item => {
     const courseName = item.getAttribute('data-course-name');
     const courseType = item.getAttribute('data-course-type');
+    const isSharedAttr = item.getAttribute('data-course-shared');
+    const isShared = isSharedAttr === 'true' || isSharedAttr === 'True';
     
     const matchesSearch = courseName.includes(searchTerm);
     const matchesType = !selectedType || courseType === selectedType;
+    const matchesShared = showShared || !isShared;
     
-    if (matchesSearch && matchesType) {
+    if (matchesSearch && matchesType && matchesShared) {
       item.style.display = 'flex';
       visibleCount++;
     } else {
@@ -123,6 +129,7 @@ function filterCourses() {
 function clearCourseFilters() {
   document.getElementById('courseSearch').value = '';
   document.getElementById('courseTypeFilter').value = '';
+  document.getElementById('showSharedCourses').checked = true;
   filterCourses();
 }
 
@@ -161,9 +168,11 @@ function resetCourseSelection() {
 function setupEditCourseSearch() {
   const searchInput = document.getElementById('editCourseSearch');
   const typeFilter = document.getElementById('editCourseTypeFilter');
+  const sharedFilter = document.getElementById('editShowSharedCourses');
   
   searchInput.addEventListener('input', filterEditCourses);
   typeFilter.addEventListener('change', filterEditCourses);
+  sharedFilter.addEventListener('change', filterEditCourses);
   
   // Setup course selection tracking
   document.querySelectorAll('.edit-course-checkbox').forEach(checkbox => {
@@ -174,17 +183,21 @@ function setupEditCourseSearch() {
 function filterEditCourses() {
   const searchTerm = document.getElementById('editCourseSearch').value.toLowerCase();
   const selectedType = document.getElementById('editCourseTypeFilter').value;
+  const showShared = document.getElementById('editShowSharedCourses').checked;
   const courseItems = document.querySelectorAll('.edit-course-item');
   let visibleCount = 0;
   
   courseItems.forEach(item => {
     const courseName = item.getAttribute('data-course-name');
     const courseType = item.getAttribute('data-course-type');
+    const isSharedAttr = item.getAttribute('data-course-shared');
+    const isShared = isSharedAttr === 'true' || isSharedAttr === 'True';
     
     const matchesSearch = courseName.includes(searchTerm);
     const matchesType = !selectedType || courseType === selectedType;
+    const matchesShared = showShared || !isShared;
     
-    if (matchesSearch && matchesType) {
+    if (matchesSearch && matchesType && matchesShared) {
       item.style.display = 'flex';
       visibleCount++;
     } else {
@@ -204,6 +217,7 @@ function filterEditCourses() {
 function clearEditCourseFilters() {
   document.getElementById('editCourseSearch').value = '';
   document.getElementById('editCourseTypeFilter').value = '';
+  document.getElementById('editShowSharedCourses').checked = true;
   filterEditCourses();
 }
 
