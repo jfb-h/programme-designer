@@ -256,8 +256,10 @@ class Programme(models.Model):
 
     @property
     def total_ects(self):
-        """Calculate total ECTS credits for this programme."""
-        return sum(module.total_ects for module in self.modules.all())
+        """Calculate total ECTS credits for this programme including nebenfach."""
+        module_ects = sum(module.total_ects for module in self.modules.all())
+        nebenfach_ects = sum(nf.ects for nf in self.nebenfach_ects.all())
+        return module_ects + nebenfach_ects
     
     @property
     def total_sws(self):
@@ -434,6 +436,78 @@ class Programme(models.Model):
         else:
             return 6  # Default
 
+    def to_json(self):
+        """Export programme as JSON representation."""
+        import json
+        from django.core.serializers.json import DjangoJSONEncoder
+        
+        # Build the programme data structure
+        programme_data = {
+            'name': self.name,
+            'programme_type': self.programme_type,
+            'programme_type_display': self.get_programme_type_display(),
+            'comment': self.comment,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'total_ects': self.total_ects,
+            'total_sws': self.total_sws,
+            'total_courses': self.total_courses,
+            'semester_count': self.get_semester_count(),
+            'modules': [],
+            'student_counts': [],
+            'nebenfach_ects': []
+        }
+        
+        # Add modules with their courses
+        for programme_module in self.programmemodule_set.all().order_by('order'):
+            module = programme_module.module
+            module_data = {
+                'name': module.name,
+                'description': module.description,
+                'certificate': module.certificate,
+                'order': programme_module.order,
+                'total_ects': module.total_ects,
+                'total_sws': module.total_sws,
+                'courses': []
+            }
+            
+            # Add courses within this module
+            for course_module in module.coursemodule_set.all().order_by('semester', 'order'):
+                course = course_module.course
+                course_data = {
+                    'name': course.name,
+                    'description': course.description,
+                    'semester': course_module.semester,
+                    'order': course_module.order,
+                    'course_type': course.course_type,
+                    'course_type_display': course.get_course_type_display(),
+                    'discipline': course.discipline,
+                    'discipline_display': course.get_discipline_display(),
+                    'ects': course.ects,
+                    'sws': course.sws,
+                    'max_participants': course.max_participants,
+                    'lpo_relevance': [lpo.name for lpo in course.lpo_relevance.all()]
+                }
+                module_data['courses'].append(course_data)
+            
+            programme_data['modules'].append(module_data)
+        
+        # Add student counts
+        for student_count in self.student_counts.all().order_by('semester'):
+            programme_data['student_counts'].append({
+                'semester': student_count.semester,
+                'min_students': student_count.min_students,
+                'max_students': student_count.max_students
+            })
+        
+        # Add nebenfach ECTS
+        for nebenfach in self.nebenfach_ects.all().order_by('semester'):
+            programme_data['nebenfach_ects'].append({
+                'semester': nebenfach.semester,
+                'ects': nebenfach.ects
+            })
+        
+        return json.dumps(programme_data, cls=DjangoJSONEncoder, indent=2, ensure_ascii=False)
+
 
 class ProgrammeStudentCount(models.Model):
     """Model for tracking minimum and maximum expected student counts per semester."""
@@ -462,6 +536,23 @@ class ProgrammeNebenfach(models.Model):
 
     def __str__(self):
         return f"{self.programme.name} Sem {self.semester}: {self.ects} ECTS Nebenfach"
+
+
+class DefaultStudentCount(models.Model):
+    """Model for storing default student counts per programme type and semester."""
+    programme_type = models.CharField(max_length=30, choices=ProgrammeType.choices)
+    semester = models.PositiveIntegerField(help_text="Semester number (1, 2, 3, etc.)")
+    min_students = models.PositiveIntegerField(default=20, help_text="Default minimum expected students")
+    max_students = models.PositiveIntegerField(default=30, help_text="Default maximum expected students")
+    
+    class Meta:
+        unique_together = ('programme_type', 'semester')
+        ordering = ['programme_type', 'semester']
+        verbose_name = "Default Student Count"
+        verbose_name_plural = "Default Student Counts"
+
+    def __str__(self):
+        return f"{self.get_programme_type_display()} Sem {self.semester}: {self.min_students}-{self.max_students}"
 
 
 class Revision(models.Model):

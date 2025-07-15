@@ -240,6 +240,12 @@ function resetEditCourseSelection() {
 
 // Student count update function
 function updateStudentCount(input) {
+  // Prevent updates if inputs are disabled (safety check)
+  if (input.disabled) {
+    console.log('Input is disabled, ignoring update');
+    return;
+  }
+  
   // Only update immediately if not in edit mode (for backward compatibility)
   if (!isEditMode) {
     console.log('Updating student count immediately (not in edit mode)');
@@ -293,6 +299,12 @@ function updateStudentCount(input) {
 
 // Nebenfach update function
 function updateNebenfach(input) {
+  // Prevent updates if inputs are disabled (safety check)
+  if (input.disabled) {
+    console.log('Nebenfach input is disabled, ignoring update');
+    return;
+  }
+  
   // Only update immediately if not in edit mode (for backward compatibility)
   if (!isEditMode) {
     console.log('Updating nebenfach immediately (not in edit mode)');
@@ -469,6 +481,12 @@ function toggleEditMode() {
   const discardBtn = document.getElementById('discard-changes-btn');
   const studentInputs = document.querySelectorAll('.student-count-input');
   const nebenfachInputs = document.querySelectorAll('.nebenfach-input');
+
+  // Prevent double-clicking issues
+  if (editBtn && editBtn.disabled) {
+    console.log('Edit button is disabled, preventing toggle');
+    return;
+  }
 
   if (!isEditMode) {
     // Enter edit mode

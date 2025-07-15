@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.db import models
-from .models import Course, Module, Programme, Revision, ProgrammeType, ProgrammeModule, ProgrammeStudentCount, ProgrammeNebenfach, CourseType, Discipline, CourseModule
+from .models import Course, Module, Programme, Revision, ProgrammeType, ProgrammeModule, ProgrammeStudentCount, ProgrammeNebenfach, DefaultStudentCount, CourseType, Discipline, CourseModule
 from .forms import CourseForm, ModuleForm, ProgrammeForm, RevisionForm
 
 
@@ -679,10 +679,32 @@ def programme_detail(request, programme_id):
     
     # Get existing student counts and ensure they're integers
     existing_counts = ProgrammeStudentCount.objects.filter(programme=programme)
-    student_counts = {
+    existing_counts_dict = {
         'min': {int(sc.semester): int(sc.min_students) for sc in existing_counts},
         'max': {int(sc.semester): int(sc.max_students) for sc in existing_counts}
     }
+    
+    # Get default student counts for this programme type
+    default_counts = DefaultStudentCount.objects.filter(programme_type=programme.programme_type)
+    default_counts_dict = {
+        'min': {int(dc.semester): int(dc.min_students) for dc in default_counts},
+        'max': {int(dc.semester): int(dc.max_students) for dc in default_counts}
+    }
+    
+    # Build final student_counts dict with fallback logic
+    student_counts = {'min': {}, 'max': {}}
+    for semester in semester_range:
+        # Use programme-specific value if exists, otherwise use default, otherwise use fallback
+        student_counts['min'][semester] = (
+            existing_counts_dict['min'].get(semester) or 
+            default_counts_dict['min'].get(semester) or 
+            20  # fallback
+        )
+        student_counts['max'][semester] = (
+            existing_counts_dict['max'].get(semester) or 
+            default_counts_dict['max'].get(semester) or 
+            30  # fallback
+        )
     
     # Get existing nebenfach ECTS
     existing_nebenfach = ProgrammeNebenfach.objects.filter(programme=programme)
@@ -812,3 +834,27 @@ def update_revision_programme(request, revision_id):
             return JsonResponse({'success': False, 'error': 'Programm nicht gefunden'})
     
     return JsonResponse({'success': True})
+
+
+@login_required
+def download_programme(request, programme_id):
+    """Download a programme as JSON file."""
+    programme = get_object_or_404(Programme, id=programme_id)
+    
+    # Generate JSON representation
+    json_data = programme.to_json()
+    
+    # Create HTTP response with JSON content
+    response = HttpResponse(json_data, content_type='application/json')
+    
+    # Create safe filename
+    safe_name = programme.name.replace(' ', '_').replace('/', '_')
+    filename = f"{safe_name}_{programme.programme_type}.json"
+    
+    # Set headers for download
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response['Content-Length'] = len(json_data.encode('utf-8'))
+    
+    return response
+
+

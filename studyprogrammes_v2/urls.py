@@ -26,6 +26,7 @@ urlpatterns = [
     
     # Detail/edit pages
     path('programmes/<int:programme_id>/edit/', views.programme_detail, name='v2_programme_detail'),
+    path('programmes/<int:programme_id>/download/', views.download_programme, name='v2_download_programme'),
     path('programmes/<int:programme_id>/reorder-modules/', views.reorder_modules, name='v2_reorder_modules'),
     path('revisions/<int:revision_id>/', views.revision_detail, name='v2_revision_detail'),
     path('revisions/<int:revision_id>/edit/', views.edit_revision, name='v2_edit_revision'),
