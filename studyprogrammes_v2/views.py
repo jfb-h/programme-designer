@@ -258,8 +258,51 @@ def programme_overview(request):
                         user=request.user,  # Set to current user
                         is_shared=False,  # Copies are always private initially
                     )
-                    # Copy many-to-many relationships (modules)
-                    copied_programme.modules.set(original_programme.modules.all())
+                    # Deep copy modules and their relationships
+                    from .models import Module, ProgrammeModule, CourseModule
+                    
+                    for programme_module in original_programme.programmemodule_set.all().order_by('order'):
+                        original_module = programme_module.module
+                        
+                        # Create a new module copy
+                        copied_module = Module.objects.create(
+                            name=original_module.name,
+                            description=original_module.description,
+                            certificate=original_module.certificate,
+                            user=request.user,  # Set to current user
+                            order=original_module.order
+                        )
+                        
+                        # Copy course relationships
+                        for course_module in original_module.coursemodule_set.all().order_by('order'):
+                            CourseModule.objects.create(
+                                module=copied_module,
+                                course=course_module.course,  # Keep reference to same course
+                                semester=course_module.semester,
+                                order=course_module.order
+                            )
+                        
+                        # Copy module certificate if it exists
+                        try:
+                            original_cert = original_module.module_certificate
+                            from .models import ModuleCertificate
+                            copied_cert = ModuleCertificate.objects.create(
+                                module=copied_module,
+                                logic_operator=original_cert.logic_operator,
+                                comment=original_cert.comment,
+                                is_graded=original_cert.is_graded
+                            )
+                            copied_cert.selected_options.set(original_cert.selected_options.all())
+                        except:
+                            pass  # No certificate to copy
+                        
+                        # Add module to programme with same order
+                        ProgrammeModule.objects.create(
+                            programme=copied_programme,
+                            module=copied_module,
+                            order=programme_module.order
+                        )
+                    
                     messages.success(request, f'Studiengang "{original_programme.name}" wurde kopiert.')
                     
                 except Programme.DoesNotExist:
@@ -625,6 +668,7 @@ def programme_detail(request, programme_id):
             module_name = request.POST.get('module_name')
             module_description = request.POST.get('module_description', '')
             module_certificate = request.POST.get('module_certificate', '')
+            module_responsible_person = request.POST.get('module_responsible_person', '')
             selected_courses = request.POST.getlist('module_courses')
             
             # Certificate form data
@@ -638,7 +682,8 @@ def programme_detail(request, programme_id):
                 new_module = Module.objects.create(
                     name=module_name.strip(),
                     description=module_description.strip(),
-                    certificate=module_certificate.strip()
+                    certificate=module_certificate.strip(),
+                    responsible_person=module_responsible_person.strip()
                 )
                 
                 # Create or update module certificate if new system is used
@@ -702,6 +747,7 @@ def programme_detail(request, programme_id):
             module_name = request.POST.get('module_name')
             module_description = request.POST.get('module_description', '')
             module_certificate = request.POST.get('module_certificate', '')
+            module_responsible_person = request.POST.get('module_responsible_person', '')
             selected_courses = request.POST.getlist('module_courses')
             
             # Certificate form data
@@ -717,6 +763,7 @@ def programme_detail(request, programme_id):
                     module.name = module_name.strip()
                     module.description = module_description.strip()
                     module.certificate = module_certificate.strip()
+                    module.responsible_person = module_responsible_person.strip()
                     module.save()
                     
                     # Create or update module certificate if new system is used

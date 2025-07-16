@@ -78,6 +78,7 @@
                     data-module-name="{{ module.name }}" 
                     data-module-description="{{ module.description }}"
                     data-module-certificate="{{ module.certificate }}"
+                    data-module-responsible-person="{{ module.responsible_person }}"
                     data-module-courses="{% for course in module.courses.all %}{{ course.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
                     data-course-semesters="{% for cm in module.coursemodule_set.all %}{{ cm.course.id }}:{{ cm.semester }}{% if not forloop.last %},{% endif %}{% endfor %}"
                     {% if module.module_certificate %}
@@ -123,6 +124,18 @@
                     Beschreibung
                   </h6>
                   <p class="text-sm text-gray-600">{{ module.description }}</p>
+                </div>
+              {% endif %}
+              
+              {% if module.responsible_person %}
+                <div>
+                  <h6 class="text-sm font-bold text-gray-700 mb-2 flex items-center">
+                    <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    Modulverantwortliche(r)
+                  </h6>
+                  <p class="text-sm text-gray-600">{{ module.responsible_person }}</p>
                 </div>
               {% endif %}
               

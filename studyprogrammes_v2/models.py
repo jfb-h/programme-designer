@@ -20,6 +20,7 @@ class Discipline(models.TextChoices):
 class LPO(models.TextChoices):
     REGIONAL = 'regional', 'Regional'
     EXKURSION = 'exkursion', 'Exkursion'
+    DIDAKTIK = 'didaktik', 'Didaktik'
 
 
 class LPOCategory(models.Model):
@@ -35,7 +36,7 @@ class LPOCategory(models.Model):
 
 
 class ProgrammeType(models.TextChoices):
-    BACHELOR_100 = 'bachelor_100', 'Bachelor 100'
+    BACHELOR_100 = 'bachelor_100', 'Bachelor'
     BACHELOR_60 = 'bachelor_60', 'Bachelor 60'
     BACHELOR_30 = 'bachelor_30', 'Bachelor 30'
     LEHRAMT_VERTIEFT = 'lehramt_vertieft', 'Lehramt Vertieft'
@@ -153,6 +154,7 @@ class Module(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     certificate = models.TextField(blank=True, help_text="Certificate or qualification information for this module")
+    responsible_person = models.CharField(max_length=200, blank=True, help_text="Modulverantwortliche(r)")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='modules_v2', null=True, blank=True)
     courses = models.ManyToManyField('Course', through='CourseModule', related_name='modules', blank=True)
 
@@ -434,6 +436,13 @@ class Programme(models.Model):
         if excursion_ects > 0:
             lpo_ects['exkursion'] = excursion_ects
         
+        # Didaktik LPO courses
+        didaktik_ects = all_courses.filter(
+            lpo_relevance__name='didaktik'
+        ).aggregate(total=Sum('ects'))['total'] or 0
+        if didaktik_ects > 0:
+            lpo_ects['didaktik'] = didaktik_ects
+        
         return lpo_ects
 
     # SWS Statistics Methods
@@ -536,7 +545,7 @@ class Programme(models.Model):
         elif self.programme_type in master_types:
             return 4  # 2 years * 2 semesters
         elif self.programme_type in lehramt_types:
-            return 8  # 4 years * 2 semesters
+            return 9  # 4.5 years * 2 semesters
         else:
             return 6  # Default
 
@@ -827,6 +836,13 @@ class Revision(models.Model):
         ).aggregate(total=Sum('ects'))['total'] or 0
         if excursion_ects > 0:
             lpo_ects['excursion'] = excursion_ects
+        
+        # Didaktik LPO courses
+        didaktik_ects = all_courses.filter(
+            lpo_relevance__name='didaktik'
+        ).aggregate(total=Sum('ects'))['total'] or 0
+        if didaktik_ects > 0:
+            lpo_ects['didaktik'] = didaktik_ects
         
         return lpo_ects
     

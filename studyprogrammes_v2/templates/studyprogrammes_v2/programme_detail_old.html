@@ -307,6 +307,7 @@ input[type="text"].student-count-input:focus {
                       data-module-id="{{ module.id }}" 
                       data-module-name="{{ module.name }}" 
                       data-module-description="{{ module.description }}"
+                      data-module-responsible-person="{{ module.responsible_person }}"
                       data-module-courses="{% for course in module.courses.all %}{{ course.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
                       title="Bearbeiten">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -659,12 +660,14 @@ function openEditModuleModal(moduleId) {
   const button = document.querySelector(`.edit-module-btn[data-module-id="${moduleId}"]`);
   const moduleName = button.getAttribute('data-module-name');
   const moduleDescription = button.getAttribute('data-module-description');
+  const moduleResponsiblePerson = button.getAttribute('data-module-responsible-person') || '';
   const moduleCourses = button.getAttribute('data-module-courses').split(',').filter(id => id !== '');
   
   // Populate the form
   document.getElementById('edit_module_id').value = moduleId;
   document.getElementById('edit_module_name').value = moduleName;
   document.getElementById('edit_module_description').value = moduleDescription;
+  document.getElementById('edit_module_responsible_person').value = moduleResponsiblePerson;
   
   // Clear all checkboxes first
   document.querySelectorAll('.edit-course-checkbox').forEach(checkbox => {

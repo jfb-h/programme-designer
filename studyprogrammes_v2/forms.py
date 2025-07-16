@@ -69,12 +69,13 @@ class CourseForm(forms.ModelForm):
 class ModuleForm(forms.ModelForm):
     class Meta:
         model = Module
-        fields = ['order', 'name', 'description', 'certificate', 'courses']
+        fields = ['order', 'name', 'description', 'certificate', 'responsible_person', 'courses']
         labels = {
             'order': 'Reihenfolge',
             'name': 'Modulname',
             'description': 'Beschreibung',
             'certificate': 'Leistungsnachweis',
+            'responsible_person': 'Modulverantwortliche(r)',
             'courses': 'Kurse',
         }
         widgets = {
@@ -84,6 +85,9 @@ class ModuleForm(forms.ModelForm):
             }),
             'certificate': forms.Textarea(attrs={
                 'rows': 2,
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500'
+            }),
+            'responsible_person': forms.TextInput(attrs={
                 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500'
             }),
             'order': forms.NumberInput(attrs={
@@ -100,8 +104,8 @@ class ModuleForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Order courses by semester then by name
-        self.fields['courses'].queryset = Course.objects.all().order_by('semester', 'name')
+        # Order courses by name
+        self.fields['courses'].queryset = Course.objects.all().order_by('name')
 
 
 class ModuleCertificateForm(forms.ModelForm):
@@ -151,7 +155,7 @@ class ProgrammeForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'block w-full rounded-lg border-gray-400 shadow-sm focus:border-primary-500 focus:ring-primary-500 focus:ring-1 transition-colors',
-                'placeholder': 'z.B. Geographie Bachelor 100'
+                'placeholder': 'z.B. Geographie Bachelor'
             }),
             'programme_type': forms.RadioSelect(attrs={
                 'class': 'flex flex-wrap gap-4'

@@ -113,7 +113,7 @@ def semester_short(semester_type):
 def programme_type_short(programme_type):
     """Convert programme type to short code."""
     short_codes = {
-        'bachelor_100': 'BA100',
+        'bachelor_100': 'BA',
         'bachelor_60': 'BA60',
         'bachelor_30': 'BA30',
         'lehramt_vertieft': 'LA Vert',
@@ -386,12 +386,12 @@ def programme_target_ects_per_semester(programme_type):
     """Get target ECTS per semester for programme type."""
     target_ects = {
         'bachelor_100': 30,
-        'bachelor_60': 20,  # Assuming 60 ECTS over 3 semesters
-        'bachelor_30': 15,  # Assuming 30 ECTS over 2 semesters
-        'lehramt_vertieft': 30,
-        'lehramt_nicht_vertieft': 25,
-        'lehramt_mittelschule': 25,
-        'lehramt_grundschule': 25,
+        'bachelor_60': 12,  # Assuming 60 ECTS over 3 semesters
+        'bachelor_30': 6,  # Assuming 30 ECTS over 2 semesters
+        'lehramt_vertieft': 12,
+        'lehramt_nicht_vertieft': 12,
+        'lehramt_mittelschule': 12,
+        'lehramt_grundschule': 12,
         'master_hg': 30,
         'master_pg': 30,
     }

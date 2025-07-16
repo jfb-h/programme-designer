@@ -71,6 +71,7 @@ function openEditModuleModal(moduleId) {
   const moduleName = button.getAttribute('data-module-name');
   const moduleDescription = button.getAttribute('data-module-description');
   const moduleCertificate = button.getAttribute('data-module-certificate');
+  const moduleResponsiblePerson = button.getAttribute('data-module-responsible-person') || '';
   const moduleCourses = button.getAttribute('data-module-courses').split(',').filter(id => id !== '');
   const courseSemesters = button.getAttribute('data-course-semesters').split(',').filter(item => item !== '');
   
@@ -84,6 +85,7 @@ function openEditModuleModal(moduleId) {
   document.getElementById('edit_module_id').value = moduleId;
   document.getElementById('edit_module_name').value = moduleName;
   document.getElementById('edit_module_description').value = moduleDescription;
+  document.getElementById('edit_module_responsible_person').value = moduleResponsiblePerson;
   
   // Populate certificate fields
   document.getElementById('edit_certificate_comment').value = certificateComment;
