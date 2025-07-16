@@ -457,16 +457,24 @@ def programme_sws_range_with_revision_counts(programme, revision):
 
 @register.filter
 def programme_sws_range(programme):
-    """Get SWS range for a programme using the programme's own student counts."""
+    """Get SWS range for a programme using the programme's own student counts or defaults."""
     if not programme:
         return "—"
     
     # Get the programme's own student counts (same as programme detail page)
-    from ..models import ProgrammeStudentCount
+    from ..models import ProgrammeStudentCount, DefaultStudentCount
     existing_counts = ProgrammeStudentCount.objects.filter(programme=programme)
     student_counts = {
         'min': {int(sc.semester): int(sc.min_students) for sc in existing_counts},
         'max': {int(sc.semester): int(sc.max_students) for sc in existing_counts}
     }
+    
+    # If no programme-specific student counts, use defaults for this programme type
+    if not existing_counts.exists():
+        default_counts = DefaultStudentCount.objects.filter(programme_type=programme.programme_type)
+        student_counts = {
+            'min': {int(dc.semester): int(dc.min_students) for dc in default_counts},
+            'max': {int(dc.semester): int(dc.max_students) for dc in default_counts}
+        }
     
     return programme.get_sws_range_total(student_counts)
