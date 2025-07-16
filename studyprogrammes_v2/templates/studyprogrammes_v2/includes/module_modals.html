@@ -248,7 +248,7 @@
                     <div class="col-span-11 flex items-center pl-4">
                       <input type="checkbox" name="module_courses" value="{{ course.id }}" class="course-checkbox mr-2 mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" onchange="validateSemesterField(this)">
                       <div class="flex-1 min-w-0">
-                        <div class="text-sm font-medium text-gray-900">{{ course.name }}</div>
+                        <div class="text-sm font-medium text-gray-900">{{ course.name }}{% if course.user %} <span class="text-gray-500">• {{ course.user.username }}</span>{% endif %}</div>
                         <div class="text-xs text-gray-500 mt-1">
                           <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
                             {{ course.get_course_type_display }}
@@ -467,7 +467,7 @@
                     <div class="col-span-11 flex items-center pl-4">
                       <input type="checkbox" name="module_courses" value="{{ course.id }}" class="edit-course-checkbox mr-2 mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" onchange="validateSemesterField(this)">
                       <div class="flex-1 min-w-0">
-                        <div class="text-sm font-medium text-gray-900">{{ course.name }}</div>
+                        <div class="text-sm font-medium text-gray-900">{{ course.name }}{% if course.user %} <span class="text-gray-500">• {{ course.user.username }}</span>{% endif %}</div>
                         <div class="text-xs text-gray-500 mt-1">
                           <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
                             {{ course.get_course_type_display }}

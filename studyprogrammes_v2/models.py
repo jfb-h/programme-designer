@@ -84,13 +84,34 @@ class Course(models.Model):
     is_shared = models.BooleanField(default=False, help_text="Whether this course is shared with other users")
     shared_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='shared_courses_v2', null=True, blank=True, help_text="Original creator who shared this course")
     shared_at = models.DateTimeField(null=True, blank=True, help_text="When this course was shared")
-    original_course = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='shared_copies', help_text="Reference to original course if this is a shared copy")
+    original_course = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='shared_copies', help_text="Reference to original course if this is a shared copy")
 
     class Meta:
         ordering = ['order', 'name']
 
     def __str__(self):
         return self.name
+    
+    def create_copy(self):
+        """Create a copy of this course with all its attributes and relationships."""
+        course_copy = Course.objects.create(
+            name=self.name,
+            description=self.description,
+            course_type=self.course_type,
+            discipline=self.discipline,
+            user=self.user,
+            ects=self.ects,
+            sws=self.sws,
+            max_participants=self.max_participants,
+            is_shared=self.is_shared,
+            shared_by=self.shared_by,
+            shared_at=self.shared_at,
+            original_course=self if not self.original_course else self.original_course,
+            order=self.order
+        )
+        # Copy many-to-many relationships
+        course_copy.lpo_relevance.set(self.lpo_relevance.all())
+        return course_copy
 
     def calculate_required_classes(self, programme, student_counts):
         """
@@ -173,13 +194,13 @@ class Module(models.Model):
                 max_students = student_counts.get('max', {}).get(semester, 0)
             if course.max_participants and course.sws:
                 import math
-                min_classes = math.ceil(min_students / course.max_participants) if min_students > 0 else 0
-                max_classes = math.ceil(max_students / course.max_participants) if max_students > 0 else 0
-                total_min_sws += course.sws * min_classes if min_classes > 0 else course.sws
-                total_max_sws += course.sws * max_classes if max_classes > 0 else course.sws
+                min_classes = math.ceil(min_students / course.max_participants) if min_students > 0 else 1
+                max_classes = math.ceil(max_students / course.max_participants) if max_students > 0 else 1
+                total_min_sws += course.sws * min_classes
+                total_max_sws += course.sws * max_classes
             else:
-                total_min_sws += course.sws
-                total_max_sws += course.sws
+                total_min_sws += course.sws if course.sws else 0
+                total_max_sws += course.sws if course.sws else 0
         if total_min_sws == total_max_sws:
             return total_min_sws
         else:
@@ -322,7 +343,7 @@ class Programme(models.Model):
     is_shared = models.BooleanField(default=False, help_text="Whether this programme is shared with other users")
     shared_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='shared_programmes_v2', null=True, blank=True, help_text="Original creator who shared this programme")
     shared_at = models.DateTimeField(null=True, blank=True, help_text="When this programme was shared")
-    original_programme = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='shared_copies', help_text="Reference to original programme if this is a shared copy")
+    original_programme = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='shared_copies', help_text="Reference to original programme if this is a shared copy")
 
     class Meta:
         ordering = ['name']
@@ -656,6 +677,22 @@ class DefaultStudentCount(models.Model):
 
     def __str__(self):
         return f"{self.get_programme_type_display()} Sem {self.semester}: {self.min_students}-{self.max_students}"
+
+
+class DefaultNebenfach(models.Model):
+    """Model for storing default nebenfach ECTS per programme type and semester."""
+    programme_type = models.CharField(max_length=30, choices=ProgrammeType.choices)
+    semester = models.PositiveIntegerField(help_text="Semester number (1, 2, 3, etc.)")
+    ects = models.PositiveIntegerField(default=0, help_text="Default ECTS for minor subject in this semester")
+    
+    class Meta:
+        unique_together = ('programme_type', 'semester')
+        ordering = ['programme_type', 'semester']
+        verbose_name = "Default Nebenfach ECTS"
+        verbose_name_plural = "Default Nebenfach ECTS"
+
+    def __str__(self):
+        return f"{self.get_programme_type_display()} Sem {self.semester}: {self.ects} ECTS Nebenfach"
 
 
 class Revision(models.Model):

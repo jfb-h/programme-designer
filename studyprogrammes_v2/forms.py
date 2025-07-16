@@ -88,7 +88,7 @@ class ModuleForm(forms.ModelForm):
             }),
             'order': forms.NumberInput(attrs={
                 'min': 0,
-                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500'
+                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500'    
             }),
             'name': forms.TextInput(attrs={
                 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500'

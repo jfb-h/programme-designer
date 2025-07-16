@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
     Course, Module, Programme, ProgrammeModule, ProgrammeStudentCount,
-    ProgrammeType, DefaultStudentCount, Revision, CertificateOption, ModuleCertificate
+    ProgrammeType, DefaultStudentCount, DefaultNebenfach, Revision, CertificateOption, ModuleCertificate
 )
 
 @admin.register(Course)
@@ -56,6 +56,24 @@ class DefaultStudentCountAdmin(admin.ModelAdmin):
         form = super().get_form(request, obj, **kwargs)
         if 'programme_type' in form.base_fields:
             form.base_fields['programme_type'].help_text = "Select the programme type for these default student counts"
+        return form
+
+
+@admin.register(DefaultNebenfach)
+class DefaultNebenfachAdmin(admin.ModelAdmin):
+    list_display = ['programme_type', 'semester', 'ects']
+    list_filter = ['programme_type', 'semester']
+    list_editable = ['ects']
+    ordering = ['programme_type', 'semester']
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if 'programme_type' in form.base_fields:
+            form.base_fields['programme_type'].help_text = "Select the programme type for these default nebenfach ECTS"
+        if 'semester' in form.base_fields:
+            form.base_fields['semester'].help_text = "Semester number (1-10 depending on programme type)"
+        if 'ects' in form.base_fields:
+            form.base_fields['ects'].help_text = "ECTS credits for minor subject (Nebenfach) in this semester"
         return form
 
 

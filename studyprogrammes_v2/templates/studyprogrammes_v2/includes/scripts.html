@@ -115,10 +115,10 @@ function openEditModuleModal(moduleId) {
   loadSelectedCertificateOptions('edit', certificateOptions);
   
   // Clear all checkboxes and semester inputs first
-  document.querySelectorAll('.edit-course-checkbox').forEach(checkbox => {
+  document.querySelectorAll('#editModuleModal .edit-course-checkbox').forEach(checkbox => {
     checkbox.checked = false;
   });
-  document.querySelectorAll('.semester-input').forEach(input => {
+  document.querySelectorAll('#editModuleModal .semester-input').forEach(input => {
     input.value = '';
     input.style.borderColor = '#d1d5db';
     input.removeAttribute('title');
@@ -133,14 +133,15 @@ function openEditModuleModal(moduleId) {
     }
   });
   
+  
   // Check the appropriate courses and set semester values
   moduleCourses.forEach(courseId => {
-    const checkbox = document.querySelector(`.edit-course-checkbox[value="${courseId}"]`);
+    const checkbox = document.querySelector(`#editModuleModal .edit-course-checkbox[value="${courseId}"]`);
     if (checkbox) {
       checkbox.checked = true;
       
       // Set semester value if available
-      const semesterInput = document.querySelector(`input[name="semester_for_${courseId}"]`);
+      const semesterInput = document.querySelector(`#editModuleModal input[name="semester_for_${courseId}"]`);
       if (semesterInput && semesterMap[courseId]) {
         semesterInput.value = semesterMap[courseId];
       }
@@ -331,8 +332,13 @@ function updateEditSelectedCoursesCount() {
 }
 
 function resetEditCourseSelection() {
-  document.querySelectorAll('.edit-course-checkbox').forEach(checkbox => {
+  document.querySelectorAll('#editModuleModal .edit-course-checkbox').forEach(checkbox => {
     checkbox.checked = false;
+  });
+  document.querySelectorAll('#editModuleModal .semester-input').forEach(input => {
+    input.value = '';
+    input.style.borderColor = '#d1d5db';
+    input.removeAttribute('title');
   });
   clearEditCourseFilters();
   updateEditSelectedCoursesCount();

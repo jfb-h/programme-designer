@@ -286,7 +286,29 @@ def programme_overview(request):
                         )
                         # Copy many-to-many relationships (modules)
                         shared_programme.modules.set(programme.modules.all())
-                        messages.success(request, f'Studiengang "{programme.name}" wurde geteilt.')
+                        
+                        # Auto-share all courses in the programme
+                        courses_to_share = []
+                        for module in programme.modules.all():
+                            for course in module.courses.filter(user=request.user, is_shared=False):
+                                courses_to_share.append(course)
+                        
+                        # Create shared copies of unshared courses
+                        shared_courses_count = 0
+                        for course in courses_to_share:
+                            shared_course = course.create_copy()
+                            shared_course.is_shared = True
+                            shared_course.shared_by = request.user
+                            shared_course.shared_at = timezone.now()
+                            shared_course.original_course = course
+                            shared_course.save()
+                            shared_course.lpo_relevance.set(course.lpo_relevance.all())
+                            shared_courses_count += 1
+                        
+                        success_msg = f'Studiengang "{programme.name}" wurde geteilt.'
+                        if shared_courses_count > 0:
+                            success_msg += f' {shared_courses_count} Kurse wurden automatisch mitgeteilt.'
+                        messages.success(request, success_msg)
                     else:
                         messages.info(request, 'Dieser Studiengang ist bereits geteilt.')
                         
@@ -643,13 +665,24 @@ def programme_detail(request, programme_id):
                 if selected_courses:
                     for course_id in selected_courses:
                         try:
-                            course = Course.objects.get(id=course_id)
+                            original_course = Course.objects.get(id=course_id)
                             semester_val = request.POST.get(f'semester_for_{course_id}')
                             try:
                                 semester = int(semester_val)
                             except (TypeError, ValueError):
                                 semester = 1
-                            CourseModule.objects.create(module=new_module, course=course, semester=semester, order=0)
+                            
+                            # Check if this course is already used in other modules
+                            existing_usage = CourseModule.objects.filter(course=original_course)
+                            
+                            if existing_usage.exists():
+                                # Create a copy of the course
+                                course_to_use = original_course.create_copy()
+                            else:
+                                # Use the original course if it's not used elsewhere
+                                course_to_use = original_course
+                            
+                            CourseModule.objects.create(module=new_module, course=course_to_use, semester=semester, order=0)
                         except Course.DoesNotExist:
                             pass
                 
@@ -716,13 +749,24 @@ def programme_detail(request, programme_id):
                     if selected_courses:
                         for course_id in selected_courses:
                             try:
-                                course = Course.objects.get(id=course_id)
+                                original_course = Course.objects.get(id=course_id)
                                 semester_val = request.POST.get(f'semester_for_{course_id}')
                                 try:
                                     semester = int(semester_val)
                                 except (TypeError, ValueError):
                                     semester = 1
-                                CourseModule.objects.create(module=module, course=course, semester=semester, order=0)
+                                
+                                # Check if this course is already used in other modules
+                                existing_usage = CourseModule.objects.filter(course=original_course).exclude(module=module)
+                                
+                                if existing_usage.exists():
+                                    # Create a copy of the course
+                                    course_to_use = original_course.create_copy()
+                                else:
+                                    # Use the original course if it's not used elsewhere
+                                    course_to_use = original_course
+                                
+                                CourseModule.objects.create(module=module, course=course_to_use, semester=semester, order=0)
                             except Course.DoesNotExist:
                                 pass
                 except Module.DoesNotExist:
