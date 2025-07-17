@@ -189,16 +189,7 @@
                 <!-- Groups will be added here dynamically -->
               </div>
               
-              <!-- Initialize with first group -->
-              <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                  // Add initial group for create modal
-                  if (document.getElementById('create-certificate-groups').children.length === 0) {
-                    groupCounter = 0; // Reset counter
-                    addCertificateGroup('create');
-                  }
-                });
-              </script>
+              <!-- Initialize with first group - moved to main script section -->
               
               <!-- Add Group Button will be added dynamically inline with groups -->
               
@@ -385,13 +376,13 @@ function addCertificateGroup(modalType) {
                    oninput="filterOptions('${modalType}-group-${groupCounter}')">
           </div>
           <div id="${modalType}-group-${groupCounter}-dropdown" class="certificate-dropdown hidden">
-            ${certificateOptions.map(option => `
+            ${certificateOptions.length > 0 ? certificateOptions.map(option => `
               <div class="certificate-option" onclick="selectOption('${modalType}-group-${groupCounter}', ${option.id}, '${option.name.replace(/'/g, "\\'")}')"
                    data-option-id="${option.id}"
                    data-option-name="${option.name}">
                 ${option.name}
               </div>
-            `).join('')}
+            `).join('') : '<div class="p-3 text-sm text-gray-500">Keine Zertifikatsoptionen verfügbar. Bitte erstellen Sie welche in der <a href="/admin/studyprogrammes_v2/certificateoption/" class="text-blue-600 hover:text-blue-800 underline" target="_blank">Admin-Oberfläche</a>.</div>'}
           </div>
         </div>
         
@@ -643,6 +634,16 @@ document.addEventListener('click', function(e) {
     document.querySelectorAll('.certificate-dropdown').forEach(d => {
       d.classList.add('hidden');
     });
+  }
+});
+
+// Initialize certificate groups when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+  // Add initial group for create modal
+  const createContainer = document.getElementById('create-certificate-groups');
+  if (createContainer && createContainer.children.length === 0) {
+    groupCounter = 0; // Reset counter
+    addCertificateGroup('create');
   }
 });
 </script>
