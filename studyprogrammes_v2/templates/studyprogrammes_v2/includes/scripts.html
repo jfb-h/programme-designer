@@ -32,6 +32,9 @@ function openCreateModuleModal() {
   document.getElementById('createModuleModal').classList.remove('hidden');
   setupCourseSearch();
   
+  // Apply default filter to show only "Meine Kurse"
+  filterCourses();
+  
   // Initialize with one certificate group
   const container = document.getElementById('create-certificate-groups');
   if (container && container.children.length === 0) {
@@ -273,6 +276,10 @@ function openEditModuleModal(moduleId) {
   
   document.getElementById('editModuleModal').classList.remove('hidden');
   setupEditCourseSearch();
+  
+  // Apply default filter to show only "Meine Kurse"
+  filterEditCourses();
+  
   updateEditSelectedCoursesCount();
 }
 
