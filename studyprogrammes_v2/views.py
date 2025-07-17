@@ -712,7 +712,6 @@ def programme_detail(request, programme_id):
             module_name = request.POST.get('module_name')
             module_description = request.POST.get('module_description', '')
             module_qualification_goals = request.POST.get('module_qualification_goals', '')
-            module_certificate = request.POST.get('module_certificate', '')
             module_responsible_person = request.POST.get('module_responsible_person', '')
             selected_courses = request.POST.getlist('module_courses')
             
@@ -734,7 +733,6 @@ def programme_detail(request, programme_id):
                     name=module_name.strip(),
                     description=module_description.strip(),
                     qualification_goals=module_qualification_goals.strip(),
-                    certificate=module_certificate.strip(),
                     responsible_person=module_responsible_person.strip()
                 )
                 
@@ -825,7 +823,6 @@ def programme_detail(request, programme_id):
             module_name = request.POST.get('module_name')
             module_description = request.POST.get('module_description', '')
             module_qualification_goals = request.POST.get('module_qualification_goals', '')
-            module_certificate = request.POST.get('module_certificate', '')
             module_responsible_person = request.POST.get('module_responsible_person', '')
             selected_courses = request.POST.getlist('module_courses')
             
@@ -849,7 +846,6 @@ def programme_detail(request, programme_id):
                     module.name = module_name.strip()
                     module.description = module_description.strip()
                     module.qualification_goals = module_qualification_goals.strip()
-                    module.certificate = module_certificate.strip()
                     module.responsible_person = module_responsible_person.strip()
                     module.save()
                     

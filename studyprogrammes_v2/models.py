@@ -153,7 +153,6 @@ class Module(models.Model):
     order = models.PositiveIntegerField(default=0, help_text="Display order within programme")
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    certificate = models.TextField(blank=True, help_text="Certificate or qualification information for this module")
     responsible_person = models.CharField(max_length=200, blank=True, help_text="Modulverantwortliche(r)")
     qualification_goals = models.TextField(blank=True, null=True, help_text="Qualification goals and learning outcomes for this module")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='modules_v2', null=True, blank=True)
@@ -282,9 +281,9 @@ class Module(models.Model):
                     
                     return result
             
-            # Fallback to legacy system
+            # Fallback to legacy system - just return empty if no new data
             if not module_cert.selected_options.exists() and not module_cert.comment:
-                return self.certificate  # Fallback to old certificate field
+                return ''
             
             parts = []
             if module_cert.selected_options.exists():
@@ -297,7 +296,7 @@ class Module(models.Model):
             if module_cert.comment:
                 parts.append(module_cert.comment)
             
-            result = ' - '.join(parts) if parts else self.certificate
+            result = ' - '.join(parts) if parts else ''
             
             # Add graded/ungraded status in parentheses
             if result:
@@ -307,7 +306,7 @@ class Module(models.Model):
             return result
             
         except ModuleCertificate.DoesNotExist:
-            return self.certificate
+            return ''
 
 
 class CertificateGroup(models.Model):
@@ -704,7 +703,6 @@ class Programme(models.Model):
                 'description': module.description,
                 'qualification_goals': module.qualification_goals,
                 'responsible_person': module.responsible_person,
-                'certificate': module.certificate,
                 'certificate_display': module.get_certificate_display(),
                 'order': programme_module.order,
                 'total_ects': module.total_ects,

@@ -75,11 +75,6 @@ function resetCertificateFields() {
     searchField.value = '';
   }
   
-  // Reset legacy field if it exists (fallback case)
-  const legacyField = document.getElementById('module_certificate');
-  if (legacyField) {
-    legacyField.value = '';
-  }
 }
 
 function openEditModuleModal(moduleId) {
@@ -87,7 +82,6 @@ function openEditModuleModal(moduleId) {
   const moduleName = button.getAttribute('data-module-name');
   const moduleDescription = button.getAttribute('data-module-description');
   const moduleQualificationGoals = button.getAttribute('data-module-qualification-goals');
-  const moduleCertificate = button.getAttribute('data-module-certificate');
   const moduleResponsiblePerson = button.getAttribute('data-module-responsible-person') || '';
   const moduleCourses = button.getAttribute('data-module-courses').split(',').filter(id => id !== '');
   const courseSemesters = button.getAttribute('data-course-semesters').split(',').filter(item => item !== '');
@@ -129,11 +123,6 @@ function openEditModuleModal(moduleId) {
     gradedCheckbox.checked = isGraded;
   }
   
-  // Handle legacy certificate field if it exists (fallback case)
-  const legacyField = document.getElementById('edit_module_certificate');
-  if (legacyField) {
-    legacyField.value = moduleCertificate || '';
-  }
   
   // Set logic operator
   const logicAndRadio = document.getElementById('edit_logic_and');

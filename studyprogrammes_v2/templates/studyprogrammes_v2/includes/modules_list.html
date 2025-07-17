@@ -78,7 +78,6 @@
                     data-module-name="{{ module.name }}" 
                     data-module-description="{{ module.description }}"
                     data-module-qualification-goals="{{ module.qualification_goals }}"
-                    data-module-certificate="{{ module.certificate }}"
                     data-module-responsible-person="{{ module.responsible_person }}"
                     data-module-courses="{% for course in module.courses.all %}{{ course.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
                     data-course-semesters="{% for cm in module.coursemodule_set.all %}{{ cm.course.id }}:{{ cm.semester }}{% if not forloop.last %},{% endif %}{% endfor %}"

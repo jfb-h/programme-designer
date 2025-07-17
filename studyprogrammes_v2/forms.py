@@ -1,4 +1,5 @@
 from django import forms
+from django.db import models
 from .models import Course, Module, Programme, Revision, CourseType, Discipline, LPO, LPOCategory, ProgrammeType, CertificateOption, ModuleCertificate
 
 
@@ -69,22 +70,17 @@ class CourseForm(forms.ModelForm):
 class ModuleForm(forms.ModelForm):
     class Meta:
         model = Module
-        fields = ['order', 'name', 'description', 'certificate', 'responsible_person', 'courses']
+        fields = ['order', 'name', 'description', 'responsible_person', 'courses']
         labels = {
             'order': 'Reihenfolge',
             'name': 'Modulname',
             'description': 'Beschreibung',
-            'certificate': 'Leistungsnachweis',
             'responsible_person': 'Modulverantwortliche(r)',
             'courses': 'Kurse',
         }
         widgets = {
             'description': forms.Textarea(attrs={
                 'rows': 3,
-                'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500'
-            }),
-            'certificate': forms.Textarea(attrs={
-                'rows': 2,
                 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500'
             }),
             'responsible_person': forms.TextInput(attrs={
