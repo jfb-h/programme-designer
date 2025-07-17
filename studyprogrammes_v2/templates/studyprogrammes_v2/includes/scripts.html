@@ -205,29 +205,19 @@ function openEditModuleModal(moduleId) {
     editContainer.innerHTML = '';
     groupCounter = 0; // Reset counter
     
-    // Always add at least one group
-    console.log('About to call addCertificateGroup, function exists:', typeof addCertificateGroup);
-    if (typeof addCertificateGroup === 'function') {
-      addCertificateGroup('edit');
-    } else {
-      console.error('addCertificateGroup function not found');
-    }
-    
     // Load existing certificate groups from group structure or fallback to legacy
     if (groupStructure.groups && groupStructure.groups.length > 0) {
       // Load from saved group structure
       console.log('Loading group structure:', groupStructure);
       
-      setTimeout(() => {
-        // Add additional groups if needed
-        const groupsNeeded = groupStructure.groups.length;
-        const currentGroups = editContainer.querySelectorAll('.certificate-group').length;
-        
-        for (let i = currentGroups; i < groupsNeeded; i++) {
-          if (typeof addCertificateGroup === 'function') {
-            addCertificateGroup('edit');
-          }
+      // Create all needed groups first
+      for (let i = 0; i < groupStructure.groups.length; i++) {
+        if (typeof addCertificateGroup === 'function') {
+          addCertificateGroup('edit');
         }
+      }
+      
+      setTimeout(() => {
         
         // Load options into each group
         groupStructure.groups.forEach((group, index) => {
@@ -235,9 +225,12 @@ function openEditModuleModal(moduleId) {
           const groupId = `edit-group-${groupNumber}`;
           
           // Set group operator
+          console.log(`Looking for radios with name: group_${groupNumber}_operator, setting to: ${group.internal_operator}`);
           const operatorRadios = document.querySelectorAll(`input[name="group_${groupNumber}_operator"]`);
+          console.log(`Found ${operatorRadios.length} radio buttons for group ${groupNumber}`);
           operatorRadios.forEach(radio => {
             radio.checked = (radio.value === group.internal_operator);
+            console.log(`Setting radio ${radio.value} checked: ${radio.checked}`);
           });
           
           // Load options for this group
@@ -270,7 +263,12 @@ function openEditModuleModal(moduleId) {
             }
           }
         });
-      }, 200);
+      }, 500);
+    } else {
+      // No saved groups, add one empty group
+      if (typeof addCertificateGroup === 'function') {
+        addCertificateGroup('edit');
+      }
     }
   }
   
@@ -1133,9 +1131,9 @@ function validateModuleForm(form) {
 }
 
 function collectAndSubmitCertificateData(form) {
-  // Remove any existing certificate data inputs to avoid duplicates (but keep the original checkbox)
+  // Remove any existing certificate data inputs to avoid duplicates (but keep the original checkbox and radio buttons)
   form.querySelectorAll('input[name^="certificate_"]').forEach(input => input.remove());
-  form.querySelectorAll('input[name^="group_"]').forEach(input => input.remove());
+  form.querySelectorAll('input[name^="group_"][type="hidden"]').forEach(input => input.remove()); // Only remove hidden inputs, not radio buttons
   form.querySelectorAll('input[name="logic_operator"]').forEach(input => input.remove());
   form.querySelectorAll('input[name="is_graded"][type="hidden"]').forEach(input => input.remove());
   
@@ -1160,7 +1158,16 @@ function collectAndSubmitCertificateData(form) {
     groups.forEach((group, groupIndex) => {
       const groupId = group.id.replace(`${modalType}-group-`, '');
       const selectedWrapper = group.querySelector(`#${modalType}-group-${groupId}-selected`);
+      // Debug: let's see what radio buttons actually exist in this group
+      const allRadios = group.querySelectorAll('input[type="radio"]');
+      console.log(`COLLECTION: All radio buttons in group ${groupId}:`, allRadios);
+      allRadios.forEach(radio => {
+        console.log(`COLLECTION: Radio name: "${radio.name}", value: "${radio.value}", checked: ${radio.checked}`);
+      });
+      
       const operatorRadios = group.querySelectorAll(`input[name="group_${groupId}_operator"]`);
+      console.log(`COLLECTION: Looking for operator radios with name: group_${groupId}_operator in group:`, group);
+      console.log(`COLLECTION: Found ${operatorRadios.length} operator radios:`, operatorRadios);
       
       // Get selected options for this group
       const groupOptions = [];
@@ -1186,6 +1193,7 @@ function collectAndSubmitCertificateData(form) {
       operatorRadios.forEach(radio => {
         if (radio.checked) {
           internalOperator = radio.value;
+          console.log(`COLLECTION: Group ${groupId} operator set to: ${internalOperator}`);
         }
       });
       
