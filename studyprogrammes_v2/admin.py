@@ -15,7 +15,6 @@ class ModuleCertificateInline(admin.StackedInline):
     model = ModuleCertificate
     extra = 0
     max_num = 1
-    filter_horizontal = ['selected_options']
 
 @admin.register(Module)
 class ModuleAdmin(admin.ModelAdmin):
@@ -119,7 +118,6 @@ class ModuleCertificateAdmin(admin.ModelAdmin):
     list_display = ['module', 'global_operator', 'get_certificate_display', 'is_graded']
     list_filter = ['global_operator', 'is_graded']
     search_fields = ['module__name', 'comment']
-    filter_horizontal = ['selected_options']  # For legacy support
     inlines = [ModuleCertificateGroupInline]
     
     def get_certificate_display(self, obj):

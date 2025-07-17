@@ -105,38 +105,22 @@ class ModuleForm(forms.ModelForm):
 
 
 class ModuleCertificateForm(forms.ModelForm):
-    """Form for handling module certificate configuration with selection and logic operator."""
+    """Form for handling module certificate configuration."""
     
     class Meta:
         model = ModuleCertificate
-        fields = ['selected_options', 'logic_operator', 'comment', 'is_graded']
+        fields = ['comment', 'is_graded']
         labels = {
-            'selected_options': 'Leistungsnachweis-Optionen',
-            'logic_operator': 'Verknüpfung',
             'comment': 'Zusätzliche Angaben',
             'is_graded': 'Benotet',
         }
         widgets = {
-            'selected_options': forms.CheckboxSelectMultiple(attrs={
-                'class': 'space-y-2'
-            }),
-            'logic_operator': forms.RadioSelect(attrs={
-                'class': 'flex gap-4'
-            }),
             'comment': forms.Textarea(attrs={
                 'rows': 2,
                 'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500',
                 'placeholder': 'Zusätzliche Details zum Leistungsnachweis...'
             }),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Order certificate options by their order field
-        self.fields['selected_options'].queryset = CertificateOption.objects.all().order_by('order', 'name')
-        
-        # Set help text for logic operator
-        self.fields['logic_operator'].help_text = 'Wählen Sie, ob die ausgewählten Optionen mit UND oder ODER verknüpft werden sollen.'
 
 
 class ProgrammeForm(forms.ModelForm):

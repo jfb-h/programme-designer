@@ -309,7 +309,7 @@ def programme_overview(request):
                                 comment=original_cert.comment,
                                 is_graded=original_cert.is_graded
                             )
-                            copied_cert.selected_options.set(original_cert.selected_options.all())
+                            # Certificate options are now managed through group structure
                         except:
                             pass  # No certificate to copy
                         
@@ -715,11 +715,7 @@ def programme_detail(request, programme_id):
             module_responsible_person = request.POST.get('module_responsible_person', '')
             selected_courses = request.POST.getlist('module_courses')
             
-            # Certificate form data - handle both legacy and new group system
-            # Legacy system (fallback)
-            selected_options = request.POST.getlist('certificate_options')
-            logic_operator = request.POST.get('logic_operator', 'or')
-            
+            # Certificate form data
             # New group system
             certificate_group_count = int(request.POST.get('certificate_group_count', 0))
             global_operator = request.POST.get('global_operator', 'or')
@@ -779,15 +775,11 @@ def programme_detail(request, programme_id):
                     # Save group structure
                     module_cert.group_structure = group_structure
                     
-                    # Also save to legacy field for backward compatibility
-                    unique_options = list(dict.fromkeys(all_options))  # Remove duplicates preserving order
-                    module_cert.selected_options.set(unique_options)
+                    # Options are now managed through group structure
                     
                 else:
-                    # Clear group structure and fallback to legacy system
+                    # Clear group structure if no groups were created
                     module_cert.group_structure = {}
-                    if selected_options:
-                        module_cert.selected_options.set(selected_options)
                 
                 module_cert.save()
                 
@@ -826,11 +818,7 @@ def programme_detail(request, programme_id):
             module_responsible_person = request.POST.get('module_responsible_person', '')
             selected_courses = request.POST.getlist('module_courses')
             
-            # Certificate form data - handle both legacy and new group system
-            # Legacy system (fallback)
-            selected_options = request.POST.getlist('certificate_options')
-            logic_operator = request.POST.get('logic_operator', 'or')
-            
+            # Certificate form data
             # New group system
             certificate_group_count = int(request.POST.get('certificate_group_count', 0))
             global_operator = request.POST.get('global_operator', 'or')
@@ -892,17 +880,11 @@ def programme_detail(request, programme_id):
                         # Save group structure
                         module_cert.group_structure = group_structure
                         
-                        # Also save to legacy field for backward compatibility
-                        unique_options = list(dict.fromkeys(all_options))  # Remove duplicates preserving order
-                        module_cert.selected_options.set(unique_options)
+                        # Options are now managed through group structure
                         
                     else:
-                        # Clear group structure and fallback to legacy system
+                        # Clear group structure if no groups were created
                         module_cert.group_structure = {}
-                        if selected_options:
-                            module_cert.selected_options.set(selected_options)
-                        else:
-                            module_cert.selected_options.clear()
                     
                     module_cert.save()
                     

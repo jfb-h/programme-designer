@@ -281,17 +281,11 @@ class Module(models.Model):
                     
                     return result
             
-            # Fallback to legacy system - just return empty if no new data
-            if not module_cert.selected_options.exists() and not module_cert.comment:
+            # Fallback to simple display if no group structure
+            if not module_cert.comment:
                 return ''
             
             parts = []
-            if module_cert.selected_options.exists():
-                option_names = [opt.name for opt in module_cert.selected_options.all()]
-                if module_cert.logic_operator == 'and':
-                    parts.append(' UND '.join(option_names))
-                else:
-                    parts.append(' ODER '.join(option_names))
             
             if module_cert.comment:
                 parts.append(module_cert.comment)
@@ -338,9 +332,6 @@ class ModuleCertificate(models.Model):
     is_graded = models.BooleanField(default=True, help_text="Whether this module is graded (benotet) or ungraded (unbenotet)")
     group_structure = models.JSONField(default=dict, blank=True, null=True, help_text="Complete group structure with options, operators, and order")
     
-    # Legacy fields for backward compatibility
-    selected_options = models.ManyToManyField('CertificateOption', blank=True, help_text="Legacy: Select multiple certificate options")
-    logic_operator = models.CharField(max_length=3, choices=LOGIC_CHOICES, default='or', help_text="Legacy: How selected options should be combined")
     
     class Meta:
         verbose_name = "Module Certificate"
@@ -351,11 +342,7 @@ class ModuleCertificate(models.Model):
     
     def get_display_text(self):
         """Get formatted display text for this certificate configuration."""
-        # Check if using new group-based system
-        if self.certificate_groups.exists():
-            return self._get_group_display_text()
-        else:
-            return self._get_legacy_display_text()
+        return self._get_group_display_text()
     
     def _get_group_display_text(self):
         """Get display text for group-based certificates."""
@@ -389,20 +376,6 @@ class ModuleCertificate(models.Model):
         
         return result
     
-    def _get_legacy_display_text(self):
-        """Get display text for legacy flat certificates."""
-        parts = []
-        if self.selected_options.exists():
-            option_names = [opt.name for opt in self.selected_options.all()]
-            if self.logic_operator == 'and':
-                parts.append(' UND '.join(option_names))
-            else:
-                parts.append(' ODER '.join(option_names))
-        
-        if self.comment:
-            parts.append(self.comment)
-        
-        return ' - '.join(parts) if parts else ''
 
 
 class ModuleCertificateGroup(models.Model):
@@ -728,7 +701,7 @@ class Programme(models.Model):
                             'name': option.name,
                             'description': option.description,
                             'order': option.order
-                        } for option in module_cert.selected_options.all().order_by('order')
+                        } for option in CertificateOption.objects.none()  # Legacy field removed
                     ]
                 }
                 
