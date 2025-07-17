@@ -285,7 +285,8 @@ def programme_overview(request):
                         copied_module = Module.objects.create(
                             name=original_module.name,
                             description=original_module.description,
-                            certificate=original_module.certificate,
+                            responsible_person=original_module.responsible_person,
+                            qualification_goals=original_module.qualification_goals,
                             user=request.user,  # Set to current user
                             order=original_module.order
                         )
