@@ -468,7 +468,6 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
 <script>
 function openModal() {
   document.getElementById('courseModal').classList.remove('hidden');
-  console.log('Modal opened: edit_course:', window._edit_course, 'form.errors:', window._form_errors);
 }
 function closeModal() {
   document.getElementById('courseModal').classList.add('hidden');
@@ -477,7 +476,6 @@ function closeModal() {
 window._edit_course = '{% if edit_course %}true{% else %}false{% endif %}';
 window._form_errors = '{% if form.errors %}true{% else %}false{% endif %}';
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('DEBUG: edit_course:', window._edit_course, 'form.errors:', window._form_errors);
   if (window._edit_course === 'true' || window._form_errors === 'true') {
     openModal();
   }

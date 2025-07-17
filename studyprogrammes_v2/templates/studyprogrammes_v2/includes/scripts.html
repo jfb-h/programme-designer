@@ -83,9 +83,7 @@ function resetCertificateFields() {
 }
 
 function openEditModuleModal(moduleId) {
-  console.log('openEditModuleModal called with moduleId:', moduleId);
   const button = document.querySelector(`.edit-module-btn[data-module-id="${moduleId}"]`);
-  console.log('Found button:', button);
   const moduleName = button.getAttribute('data-module-name');
   const moduleDescription = button.getAttribute('data-module-description');
   const moduleQualificationGoals = button.getAttribute('data-module-qualification-goals');
@@ -100,20 +98,15 @@ function openEditModuleModal(moduleId) {
   const certificateComment = button.getAttribute('data-certificate-comment') || '';
   const isGradedStr = button.getAttribute('data-is-graded');
   const isGraded = isGradedStr === 'true' || isGradedStr === 'True';
-  console.log('isGraded parsing:', { isGradedStr, isGraded });
   
   // Get group structure
   const groupStructureStr = button.getAttribute('data-group-structure') || '{}';
-  console.log('Raw group structure string:', groupStructureStr);
   let groupStructure = {};
   try {
     // Convert Python dict format to valid JSON
     const validJsonStr = groupStructureStr.replace(/'/g, '"');
-    console.log('Converted to valid JSON:', validJsonStr);
     groupStructure = JSON.parse(validJsonStr);
-    console.log('Parsed group structure:', groupStructure);
   } catch (e) {
-    console.error('Failed to parse group structure:', e, 'Raw string:', groupStructureStr);
     groupStructure = {};
   }
   
@@ -200,7 +193,6 @@ function openEditModuleModal(moduleId) {
   
   // Clear and initialize certificate groups
   const editContainer = document.getElementById('edit-certificate-groups');
-  console.log('Found edit container:', editContainer);
   if (editContainer) {
     editContainer.innerHTML = '';
     groupCounter = 0; // Reset counter
@@ -208,7 +200,6 @@ function openEditModuleModal(moduleId) {
     // Load existing certificate groups from group structure or fallback to legacy
     if (groupStructure.groups && groupStructure.groups.length > 0) {
       // Load from saved group structure
-      console.log('Loading group structure:', groupStructure);
       
       // Create all needed groups first
       for (let i = 0; i < groupStructure.groups.length; i++) {
@@ -225,12 +216,9 @@ function openEditModuleModal(moduleId) {
           const groupId = `edit-group-${groupNumber}`;
           
           // Set group operator
-          console.log(`Looking for radios with name: group_${groupNumber}_operator, setting to: ${group.internal_operator}`);
           const operatorRadios = document.querySelectorAll(`input[name="group_${groupNumber}_operator"]`);
-          console.log(`Found ${operatorRadios.length} radio buttons for group ${groupNumber}`);
           operatorRadios.forEach(radio => {
             radio.checked = (radio.value === group.internal_operator);
-            console.log(`Setting radio ${radio.value} checked: ${radio.checked}`);
           });
           
           // Load options for this group
@@ -483,13 +471,11 @@ function resetEditCourseSelection() {
 function updateStudentCount(input) {
   // Prevent updates if inputs are disabled (safety check)
   if (input.disabled) {
-    console.log('Input is disabled, ignoring update');
     return;
   }
   
   // Only update immediately if not in edit mode (for backward compatibility)
   if (!isEditMode) {
-    console.log('Updating student count immediately (not in edit mode)');
     const programmeId = input.dataset.programmeId;
     const semester = input.dataset.semester;
     const type = input.dataset.type;  // 'min' or 'max'
@@ -542,13 +528,11 @@ function updateStudentCount(input) {
 function updateNebenfach(input) {
   // Prevent updates if inputs are disabled (safety check)
   if (input.disabled) {
-    console.log('Nebenfach input is disabled, ignoring update');
     return;
   }
   
   // Only update immediately if not in edit mode (for backward compatibility)
   if (!isEditMode) {
-    console.log('Updating nebenfach immediately (not in edit mode)');
     const programmeId = input.dataset.programmeId;
     const semester = input.dataset.semester;
     const value = input.value;
@@ -711,11 +695,9 @@ function initializeEditMode() {
     input.classList.remove('bg-red-50');
   });
   
-  console.log('Edit mode initialized - isEditMode:', isEditMode);
 }
 
 function toggleEditMode() {
-  console.log('toggleEditMode called, current isEditMode:', isEditMode);
   
   const editBtn = document.getElementById('edit-table-btn');
   const saveBtn = document.getElementById('save-changes-btn');
@@ -725,14 +707,12 @@ function toggleEditMode() {
 
   // Prevent double-clicking issues
   if (editBtn && editBtn.disabled) {
-    console.log('Edit button is disabled, preventing toggle');
     return;
   }
 
   if (!isEditMode) {
     // Enter edit mode
     isEditMode = true;
-    console.log('Entering edit mode');
     
     // Store original values
     originalValues = {};
@@ -1141,12 +1121,6 @@ function collectAndSubmitCertificateData(form) {
   const action = form.querySelector('input[name="action"]').value;
   const modalType = action === 'edit_module' ? 'edit' : 'create';
   
-  console.log('Form element:', form);
-  console.log('Form contains these inputs:', Array.from(form.querySelectorAll('input')).map(input => ({
-    type: input.type,
-    name: input.name,
-    id: input.id
-  })));
   
   // Collect certificate groups data
   const container = document.getElementById(`${modalType}-certificate-groups`);
@@ -1158,34 +1132,20 @@ function collectAndSubmitCertificateData(form) {
     groups.forEach((group, groupIndex) => {
       const groupId = group.id.replace(`${modalType}-group-`, '');
       const selectedWrapper = group.querySelector(`#${modalType}-group-${groupId}-selected`);
-      // Debug: let's see what radio buttons actually exist in this group
-      const allRadios = group.querySelectorAll('input[type="radio"]');
-      console.log(`COLLECTION: All radio buttons in group ${groupId}:`, allRadios);
-      allRadios.forEach(radio => {
-        console.log(`COLLECTION: Radio name: "${radio.name}", value: "${radio.value}", checked: ${radio.checked}`);
-      });
       
       const operatorRadios = group.querySelectorAll(`input[name="group_${groupId}_operator"]`);
-      console.log(`COLLECTION: Looking for operator radios with name: group_${groupId}_operator in group:`, group);
-      console.log(`COLLECTION: Found ${operatorRadios.length} operator radios:`, operatorRadios);
       
       // Get selected options for this group
       const groupOptions = [];
-      console.log(`Looking for selected wrapper: #${modalType}-group-${groupId}-selected`);
-      console.log('Selected wrapper found:', selectedWrapper);
       
       if (selectedWrapper) {
         const selectedOptions = selectedWrapper.querySelectorAll('.selected-option-tag');
-        console.log(`Found ${selectedOptions.length} selected options in group ${groupId}`);
         selectedOptions.forEach(option => {
           const optionId = option.getAttribute('data-option-id');
-          console.log('Processing option:', option, 'ID:', optionId);
           if (optionId) {
             groupOptions.push(optionId);
           }
         });
-      } else {
-        console.log(`No selected wrapper found for group ${groupId}`);
       }
       
       // Get internal operator for this group (OR/AND within the group)
@@ -1193,7 +1153,6 @@ function collectAndSubmitCertificateData(form) {
       operatorRadios.forEach(radio => {
         if (radio.checked) {
           internalOperator = radio.value;
-          console.log(`COLLECTION: Group ${groupId} operator set to: ${internalOperator}`);
         }
       });
       
@@ -1218,7 +1177,6 @@ function collectAndSubmitCertificateData(form) {
       operatorInput.value = internalOperator;
       form.appendChild(operatorInput);
       
-      console.log(`Collected group ${groupCount}: ${groupOptions.length} options, operator: ${internalOperator}`);
     });
   }
   
@@ -1253,16 +1211,12 @@ function collectAndSubmitCertificateData(form) {
   
   // Add is_graded
   const gradedFieldId = `${modalType}_is_graded`;
-  console.log('Modal type:', modalType, 'Looking for ID:', gradedFieldId);
   const gradedField = document.getElementById(gradedFieldId);
-  console.log('Found graded field:', gradedField);
   
   // Also try to find it by name as backup
   const gradedFieldByName = form.querySelector('input[name="is_graded"]');
-  console.log('Found by name:', gradedFieldByName);
   
   const finalGradedField = gradedField || gradedFieldByName;
-  console.log('Using field:', finalGradedField, 'Checked:', finalGradedField ? finalGradedField.checked : 'not found');
   
   const gradedInput = document.createElement('input');
   gradedInput.type = 'hidden';
@@ -1270,12 +1224,6 @@ function collectAndSubmitCertificateData(form) {
   gradedInput.value = (finalGradedField && finalGradedField.checked) ? 'on' : '';
   form.appendChild(gradedInput);
   
-  console.log('Certificate groups data collected:', {
-    groupCount: groupCount,
-    comment: commentField ? commentField.value : '',
-    isGraded: finalGradedField ? finalGradedField.checked : false,
-    gradedInputValue: gradedInput.value
-  });
 }
 
 // Add event listener for semester input changes

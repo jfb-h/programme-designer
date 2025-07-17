@@ -785,8 +785,6 @@ def programme_detail(request, programme_id):
                     unique_options = list(dict.fromkeys(all_options))  # Remove duplicates preserving order
                     module_cert.selected_options.set(unique_options)
                     
-                    print(f"DEBUG CREATE: Saved group structure: {group_structure}")
-                    print(f"DEBUG CREATE: Saved {len(unique_options)} legacy options: {unique_options}")
                 else:
                     # Clear group structure and fallback to legacy system
                     module_cert.group_structure = {}
@@ -840,14 +838,6 @@ def programme_detail(request, programme_id):
             certificate_group_count = int(request.POST.get('certificate_group_count', 0))
             global_operator = request.POST.get('global_operator', 'or')
             
-            # Debug: Log what we're receiving
-            print(f"DEBUG EDIT: Received certificate_group_count: {certificate_group_count}")
-            print(f"DEBUG EDIT: Received POST data keys: {list(request.POST.keys())}")
-            if certificate_group_count > 0:
-                for i in range(1, certificate_group_count + 1):
-                    group_options = request.POST.getlist(f'group_{i}_options')
-                    group_operator = request.POST.get(f'group_{i}_operator', 'or')
-                    print(f"DEBUG EDIT: Group {i}: options={group_options}, operator={group_operator}")
             
             certificate_comment = request.POST.get('certificate_comment', '')
             is_graded = request.POST.get('is_graded') == 'on'
@@ -910,8 +900,6 @@ def programme_detail(request, programme_id):
                         unique_options = list(dict.fromkeys(all_options))  # Remove duplicates preserving order
                         module_cert.selected_options.set(unique_options)
                         
-                        print(f"DEBUG EDIT: Saved group structure: {group_structure}")
-                        print(f"DEBUG EDIT: Saved {len(unique_options)} legacy options: {unique_options}")
                     else:
                         # Clear group structure and fallback to legacy system
                         module_cert.group_structure = {}
