@@ -702,6 +702,8 @@ class Programme(models.Model):
             module_data = {
                 'name': module.name,
                 'description': module.description,
+                'qualification_goals': module.qualification_goals,
+                'responsible_person': module.responsible_person,
                 'certificate': module.certificate,
                 'certificate_display': module.get_certificate_display(),
                 'order': programme_module.order,
@@ -713,7 +715,15 @@ class Programme(models.Model):
             # Add new certificate system data if available
             try:
                 module_cert = module.module_certificate
-                module_data['certificate_config'] = {
+                certificate_config = {
+                    'is_graded': module_cert.is_graded,
+                    'comment': module_cert.comment,
+                    'global_operator': module_cert.global_operator,
+                    'global_operator_display': 'UND' if module_cert.global_operator == 'and' else 'ODER',
+                    
+                    # Legacy fields for backward compatibility
+                    'logic_operator': module_cert.logic_operator,
+                    'logic_operator_display': module_cert.get_logic_operator_display(),
                     'selected_options': [
                         {
                             'id': option.id,
@@ -721,11 +731,42 @@ class Programme(models.Model):
                             'description': option.description,
                             'order': option.order
                         } for option in module_cert.selected_options.all().order_by('order')
-                    ],
-                    'logic_operator': module_cert.logic_operator,
-                    'logic_operator_display': module_cert.get_logic_operator_display(),
-                    'comment': module_cert.comment
+                    ]
                 }
+                
+                # Add group structure if it exists (new system)
+                if hasattr(module_cert, 'group_structure') and module_cert.group_structure:
+                    certificate_config['group_structure'] = module_cert.group_structure
+                    
+                    # Expand group structure with option details for easier reading
+                    if module_cert.group_structure.get('groups'):
+                        expanded_groups = []
+                        for group in module_cert.group_structure['groups']:
+                            expanded_group = {
+                                'internal_operator': group.get('internal_operator', 'or'),
+                                'internal_operator_display': 'UND' if group.get('internal_operator') == 'and' else 'ODER',
+                                'order': group.get('order', 0),
+                                'options': []
+                            }
+                            
+                            # Get full option details
+                            option_ids = group.get('options', [])
+                            if option_ids:
+                                options = CertificateOption.objects.filter(id__in=option_ids).order_by('order')
+                                for option in options:
+                                    expanded_group['options'].append({
+                                        'id': option.id,
+                                        'name': option.name,
+                                        'description': option.description,
+                                        'order': option.order
+                                    })
+                            
+                            expanded_groups.append(expanded_group)
+                        
+                        certificate_config['groups_expanded'] = expanded_groups
+                
+                module_data['certificate_config'] = certificate_config
+                
             except ModuleCertificate.DoesNotExist:
                 module_data['certificate_config'] = None
             
