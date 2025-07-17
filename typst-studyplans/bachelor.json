@@ -1,0 +1,1080 @@
+{
+  "name": "Bachelor novelliert",
+  "programme_type": "bachelor_100",
+  "programme_type_display": "Bachelor",
+  "comment": "",
+  "created_at": "2025-07-15T15:56:47.469267+00:00",
+  "total_ects": 180,
+  "total_sws": 71,
+  "total_courses": 36,
+  "semester_count": 6,
+  "modules": [
+    {
+      "name": "Grundlagen physische Geographie I",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "Referat UND Übungsmappe (benotet)",
+      "order": 0,
+      "total_ects": 9,
+      "total_sws": 4,
+      "courses": [
+        {
+          "name": "Physische Geographie I",
+          "description": "",
+          "semester": 1,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "physische_geographie",
+          "discipline_display": "Physische Geographie",
+          "ects": 6,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": []
+        },
+        {
+          "name": "Grundlagen Physische Geographie I",
+          "description": "",
+          "semester": 1,
+          "order": 0,
+          "course_type": "uebung",
+          "course_type_display": "Übung",
+          "discipline": "physische_geographie",
+          "discipline_display": "Physische Geographie",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 30,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [
+          {
+            "id": 3,
+            "name": "Referat",
+            "description": "",
+            "order": 0
+          },
+          {
+            "id": 4,
+            "name": "Übungsmappe",
+            "description": "",
+            "order": 0
+          }
+        ],
+        "logic_operator": "and",
+        "logic_operator_display": "UND",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Grundlagen Humangeographie I",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "Klausur ODER Übungsmappe (benotet)",
+      "order": 1,
+      "total_ects": 9,
+      "total_sws": 4,
+      "courses": [
+        {
+          "name": "Humangeographie I",
+          "description": "",
+          "semester": 1,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "humangeographie",
+          "discipline_display": "Humangeographie",
+          "ects": 6,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": []
+        },
+        {
+          "name": "Grundlagen Humangeo I",
+          "description": "",
+          "semester": 1,
+          "order": 0,
+          "course_type": "uebung",
+          "course_type_display": "Übung",
+          "discipline": "humangeographie",
+          "discipline_display": "Humangeographie",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 30,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [
+          {
+            "id": 1,
+            "name": "Klausur",
+            "description": "",
+            "order": 0
+          },
+          {
+            "id": 4,
+            "name": "Übungsmappe",
+            "description": "",
+            "order": 0
+          }
+        ],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Empirische Sozialforschung",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "Klausur ODER Übungsmappe (benotet)",
+      "order": 2,
+      "total_ects": 6,
+      "total_sws": 4,
+      "courses": [
+        {
+          "name": "Empirische Sozialforschung",
+          "description": "",
+          "semester": 2,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "methoden",
+          "discipline_display": "Methoden",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": []
+        },
+        {
+          "name": "Empirische Sozialforschung",
+          "description": "",
+          "semester": 2,
+          "order": 0,
+          "course_type": "uebung",
+          "course_type_display": "Übung",
+          "discipline": "methoden",
+          "discipline_display": "Methoden",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 30,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [
+          {
+            "id": 1,
+            "name": "Klausur",
+            "description": "",
+            "order": 0
+          },
+          {
+            "id": 4,
+            "name": "Übungsmappe",
+            "description": "",
+            "order": 0
+          }
+        ],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Einführung in die geographischen Methoden",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "Klausur UND Übungsmappe (benotet)",
+      "order": 3,
+      "total_ects": 6,
+      "total_sws": 4,
+      "courses": [
+        {
+          "name": "Methoden I",
+          "description": "z.B. Statistik oder GIS",
+          "semester": 1,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "methoden",
+          "discipline_display": "Methoden",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": []
+        },
+        {
+          "name": "Methoden I",
+          "description": "z.B. Statistik oder GIS",
+          "semester": 1,
+          "order": 0,
+          "course_type": "uebung",
+          "course_type_display": "Übung",
+          "discipline": "methoden",
+          "discipline_display": "Methoden",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 30,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [
+          {
+            "id": 1,
+            "name": "Klausur",
+            "description": "",
+            "order": 0
+          },
+          {
+            "id": 4,
+            "name": "Übungsmappe",
+            "description": "",
+            "order": 0
+          }
+        ],
+        "logic_operator": "and",
+        "logic_operator_display": "UND",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Einführung in die räumliche Datenanalyse",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "Klausur UND Übungsmappe (unbenotet)",
+      "order": 4,
+      "total_ects": 6,
+      "total_sws": 4,
+      "courses": [
+        {
+          "name": "Einführung in die räumliche Datenanalyse",
+          "description": "",
+          "semester": 2,
+          "order": 0,
+          "course_type": "uebung",
+          "course_type_display": "Übung",
+          "discipline": "methoden",
+          "discipline_display": "Methoden",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 30,
+          "lpo_relevance": []
+        },
+        {
+          "name": "Einführung in die räumliche Datenanalyse",
+          "description": "",
+          "semester": 2,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "methoden",
+          "discipline_display": "Methoden",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [
+          {
+            "id": 1,
+            "name": "Klausur",
+            "description": "",
+            "order": 0
+          },
+          {
+            "id": 4,
+            "name": "Übungsmappe",
+            "description": "",
+            "order": 0
+          }
+        ],
+        "logic_operator": "and",
+        "logic_operator_display": "UND",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Grundlagen Geographie II",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "Klausur - zwei Klausuren a 45 min (benotet)",
+      "order": 5,
+      "total_ects": 12,
+      "total_sws": 4,
+      "courses": [
+        {
+          "name": "Humangeographie II",
+          "description": "",
+          "semester": 2,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "humangeographie",
+          "discipline_display": "Humangeographie",
+          "ects": 6,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": []
+        },
+        {
+          "name": "Physische Geographie II",
+          "description": "",
+          "semester": 2,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "physische_geographie",
+          "discipline_display": "Physische Geographie",
+          "ects": 6,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [
+          {
+            "id": 1,
+            "name": "Klausur",
+            "description": "",
+            "order": 0
+          }
+        ],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": "zwei Klausuren a 45 min"
+      }
+    },
+    {
+      "name": "Grundlagen Geographie III",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "",
+      "order": 6,
+      "total_ects": 12,
+      "total_sws": 4,
+      "courses": [
+        {
+          "name": "Humangeographie III",
+          "description": "",
+          "semester": 3,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "humangeographie",
+          "discipline_display": "Humangeographie",
+          "ects": 6,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": []
+        },
+        {
+          "name": "Physische Geographie III",
+          "description": "",
+          "semester": 3,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "physische_geographie",
+          "discipline_display": "Physische Geographie",
+          "ects": 6,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Proseminar",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "Hausarbeit UND Referat (benotet)",
+      "order": 7,
+      "total_ects": 3,
+      "total_sws": 2,
+      "courses": [
+        {
+          "name": "Proseminar",
+          "description": "",
+          "semester": 3,
+          "order": 0,
+          "course_type": "seminar",
+          "course_type_display": "Seminar",
+          "discipline": "übergreifend",
+          "discipline_display": "Übergreifend",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 15,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [
+          {
+            "id": 2,
+            "name": "Hausarbeit",
+            "description": "",
+            "order": 0
+          },
+          {
+            "id": 3,
+            "name": "Referat",
+            "description": "",
+            "order": 0
+          }
+        ],
+        "logic_operator": "and",
+        "logic_operator_display": "UND",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Vertiefte Humangeographische Methoden",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "",
+      "order": 8,
+      "total_ects": 6,
+      "total_sws": 4,
+      "courses": [
+        {
+          "name": "Vertiefte humangeographische Methoden",
+          "description": "",
+          "semester": 3,
+          "order": 0,
+          "course_type": "uebung",
+          "course_type_display": "Übung",
+          "discipline": "methoden",
+          "discipline_display": "Methoden",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 30,
+          "lpo_relevance": []
+        },
+        {
+          "name": "Vertiefte humangeographische Methoden",
+          "description": "",
+          "semester": 3,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "methoden",
+          "discipline_display": "Methoden",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Kleines Geländeseminar",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "Hausarbeit (benotet)",
+      "order": 9,
+      "total_ects": 3,
+      "total_sws": 2,
+      "courses": [
+        {
+          "name": "Kleine Exkursion",
+          "description": "",
+          "semester": 3,
+          "order": 0,
+          "course_type": "gelände",
+          "course_type_display": "Geländeseminar",
+          "discipline": "übergreifend",
+          "discipline_display": "Übergreifend",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 15,
+          "lpo_relevance": [
+            "exkursion"
+          ]
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [
+          {
+            "id": 2,
+            "name": "Hausarbeit",
+            "description": "",
+            "order": 0
+          }
+        ],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Vertiefte Humangeographie",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "",
+      "order": 10,
+      "total_ects": 6,
+      "total_sws": 4,
+      "courses": [
+        {
+          "name": "Vertiefte Humangeographie",
+          "description": "",
+          "semester": 4,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "humangeographie",
+          "discipline_display": "Humangeographie",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": [
+            "regional"
+          ]
+        },
+        {
+          "name": "Vertiefte Humangeographie",
+          "description": "",
+          "semester": 4,
+          "order": 0,
+          "course_type": "uebung",
+          "course_type_display": "Übung",
+          "discipline": "methoden",
+          "discipline_display": "Methoden",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 30,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Projektseminar",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "Hausarbeit UND Referat (benotet)",
+      "order": 11,
+      "total_ects": 6,
+      "total_sws": 4,
+      "courses": [
+        {
+          "name": "Projektseminar",
+          "description": "",
+          "semester": 4,
+          "order": 0,
+          "course_type": "seminar",
+          "course_type_display": "Seminar",
+          "discipline": "übergreifend",
+          "discipline_display": "Übergreifend",
+          "ects": 6,
+          "sws": 4,
+          "max_participants": 15,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [
+          {
+            "id": 2,
+            "name": "Hausarbeit",
+            "description": "",
+            "order": 0
+          },
+          {
+            "id": 3,
+            "name": "Referat",
+            "description": "",
+            "order": 0
+          }
+        ],
+        "logic_operator": "and",
+        "logic_operator_display": "UND",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Regionale Geographie",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "Klausur (benotet)",
+      "order": 12,
+      "total_ects": 3,
+      "total_sws": 2,
+      "courses": [
+        {
+          "name": "Regionale Geographie",
+          "description": "",
+          "semester": 4,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "übergreifend",
+          "discipline_display": "Übergreifend",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": [
+            "regional"
+          ]
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [
+          {
+            "id": 1,
+            "name": "Klausur",
+            "description": "",
+            "order": 0
+          }
+        ],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Vertiefte physisch-geographische Methoden",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "Klausur (benotet)",
+      "order": 13,
+      "total_ects": 6,
+      "total_sws": 4,
+      "courses": [
+        {
+          "name": "Vertiefte physisch-geographische Methoden",
+          "description": "",
+          "semester": 4,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "methoden",
+          "discipline_display": "Methoden",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": []
+        },
+        {
+          "name": "Vertiefte physisch-geographische Methoden",
+          "description": "",
+          "semester": 4,
+          "order": 0,
+          "course_type": "uebung",
+          "course_type_display": "Übung",
+          "discipline": "methoden",
+          "discipline_display": "Methoden",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 30,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [
+          {
+            "id": 1,
+            "name": "Klausur",
+            "description": "",
+            "order": 0
+          }
+        ],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Großes Geländeseminar",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "",
+      "order": 14,
+      "total_ects": 9,
+      "total_sws": 7,
+      "courses": [
+        {
+          "name": "Große Exkursion",
+          "description": "",
+          "semester": 4,
+          "order": 0,
+          "course_type": "gelände",
+          "course_type_display": "Geländeseminar",
+          "discipline": "übergreifend",
+          "discipline_display": "Übergreifend",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 15,
+          "lpo_relevance": [
+            "exkursion"
+          ]
+        },
+        {
+          "name": "Große Exkursion",
+          "description": "",
+          "semester": 5,
+          "order": 0,
+          "course_type": "gelände",
+          "course_type_display": "Geländeseminar",
+          "discipline": "übergreifend",
+          "discipline_display": "Übergreifend",
+          "ects": 6,
+          "sws": 5,
+          "max_participants": 15,
+          "lpo_relevance": [
+            "exkursion"
+          ]
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Vertiefte physische Geographie",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "Klausur (unbenotet)",
+      "order": 15,
+      "total_ects": 6,
+      "total_sws": 4,
+      "courses": [
+        {
+          "name": "Vertiefte physische Geographie",
+          "description": "",
+          "semester": 5,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "physische_geographie",
+          "discipline_display": "Physische Geographie",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": [
+            "regional"
+          ]
+        },
+        {
+          "name": "Vertiefte physische Geographie",
+          "description": "",
+          "semester": 5,
+          "order": 0,
+          "course_type": "seminar",
+          "course_type_display": "Seminar",
+          "discipline": "physische_geographie",
+          "discipline_display": "Physische Geographie",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 15,
+          "lpo_relevance": [
+            "regional"
+          ]
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [
+          {
+            "id": 1,
+            "name": "Klausur",
+            "description": "",
+            "order": 0
+          }
+        ],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Hauptseminar",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "",
+      "order": 16,
+      "total_ects": 3,
+      "total_sws": 2,
+      "courses": [
+        {
+          "name": "Hauptseminar",
+          "description": "",
+          "semester": 5,
+          "order": 0,
+          "course_type": "seminar",
+          "course_type_display": "Seminar",
+          "discipline": "übergreifend",
+          "discipline_display": "Übergreifend",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 15,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Angewandte geographische Methoden",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "Klausur (unbenotet)",
+      "order": 17,
+      "total_ects": 6,
+      "total_sws": 4,
+      "courses": [
+        {
+          "name": "Angewandte geographische Methoden",
+          "description": "",
+          "semester": 5,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "methoden",
+          "discipline_display": "Methoden",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": []
+        },
+        {
+          "name": "Angewandte geographische Methoden",
+          "description": "",
+          "semester": 5,
+          "order": 0,
+          "course_type": "uebung",
+          "course_type_display": "Übung",
+          "discipline": "methoden",
+          "discipline_display": "Methoden",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 30,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [
+          {
+            "id": 1,
+            "name": "Klausur",
+            "description": "",
+            "order": 0
+          }
+        ],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Berufsvorbereitung",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "",
+      "order": 18,
+      "total_ects": 3,
+      "total_sws": 2,
+      "courses": [
+        {
+          "name": "Berufsvorbereitung",
+          "description": "",
+          "semester": 5,
+          "order": 0,
+          "course_type": "uebung",
+          "course_type_display": "Übung",
+          "discipline": "übergreifend",
+          "discipline_display": "Übergreifend",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 30,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Angewandte Geographie",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "Klausur (unbenotet)",
+      "order": 19,
+      "total_ects": 3,
+      "total_sws": 2,
+      "courses": [
+        {
+          "name": "Angewandte regionale Geographie",
+          "description": "",
+          "semester": 6,
+          "order": 0,
+          "course_type": "vorlesung",
+          "course_type_display": "Vorlesung",
+          "discipline": "übergreifend",
+          "discipline_display": "Übergreifend",
+          "ects": 3,
+          "sws": 2,
+          "max_participants": 600,
+          "lpo_relevance": [
+            "regional"
+          ]
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [
+          {
+            "id": 1,
+            "name": "Klausur",
+            "description": "",
+            "order": 0
+          }
+        ],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Abschlussmodul",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "",
+      "order": 20,
+      "total_ects": 15,
+      "total_sws": 0,
+      "courses": [
+        {
+          "name": "Bacherlorarbeit",
+          "description": "",
+          "semester": 6,
+          "order": 0,
+          "course_type": "thesis",
+          "course_type_display": "Thesis",
+          "discipline": "übergreifend",
+          "discipline_display": "Übergreifend",
+          "ects": 12,
+          "sws": 0,
+          "max_participants": 1,
+          "lpo_relevance": []
+        },
+        {
+          "name": "Kolloquium/Disputation",
+          "description": "",
+          "semester": 6,
+          "order": 0,
+          "course_type": "seminar",
+          "course_type_display": "Seminar",
+          "discipline": "übergreifend",
+          "discipline_display": "Übergreifend",
+          "ects": 3,
+          "sws": 0,
+          "max_participants": 1,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    },
+    {
+      "name": "Praktikum",
+      "description": "",
+      "certificate": "",
+      "certificate_display": "",
+      "order": 21,
+      "total_ects": 12,
+      "total_sws": 0,
+      "courses": [
+        {
+          "name": "Praktikum",
+          "description": "",
+          "semester": 6,
+          "order": 0,
+          "course_type": "thesis",
+          "course_type_display": "Thesis",
+          "discipline": "übergreifend",
+          "discipline_display": "Übergreifend",
+          "ects": 12,
+          "sws": 0,
+          "max_participants": 1,
+          "lpo_relevance": []
+        }
+      ],
+      "certificate_config": {
+        "selected_options": [],
+        "logic_operator": "or",
+        "logic_operator_display": "ODER",
+        "comment": ""
+      }
+    }
+  ],
+  "student_counts": [
+    {
+      "semester": 6,
+      "min_students": 76,
+      "max_students": 95
+    }
+  ],
+  "nebenfach_ects": [
+    {
+      "semester": 1,
+      "ects": 6
+    },
+    {
+      "semester": 2,
+      "ects": 6
+    },
+    {
+      "semester": 3,
+      "ects": 6
+    },
+    {
+      "semester": 4,
+      "ects": 6
+    },
+    {
+      "semester": 5,
+      "ects": 6
+    },
+    {
+      "semester": 6,
+      "ects": 0
+    }
+  ]
+}

@@ -31,12 +31,25 @@ function toggleModuleTray(moduleId) {
 function openCreateModuleModal() {
   document.getElementById('createModuleModal').classList.remove('hidden');
   setupCourseSearch();
+  
+  // Initialize with one certificate group
+  const container = document.getElementById('create-certificate-groups');
+  if (container && container.children.length === 0) {
+    groupCounter = 0; // Reset counter
+    addCertificateGroup('create');
+  }
 }
 
 function closeCreateModuleModal() {
   document.getElementById('createModuleModal').classList.add('hidden');
   resetCourseSelection();
   resetCertificateFields();
+  
+  // Clear certificate groups
+  const container = document.getElementById('create-certificate-groups');
+  if (container) {
+    container.innerHTML = '';
+  }
 }
 
 function resetCertificateFields() {
@@ -67,9 +80,12 @@ function resetCertificateFields() {
 }
 
 function openEditModuleModal(moduleId) {
+  console.log('openEditModuleModal called with moduleId:', moduleId);
   const button = document.querySelector(`.edit-module-btn[data-module-id="${moduleId}"]`);
+  console.log('Found button:', button);
   const moduleName = button.getAttribute('data-module-name');
   const moduleDescription = button.getAttribute('data-module-description');
+  const moduleQualificationGoals = button.getAttribute('data-module-qualification-goals');
   const moduleCertificate = button.getAttribute('data-module-certificate');
   const moduleResponsiblePerson = button.getAttribute('data-module-responsible-person') || '';
   const moduleCourses = button.getAttribute('data-module-courses').split(',').filter(id => id !== '');
@@ -79,19 +95,43 @@ function openEditModuleModal(moduleId) {
   const certificateOptions = button.getAttribute('data-certificate-options').split(',').filter(id => id !== '');
   const logicOperator = button.getAttribute('data-logic-operator') || 'or';
   const certificateComment = button.getAttribute('data-certificate-comment') || '';
-  const isGraded = button.getAttribute('data-is-graded') === 'true';
+  const isGradedStr = button.getAttribute('data-is-graded');
+  const isGraded = isGradedStr === 'true' || isGradedStr === 'True';
+  console.log('isGraded parsing:', { isGradedStr, isGraded });
+  
+  // Get group structure
+  const groupStructureStr = button.getAttribute('data-group-structure') || '{}';
+  console.log('Raw group structure string:', groupStructureStr);
+  let groupStructure = {};
+  try {
+    // Convert Python dict format to valid JSON
+    const validJsonStr = groupStructureStr.replace(/'/g, '"');
+    console.log('Converted to valid JSON:', validJsonStr);
+    groupStructure = JSON.parse(validJsonStr);
+    console.log('Parsed group structure:', groupStructure);
+  } catch (e) {
+    console.error('Failed to parse group structure:', e, 'Raw string:', groupStructureStr);
+    groupStructure = {};
+  }
   
   // Populate the form
   document.getElementById('edit_module_id').value = moduleId;
   document.getElementById('edit_module_name').value = moduleName;
   document.getElementById('edit_module_description').value = moduleDescription;
+  document.getElementById('edit_module_qualification_goals').value = moduleQualificationGoals || '';
   document.getElementById('edit_module_responsible_person').value = moduleResponsiblePerson;
   
   // Populate certificate fields
-  document.getElementById('edit_certificate_comment').value = certificateComment;
+  const certCommentField = document.getElementById('edit_certificate_comment');
+  if (certCommentField) {
+    certCommentField.value = certificateComment;
+  }
   
   // Set graded checkbox
-  document.getElementById('edit_is_graded').checked = isGraded;
+  const gradedCheckbox = document.getElementById('edit_is_graded');
+  if (gradedCheckbox) {
+    gradedCheckbox.checked = isGraded;
+  }
   
   // Handle legacy certificate field if it exists (fallback case)
   const legacyField = document.getElementById('edit_module_certificate');
@@ -100,10 +140,13 @@ function openEditModuleModal(moduleId) {
   }
   
   // Set logic operator
-  if (logicOperator === 'and') {
-    document.getElementById('edit_logic_and').checked = true;
-  } else {
-    document.getElementById('edit_logic_or').checked = true;
+  const logicAndRadio = document.getElementById('edit_logic_and');
+  const logicOrRadio = document.getElementById('edit_logic_or');
+  
+  if (logicOperator === 'and' && logicAndRadio) {
+    logicAndRadio.checked = true;
+  } else if (logicOrRadio) {
+    logicOrRadio.checked = true;
   }
   
   // Clear all certificate option checkboxes first
@@ -113,8 +156,7 @@ function openEditModuleModal(moduleId) {
     }
   });
   
-  // Load selected certificate options into searchable select
-  loadSelectedCertificateOptions('edit', certificateOptions);
+  // Certificate groups will be initialized later in the function
   
   // Clear all checkboxes and semester inputs first
   document.querySelectorAll('#editModuleModal .edit-course-checkbox').forEach(checkbox => {
@@ -153,6 +195,82 @@ function openEditModuleModal(moduleId) {
     }
   });
   
+  // Clear and initialize certificate groups
+  const editContainer = document.getElementById('edit-certificate-groups');
+  console.log('Found edit container:', editContainer);
+  if (editContainer) {
+    editContainer.innerHTML = '';
+    groupCounter = 0; // Reset counter
+    
+    // Always add at least one group
+    console.log('About to call addCertificateGroup, function exists:', typeof addCertificateGroup);
+    if (typeof addCertificateGroup === 'function') {
+      addCertificateGroup('edit');
+    } else {
+      console.error('addCertificateGroup function not found');
+    }
+    
+    // Load existing certificate groups from group structure or fallback to legacy
+    if (groupStructure.groups && groupStructure.groups.length > 0) {
+      // Load from saved group structure
+      console.log('Loading group structure:', groupStructure);
+      
+      setTimeout(() => {
+        // Add additional groups if needed
+        const groupsNeeded = groupStructure.groups.length;
+        const currentGroups = editContainer.querySelectorAll('.certificate-group').length;
+        
+        for (let i = currentGroups; i < groupsNeeded; i++) {
+          if (typeof addCertificateGroup === 'function') {
+            addCertificateGroup('edit');
+          }
+        }
+        
+        // Load options into each group
+        groupStructure.groups.forEach((group, index) => {
+          const groupNumber = index + 1;
+          const groupId = `edit-group-${groupNumber}`;
+          
+          // Set group operator
+          const operatorRadios = document.querySelectorAll(`input[name="group_${groupNumber}_operator"]`);
+          operatorRadios.forEach(radio => {
+            radio.checked = (radio.value === group.internal_operator);
+          });
+          
+          // Load options for this group
+          group.options.forEach(optionId => {
+            const dropdown = document.getElementById(`${groupId}-dropdown`);
+            if (dropdown) {
+              const optionElement = dropdown.querySelector(`[data-option-id="${optionId}"]`);
+              if (optionElement) {
+                const optionName = optionElement.getAttribute('data-option-name');
+                if (typeof selectOption === 'function') {
+                  selectOption(groupId, optionId, optionName);
+                }
+              }
+            }
+          });
+        });
+      }, 250);
+    } else if (certificateOptions.length > 0) {
+      // Fallback to legacy loading into single group
+      setTimeout(() => {
+        certificateOptions.forEach(optionId => {
+          const dropdown = document.getElementById('edit-group-1-dropdown');
+          if (dropdown) {
+            const optionElement = dropdown.querySelector(`[data-option-id="${optionId}"]`);
+            if (optionElement) {
+              const optionName = optionElement.getAttribute('data-option-name');
+              if (typeof selectOption === 'function') {
+                selectOption('edit-group-1', optionId, optionName);
+              }
+            }
+          }
+        });
+      }, 200);
+    }
+  }
+  
   document.getElementById('editModuleModal').classList.remove('hidden');
   setupEditCourseSearch();
   updateEditSelectedCoursesCount();
@@ -161,17 +279,25 @@ function openEditModuleModal(moduleId) {
 function closeEditModuleModal() {
   document.getElementById('editModuleModal').classList.add('hidden');
   resetEditCourseSelection();
+  
+  // Clear certificate groups
+  const container = document.getElementById('edit-certificate-groups');
+  if (container) {
+    container.innerHTML = '';
+  }
 }
 
 // Course search and filter functionality for create modal
 function setupCourseSearch() {
   const searchInput = document.getElementById('courseSearch');
   const typeFilter = document.getElementById('courseTypeFilter');
-  const sharedFilter = document.getElementById('showSharedCourses');
+  const courseFilterRadios = document.querySelectorAll('input[name="courseFilter"]');
   
   searchInput.addEventListener('input', filterCourses);
   typeFilter.addEventListener('change', filterCourses);
-  sharedFilter.addEventListener('change', filterCourses);
+  courseFilterRadios.forEach(radio => {
+    radio.addEventListener('change', filterCourses);
+  });
   
   // Setup course selection tracking
   document.querySelectorAll('.course-checkbox').forEach(checkbox => {
@@ -184,7 +310,7 @@ function setupCourseSearch() {
 function filterCourses() {
   const searchTerm = document.getElementById('courseSearch').value.toLowerCase();
   const selectedType = document.getElementById('courseTypeFilter').value;
-  const showShared = document.getElementById('showSharedCourses').checked;
+  const courseFilter = document.querySelector('input[name="courseFilter"]:checked').value;
   const courseItems = document.querySelectorAll('.course-item');
   let visibleCount = 0;
   
@@ -196,7 +322,7 @@ function filterCourses() {
     
     const matchesSearch = courseName.includes(searchTerm);
     const matchesType = !selectedType || courseType === selectedType;
-    const matchesShared = showShared || !isShared;
+    const matchesShared = (courseFilter === 'shared') ? isShared : !isShared;
     
     if (matchesSearch && matchesType && matchesShared) {
       item.style.display = 'flex';
@@ -218,7 +344,7 @@ function filterCourses() {
 function clearCourseFilters() {
   document.getElementById('courseSearch').value = '';
   document.getElementById('courseTypeFilter').value = '';
-  document.getElementById('showSharedCourses').checked = true;
+  document.querySelector('input[name="courseFilter"][value="my"]').checked = true;
   filterCourses();
 }
 
@@ -257,11 +383,13 @@ function resetCourseSelection() {
 function setupEditCourseSearch() {
   const searchInput = document.getElementById('editCourseSearch');
   const typeFilter = document.getElementById('editCourseTypeFilter');
-  const sharedFilter = document.getElementById('editShowSharedCourses');
+  const courseFilterRadios = document.querySelectorAll('input[name="editCourseFilter"]');
   
   searchInput.addEventListener('input', filterEditCourses);
   typeFilter.addEventListener('change', filterEditCourses);
-  sharedFilter.addEventListener('change', filterEditCourses);
+  courseFilterRadios.forEach(radio => {
+    radio.addEventListener('change', filterEditCourses);
+  });
   
   // Setup course selection tracking
   document.querySelectorAll('.edit-course-checkbox').forEach(checkbox => {
@@ -272,7 +400,7 @@ function setupEditCourseSearch() {
 function filterEditCourses() {
   const searchTerm = document.getElementById('editCourseSearch').value.toLowerCase();
   const selectedType = document.getElementById('editCourseTypeFilter').value;
-  const showShared = document.getElementById('editShowSharedCourses').checked;
+  const courseFilter = document.querySelector('input[name="editCourseFilter"]:checked').value;
   const courseItems = document.querySelectorAll('.edit-course-item');
   let visibleCount = 0;
   
@@ -284,7 +412,7 @@ function filterEditCourses() {
     
     const matchesSearch = courseName.includes(searchTerm);
     const matchesType = !selectedType || courseType === selectedType;
-    const matchesShared = showShared || !isShared;
+    const matchesShared = (courseFilter === 'shared') ? isShared : !isShared;
     
     if (matchesSearch && matchesType && matchesShared) {
       item.style.display = 'flex';
@@ -306,7 +434,7 @@ function filterEditCourses() {
 function clearEditCourseFilters() {
   document.getElementById('editCourseSearch').value = '';
   document.getElementById('editCourseTypeFilter').value = '';
-  document.getElementById('editShowSharedCourses').checked = true;
+  document.querySelector('input[name="editCourseFilter"][value="my"]').checked = true;
   filterEditCourses();
 }
 
@@ -891,8 +1019,17 @@ function updateCertificateHiddenInputs(mode) {
 
 function clearSelectedCertificateOptions(mode) {
   selectedCertificateOptions[mode] = {};
-  document.getElementById(`${mode}-selected-options`).innerHTML = '';
-  document.getElementById(`${mode}-cert-hidden-inputs`).innerHTML = '';
+  
+  // Check if elements exist before accessing them (for backwards compatibility)
+  const selectedOptionsEl = document.getElementById(`${mode}-selected-options`);
+  if (selectedOptionsEl) {
+    selectedOptionsEl.innerHTML = '';
+  }
+  
+  const hiddenInputsEl = document.getElementById(`${mode}-cert-hidden-inputs`);
+  if (hiddenInputsEl) {
+    hiddenInputsEl.innerHTML = '';
+  }
 }
 
 function loadSelectedCertificateOptions(mode, optionIds) {
@@ -972,6 +1109,11 @@ function validateModuleForm(form) {
     }
   });
   
+  // Collect certificate groups data and convert to old format for backend compatibility
+  if (isValid) {
+    collectAndSubmitCertificateData(form);
+  }
+  
   if (!isValid) {
     alert('Bitte geben Sie ein gültiges Semester für alle ausgewählten Kurse an.');
     // Focus on first invalid field
@@ -981,6 +1123,144 @@ function validateModuleForm(form) {
   }
   
   return isValid;
+}
+
+function collectAndSubmitCertificateData(form) {
+  // Remove any existing certificate data inputs to avoid duplicates (but keep the original checkbox)
+  form.querySelectorAll('input[name^="certificate_"]').forEach(input => input.remove());
+  form.querySelectorAll('input[name^="group_"]').forEach(input => input.remove());
+  form.querySelectorAll('input[name="logic_operator"]').forEach(input => input.remove());
+  form.querySelectorAll('input[name="is_graded"][type="hidden"]').forEach(input => input.remove());
+  
+  // Determine modal type based on form action
+  const action = form.querySelector('input[name="action"]').value;
+  const modalType = action === 'edit_module' ? 'edit' : 'create';
+  
+  console.log('Form element:', form);
+  console.log('Form contains these inputs:', Array.from(form.querySelectorAll('input')).map(input => ({
+    type: input.type,
+    name: input.name,
+    id: input.id
+  })));
+  
+  // Collect certificate groups data
+  const container = document.getElementById(`${modalType}-certificate-groups`);
+  let groupCount = 0;
+  
+  if (container) {
+    const groups = container.querySelectorAll('.certificate-group');
+    
+    groups.forEach((group, groupIndex) => {
+      const groupId = group.id.replace(`${modalType}-group-`, '');
+      const selectedWrapper = group.querySelector(`#${modalType}-group-${groupId}-selected`);
+      const operatorRadios = group.querySelectorAll(`input[name="group_${groupId}_operator"]`);
+      
+      // Get selected options for this group
+      const groupOptions = [];
+      console.log(`Looking for selected wrapper: #${modalType}-group-${groupId}-selected`);
+      console.log('Selected wrapper found:', selectedWrapper);
+      
+      if (selectedWrapper) {
+        const selectedOptions = selectedWrapper.querySelectorAll('.selected-option-tag');
+        console.log(`Found ${selectedOptions.length} selected options in group ${groupId}`);
+        selectedOptions.forEach(option => {
+          const optionId = option.getAttribute('data-option-id');
+          console.log('Processing option:', option, 'ID:', optionId);
+          if (optionId) {
+            groupOptions.push(optionId);
+          }
+        });
+      } else {
+        console.log(`No selected wrapper found for group ${groupId}`);
+      }
+      
+      // Get internal operator for this group (OR/AND within the group)
+      let internalOperator = 'or';
+      operatorRadios.forEach(radio => {
+        if (radio.checked) {
+          internalOperator = radio.value;
+        }
+      });
+      
+      // Submit all groups, even empty ones (to maintain group structure)
+      groupCount++;
+      
+      // Add group options (if any)
+      if (groupOptions.length > 0) {
+        groupOptions.forEach(optionId => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = `group_${groupCount}_options`;
+          input.value = optionId;
+          form.appendChild(input);
+        });
+      }
+      
+      // Add group internal operator
+      const operatorInput = document.createElement('input');
+      operatorInput.type = 'hidden';
+      operatorInput.name = `group_${groupCount}_operator`;
+      operatorInput.value = internalOperator;
+      form.appendChild(operatorInput);
+      
+      console.log(`Collected group ${groupCount}: ${groupOptions.length} options, operator: ${internalOperator}`);
+    });
+  }
+  
+  // Add group count
+  const groupCountInput = document.createElement('input');
+  groupCountInput.type = 'hidden';
+  groupCountInput.name = 'certificate_group_count';
+  groupCountInput.value = groupCount;
+  form.appendChild(groupCountInput);
+  
+  // Add global operator from combinator radios
+  let globalOperator = 'and'; // default
+  const combinatorRadios = form.querySelectorAll('input[name^="combinator_"]:checked');
+  if (combinatorRadios.length > 0) {
+    // Use the first combinator as the global operator
+    globalOperator = combinatorRadios[0].value;
+  }
+  
+  const globalOperatorInput = document.createElement('input');
+  globalOperatorInput.type = 'hidden';
+  globalOperatorInput.name = 'global_operator';
+  globalOperatorInput.value = globalOperator;
+  form.appendChild(globalOperatorInput);
+  
+  // Add certificate comment
+  const commentField = document.getElementById(`${modalType}_certificate_comment`);
+  const commentInput = document.createElement('input');
+  commentInput.type = 'hidden';
+  commentInput.name = 'certificate_comment';
+  commentInput.value = commentField ? commentField.value : '';
+  form.appendChild(commentInput);
+  
+  // Add is_graded
+  const gradedFieldId = `${modalType}_is_graded`;
+  console.log('Modal type:', modalType, 'Looking for ID:', gradedFieldId);
+  const gradedField = document.getElementById(gradedFieldId);
+  console.log('Found graded field:', gradedField);
+  
+  // Also try to find it by name as backup
+  const gradedFieldByName = form.querySelector('input[name="is_graded"]');
+  console.log('Found by name:', gradedFieldByName);
+  
+  const finalGradedField = gradedField || gradedFieldByName;
+  console.log('Using field:', finalGradedField, 'Checked:', finalGradedField ? finalGradedField.checked : 'not found');
+  
+  const gradedInput = document.createElement('input');
+  gradedInput.type = 'hidden';
+  gradedInput.name = 'is_graded';
+  gradedInput.value = (finalGradedField && finalGradedField.checked) ? 'on' : '';
+  form.appendChild(gradedInput);
+  
+  console.log('Certificate groups data collected:', {
+    groupCount: groupCount,
+    comment: commentField ? commentField.value : '',
+    isGraded: finalGradedField ? finalGradedField.checked : false,
+    gradedInputValue: gradedInput.value
+  });
 }
 
 // Add event listener for semester input changes

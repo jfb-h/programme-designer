@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     Course, Module, Programme, ProgrammeModule, ProgrammeStudentCount,
-    ProgrammeType, DefaultStudentCount, DefaultNebenfach, Revision, CertificateOption, ModuleCertificate
+    ProgrammeType, DefaultStudentCount, DefaultNebenfach, Revision, CertificateOption, ModuleCertificate,
+    CertificateGroup, ModuleCertificateGroup
 )
 
 @admin.register(Course)
@@ -98,12 +99,41 @@ class CertificateOptionAdmin(admin.ModelAdmin):
     search_fields = ['name', 'description']
 
 
+@admin.register(CertificateGroup)
+class CertificateGroupAdmin(admin.ModelAdmin):
+    list_display = ['name', 'order', 'description']
+    list_editable = ['order']
+    ordering = ['order', 'name']
+    search_fields = ['name', 'description']
+
+
+class ModuleCertificateGroupInline(admin.TabularInline):
+    model = ModuleCertificateGroup
+    extra = 1
+    filter_horizontal = ['selected_options']
+    ordering = ['order']
+
+
 @admin.register(ModuleCertificate)
 class ModuleCertificateAdmin(admin.ModelAdmin):
-    list_display = ['module', 'logic_operator', 'get_selected_options', 'comment']
-    list_filter = ['logic_operator']
+    list_display = ['module', 'global_operator', 'get_certificate_display', 'is_graded']
+    list_filter = ['global_operator', 'is_graded']
     search_fields = ['module__name', 'comment']
+    filter_horizontal = ['selected_options']  # For legacy support
+    inlines = [ModuleCertificateGroupInline]
+    
+    def get_certificate_display(self, obj):
+        return obj.get_display_text()
+    get_certificate_display.short_description = 'Certificate Configuration'
+
+
+@admin.register(ModuleCertificateGroup)
+class ModuleCertificateGroupAdmin(admin.ModelAdmin):
+    list_display = ['module_certificate', 'group', 'internal_operator', 'get_selected_options', 'order']
+    list_filter = ['group', 'internal_operator']
+    search_fields = ['module_certificate__module__name', 'group__name']
     filter_horizontal = ['selected_options']
+    ordering = ['module_certificate__module__name', 'order']
     
     def get_selected_options(self, obj):
         return ', '.join([opt.name for opt in obj.selected_options.all()])

@@ -205,7 +205,7 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
       <thead class="bg-gray-50">
         <tr>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
-            <a href="?sort=name&order={% if current_sort == 'name' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="group inline-flex items-center hover:text-gray-900">
+            <a href="?sort=name&order={% if current_sort == 'name' and current_order == 'asc' %}desc{% else %}asc{% endif %}&tab={{ current_tab }}" class="group inline-flex items-center hover:text-gray-900">
               Name
               {% if current_sort == 'name' %}
                 {% if current_order == 'asc' %}
@@ -226,7 +226,7 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
           </th>
           <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-16">Typ</th>
           <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-            <a href="?sort=discipline&order={% if current_sort == 'discipline' and current_order == 'asc' %}desc{% else %}asc{% endif %}" class="group inline-flex items-center hover:text-gray-900">
+            <a href="?sort=discipline&order={% if current_sort == 'discipline' and current_order == 'asc' %}desc{% else %}asc{% endif %}&tab={{ current_tab }}" class="group inline-flex items-center hover:text-gray-900">
               Fach
               {% if current_sort == 'discipline' %}
                 {% if current_order == 'asc' %}
@@ -275,14 +275,14 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium w-32">
             <div class="flex space-x-2 justify-center">
               <!-- Edit Button -->
-              <a href="?edit={{ course.id }}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_order %}&order={{ current_order }}{% endif %}" class="text-primary-600 hover:text-primary-900 transition-colors p-1 hover:bg-primary-50 rounded" title="Bearbeiten">
+              <a href="?edit={{ course.id }}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_order %}&order={{ current_order }}{% endif %}&tab={{ current_tab }}" class="text-primary-600 hover:text-primary-900 transition-colors p-1 hover:bg-primary-50 rounded" title="Bearbeiten">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                 </svg>
               </a>
               
               <!-- Copy Button -->
-              <form method="post" class="inline">
+              <form method="post" action="?tab={{ current_tab }}" class="inline">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="copy">
                 <input type="hidden" name="course_id" value="{{ course.id }}">
@@ -298,7 +298,7 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
               
               <!-- Share Button (only for own courses) -->
               {% if current_tab == 'my' and course.user == request.user %}
-                <form method="post" class="inline">
+                <form method="post" action="?tab={{ current_tab }}" class="inline">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="share">
                   <input type="hidden" name="course_id" value="{{ course.id }}">
@@ -311,7 +311,7 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
               {% endif %}
               
               <!-- Delete Button -->
-              <form method="post" action="{% url 'v2_delete_course' course.id %}" class="inline" onsubmit="return confirm('Wirklich löschen?')">
+              <form method="post" action="{% url 'v2_delete_course' course.id %}?tab={{ current_tab }}" class="inline" onsubmit="return confirm('Wirklich löschen?')">
                 {% csrf_token %}
                 <button type="submit" class="text-red-600 hover:text-red-900 transition-colors bg-transparent border-none cursor-pointer p-1 hover:bg-red-50 rounded" title="Löschen">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -355,7 +355,7 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
         </button>
       </div>
       
-      <form method="post" action="{{ request.path }}" class="space-y-4">
+      <form method="post" action="{{ request.path }}?tab={{ current_tab }}" class="space-y-4">
         {% csrf_token %}
         {% if edit_course %}
           <input type="hidden" name="edit_course_id" value="{{ edit_course.id }}">

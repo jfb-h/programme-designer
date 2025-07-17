@@ -134,11 +134,11 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
       <thead class="bg-gray-50">
         <tr>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
-            <a href="?sort=name" class="hover:text-gray-700">Name</a>
+            <a href="?sort=name&tab={{ current_tab }}" class="hover:text-gray-700">Name</a>
           </th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Autor</th>
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
-            <a href="?sort=created" class="hover:text-gray-700">Erstellt</a>
+            <a href="?sort=created&tab={{ current_tab }}" class="hover:text-gray-700">Erstellt</a>
           </th>
           
           <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Typ</th>
@@ -155,7 +155,7 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
             <div class="flex items-center space-x-2">
               <span class="truncate block" title="{{ programme.name }}">{{ programme.name }}</span>
               <!-- Edit Modal Button -->
-              <a href="?edit={{ programme.id }}" class="text-gray-500 hover:text-gray-700 transition-colors p-1 hover:bg-gray-100 rounded" title="Bearbeiten">
+              <a href="?edit={{ programme.id }}&tab={{ current_tab }}" class="text-gray-500 hover:text-gray-700 transition-colors p-1 hover:bg-gray-100 rounded" title="Bearbeiten">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
                 </svg>
@@ -199,7 +199,7 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
               </a>
               
               <!-- Copy Button -->
-              <form method="post" class="inline">
+              <form method="post" action="?tab={{ current_tab }}" class="inline">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="copy">
                 <input type="hidden" name="programme_id" value="{{ programme.id }}">
@@ -219,7 +219,7 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
               
               <!-- Share Button (only for own programmes) -->
               {% if current_tab == 'my' and programme.user == request.user %}
-                <form method="post" class="inline">
+                <form method="post" action="?tab={{ current_tab }}" class="inline">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="share">
                   <input type="hidden" name="programme_id" value="{{ programme.id }}">
@@ -232,7 +232,7 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
               {% endif %}
               
               <!-- Delete Button -->
-              <form method="post" action="{% url 'v2_delete_programme' programme.id %}" class="inline" onsubmit="return confirm('Studiengang {{ programme.name }} wirklich löschen?')">
+              <form method="post" action="{% url 'v2_delete_programme' programme.id %}?tab={{ current_tab }}" class="inline" onsubmit="return confirm('Studiengang {{ programme.name }} wirklich löschen?')">
                 {% csrf_token %}
                 <button type="submit" class="text-red-600 hover:text-red-900 transition-colors bg-transparent border-none cursor-pointer p-1 hover:bg-red-50 rounded" title="Löschen">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,7 +275,7 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
         </button>
       </div>
       
-      <form method="post" action="" class="space-y-6">
+      <form method="post" action="?tab={{ current_tab }}" class="space-y-6">
         {% csrf_token %}
         {% if edit_programme %}
           <input type="hidden" name="edit_programme_id" value="{{ edit_programme.id }}">

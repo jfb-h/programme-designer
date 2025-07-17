@@ -5,11 +5,6 @@
 }
 
 .selected-options-container {
-  min-height: 2.5rem;
-  cursor: text;
-}
-
-.selected-options-wrapper {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -158,16 +153,10 @@
             </div>
           </div>
 
-          <!-- Module Description and Qualification Goals -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label for="module_description" class="block text-sm font-semibold text-gray-700 mb-2">Beschreibung (optional)</label>
-              <textarea id="module_description" name="module_description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"></textarea>
-            </div>
-            <div>
-              <label for="module_qualification_goals" class="block text-sm font-semibold text-gray-700 mb-2">Qualifikationsziele (optional)</label>
-              <textarea id="module_qualification_goals" name="module_qualification_goals" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"></textarea>
-            </div>
+          <!-- Module Description -->
+          <div>
+            <label for="module_description" class="block text-sm font-semibold text-gray-700 mb-2">Beschreibung (optional)</label>
+            <textarea id="module_description" name="module_description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"></textarea>
           </div>
 
           <!-- Module Certificate -->
@@ -179,7 +168,7 @@
                 <label class="block text-sm font-semibold text-gray-700">Leistungsnachweis (optional)</label>
                 <div class="flex items-center gap-2">
                   <label class="flex items-center">
-                    <input type="checkbox" name="is_graded" class="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                    <input type="checkbox" name="is_graded" checked class="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
                     <span class="ml-2 text-sm text-gray-700">Benotet</span>
                   </label>
                 </div>
@@ -190,19 +179,30 @@
                 <!-- Groups will be added here dynamically -->
               </div>
               
-              <!-- Initialize with first group -->
-              <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                  // Add initial group for create modal
-                  if (document.getElementById('create-certificate-groups').children.length === 0) {
-                    groupCounter = 0; // Reset counter
-                    addCertificateGroup('create');
-                  }
-                });
-              </script>
+              <!-- Add Group Button -->
+              <div class="flex justify-center">
+                <button type="button" onclick="addCertificateGroup('create')" class="flex items-center gap-2 px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md border border-blue-200 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                  Gruppe hinzufügen
+                </button>
+              </div>
               
-              <!-- Add Group Button will be added dynamically inline with groups -->
-              
+              <!-- Global Operator -->
+              <div id="create-global-operator" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Gruppen kombinieren mit:</label>
+                <div class="flex gap-4">
+                  <label class="flex items-center">
+                    <input type="radio" name="global_operator" value="and" checked class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                    <span class="ml-2 text-sm text-gray-700">UND</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="radio" name="global_operator" value="or" class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                    <span class="ml-2 text-sm text-gray-700">ODER</span>
+                  </label>
+                </div>
+              </div>
               
               <!-- Certificate Comment -->
               <div>
@@ -245,16 +245,10 @@
                 </button>
               </div>
               
-              <!-- Course type filter -->
-              <div class="flex items-center gap-4">
-                <label class="flex items-center">
-                  <input type="radio" name="courseFilter" value="my" checked class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
-                  <span class="ml-2 text-sm font-medium text-gray-700">Meine Kurse</span>
-                </label>
-                <label class="flex items-center">
-                  <input type="radio" name="courseFilter" value="shared" class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
-                  <span class="ml-2 text-sm font-medium text-gray-700">Geteilte Kurse</span>
-                </label>
+              <!-- Shared courses filter -->
+              <div class="flex items-center">
+                <input type="checkbox" id="showSharedCourses" checked class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2">
+                <label for="showSharedCourses" class="ml-2 text-sm font-medium text-gray-700">Geteilte zeigen</label>
               </div>
               
               <!-- Selected courses summary -->
@@ -338,328 +332,82 @@
 <script>
 // Certificate Group Management
 let groupCounter = 0;
-const certificateOptions = [{% for option in certificate_options %}{id: {{ option.id }}, name: "{{ option.name|escapejs }}", description: "{{ option.description|escapejs }}"}{% if not forloop.last %}, {% endif %}{% endfor %}];
+const certificateGroups = [
+  {% for group in certificate_groups %}
+    {id: {{ group.id }}, name: "{{ group.name|escapejs }}", description: "{{ group.description|escapejs }}"}{% if not forloop.last %},{% endif %}
+  {% endfor %}
+];
+const certificateOptions = [
+  {% for option in certificate_options %}
+    {id: {{ option.id }}, name: "{{ option.name|escapejs }}", description: "{{ option.description|escapejs }}"}{% if not forloop.last %},{% endif %}
+  {% endfor %}
+];
 
 function addCertificateGroup(modalType) {
   const container = document.getElementById(`${modalType}-certificate-groups`);
-  
-  // Hide add button on all existing groups
-  const existingAddBtns = container.querySelectorAll('.add-group-btn');
-  existingAddBtns.forEach(btn => btn.style.display = 'none');
+  const globalOperator = document.getElementById(`${modalType}-global-operator`);
   
   groupCounter++;
   
-  // Add combinator if this is not the first group
-  if (container.children.length > 0) {
-    const combinatorHtml = `
-      <div class="flex items-center justify-center my-3 combinator-div">
-        <div class="flex items-center gap-4 border border-gray-300 rounded-md px-4 py-2 bg-gray-50">
-          <label class="flex items-center">
-            <input type="radio" name="combinator_${groupCounter}" value="and" checked class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
-            <span class="ml-2 text-sm text-gray-700 font-medium">UND</span>
-          </label>
-          <label class="flex items-center">
-            <input type="radio" name="combinator_${groupCounter}" value="or" class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
-            <span class="ml-2 text-sm text-gray-700 font-medium">ODER</span>
-          </label>
-        </div>
-      </div>
-    `;
-    container.insertAdjacentHTML('beforeend', combinatorHtml);
-  }
-  
   const groupHtml = `
-    <div class="certificate-group relative border border-gray-200 rounded-md p-3" id="${modalType}-group-${groupCounter}" data-group-id="${groupCounter}">
-      <!-- Remove button - top right -->
-      <button type="button" class="remove-group-btn absolute top-2 right-2 p-1 text-gray-400 hover:text-red-600 transition-colors" onclick="removeCertificateGroup('${modalType}', ${groupCounter})" title="Gruppe entfernen">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-      </button>
+    <div class="certificate-group" id="${modalType}-group-${groupCounter}" data-group-id="${groupCounter}">
+      <div class="certificate-group-header">
+        <select name="group_${groupCounter}_type" class="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500">
+          <option value="">Gruppe auswählen...</option>
+          ${certificateGroups.map(group => `<option value="${group.id}">${group.name}</option>`).join('')}
+        </select>
+        <button type="button" class="remove-group-btn" onclick="removeCertificateGroup('${modalType}', ${groupCounter})">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
       
-      <!-- Add button - bottom right (only on last group) -->
-      <button type="button" class="add-group-btn absolute bottom-2 right-2 p-1 text-blue-600 hover:text-blue-800 transition-colors" onclick="addCertificateGroup('${modalType}')" title="Gruppe hinzufügen">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-        </svg>
-      </button>
+      <div class="certificate-group-options">
+        ${certificateOptions.map(option => `
+          <label class="certificate-option-checkbox">
+            <input type="checkbox" name="group_${groupCounter}_options" value="${option.id}" class="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+            <span class="text-sm text-gray-700">${option.name}</span>
+          </label>
+        `).join('')}
+      </div>
       
-      <div class="flex gap-3 pr-12">
-        <!-- Select field -->
-        <div class="certificate-selector flex-1 relative">
-          <div class="selected-options-container min-h-[2.5rem] flex flex-wrap gap-2 items-center cursor-text" onclick="focusSearchInput('${modalType}-group-${groupCounter}-search')">
-            <div class="selected-options-wrapper flex flex-wrap gap-2" id="${modalType}-group-${groupCounter}-selected">
-              <!-- Selected options will be displayed here as tags -->
-            </div>
-            <input type="text" 
-                   id="${modalType}-group-${groupCounter}-search" 
-                   class="search-input border-none outline-none bg-transparent text-sm flex-1 min-w-[120px]" 
-                   placeholder="Optionen auswählen..."
-                   autocomplete="off"
-                   onfocus="showDropdown('${modalType}-group-${groupCounter}')"
-                   oninput="filterOptions('${modalType}-group-${groupCounter}')">
-          </div>
-          <div id="${modalType}-group-${groupCounter}-dropdown" class="certificate-dropdown hidden">
-            ${certificateOptions.map(option => `
-              <div class="certificate-option" onclick="selectOption('${modalType}-group-${groupCounter}', ${option.id}, '${option.name.replace(/'/g, "\\'")}')"
-                   data-option-id="${option.id}"
-                   data-option-name="${option.name}">
-                ${option.name}
-              </div>
-            `).join('')}
-          </div>
-        </div>
-        
-        <!-- Stacked ODER/UND options -->
-        <div class="flex flex-col gap-1">
-          <label class="flex items-center">
-            <input type="radio" name="group_${groupCounter}_operator" value="or" checked class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
-            <span class="ml-2 text-sm text-gray-700">ODER</span>
-          </label>
-          <label class="flex items-center">
-            <input type="radio" name="group_${groupCounter}_operator" value="and" class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
-            <span class="ml-2 text-sm text-gray-700">UND</span>
-          </label>
-        </div>
+      <div class="flex gap-4">
+        <span class="text-sm font-medium text-gray-700">Verknüpfung:</span>
+        <label class="flex items-center">
+          <input type="radio" name="group_${groupCounter}_operator" value="or" checked class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+          <span class="ml-2 text-sm text-gray-700">ODER</span>
+        </label>
+        <label class="flex items-center">
+          <input type="radio" name="group_${groupCounter}_operator" value="and" class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+          <span class="ml-2 text-sm text-gray-700">UND</span>
+        </label>
       </div>
     </div>
   `;
   
   container.insertAdjacentHTML('beforeend', groupHtml);
+  
+  // Show global operator if more than one group
+  if (container.children.length > 1) {
+    globalOperator.classList.remove('hidden');
+  }
 }
 
 function removeCertificateGroup(modalType, groupId) {
   const groupElement = document.getElementById(`${modalType}-group-${groupId}`);
   const container = document.getElementById(`${modalType}-certificate-groups`);
+  const globalOperator = document.getElementById(`${modalType}-global-operator`);
   
   if (groupElement) {
-    // Find and remove the combinator that comes before this group (if any)
-    const previousSibling = groupElement.previousElementSibling;
-    if (previousSibling && previousSibling.classList.contains('combinator-div')) {
-      previousSibling.remove();
-    }
-    
-    // Remove the group itself
     groupElement.remove();
-    
-    // If this was the first group, remove the combinator that comes after the new first group
-    const firstGroup = container.querySelector('.certificate-group');
-    if (firstGroup) {
-      const nextSibling = firstGroup.nextElementSibling;
-      if (nextSibling && nextSibling.classList.contains('combinator-div')) {
-        nextSibling.remove();
-      }
-    }
-    
-    // Renumber remaining groups
-    renumberGroups(modalType);
-    
-    // Ensure at least one group exists
-    const remainingGroups = container.querySelectorAll('.certificate-group');
-    if (remainingGroups.length === 0) {
-      addCertificateGroup(modalType);
-    } else {
-      // Show add button only on the last group
-      const addButtons = container.querySelectorAll('.add-group-btn');
-      addButtons.forEach(btn => btn.style.display = 'none');
-      
-      const lastGroup = remainingGroups[remainingGroups.length - 1];
-      const lastAddBtn = lastGroup.querySelector('.add-group-btn');
-      if (lastAddBtn) {
-        lastAddBtn.style.display = 'block';
-      }
-    }
+  }
+  
+  // Hide global operator if only one group left
+  if (container.children.length <= 1) {
+    globalOperator.classList.add('hidden');
   }
 }
-
-function renumberGroups(modalType) {
-  const container = document.getElementById(`${modalType}-certificate-groups`);
-  const groups = container.querySelectorAll('.certificate-group');
-  
-  groups.forEach((group, index) => {
-    const newNumber = index + 1;
-    const oldId = group.id;
-    const newId = `${modalType}-group-${newNumber}`;
-    
-    // Update group ID and data attribute
-    group.id = newId;
-    group.setAttribute('data-group-id', newNumber);
-    
-    // Update all internal IDs and names
-    updateGroupInternalIds(group, modalType, newNumber);
-    
-    // Handle add button visibility - only show on last group
-    const addBtn = group.querySelector('.add-group-btn');
-    if (addBtn) {
-      addBtn.style.display = (index === groups.length - 1) ? 'block' : 'none';
-    }
-  });
-}
-
-function updateGroupInternalIds(group, modalType, newNumber) {
-  // Update search input
-  const searchInput = group.querySelector('.search-input');
-  if (searchInput) {
-    searchInput.id = `${modalType}-group-${newNumber}-search`;
-    searchInput.setAttribute('onfocus', `showDropdown('${modalType}-group-${newNumber}')`);
-    searchInput.setAttribute('oninput', `filterOptions('${modalType}-group-${newNumber}')`);
-  }
-  
-  // Update selected container
-  const selectedContainer = group.querySelector('.selected-options-wrapper');
-  if (selectedContainer) {
-    selectedContainer.id = `${modalType}-group-${newNumber}-selected`;
-  }
-  
-  // Update dropdown
-  const dropdown = group.querySelector('.certificate-dropdown');
-  if (dropdown) {
-    dropdown.id = `${modalType}-group-${newNumber}-dropdown`;
-    
-    // Update option click handlers
-    const options = dropdown.querySelectorAll('.certificate-option');
-    options.forEach(option => {
-      const optionId = option.getAttribute('data-option-id');
-      const optionName = option.getAttribute('data-option-name');
-      option.setAttribute('onclick', `selectOption('${modalType}-group-${newNumber}', ${optionId}, '${optionName.replace(/'/g, "\\'")}')`); 
-    });
-  }
-  
-  // Update radio button names
-  const radios = group.querySelectorAll('input[type="radio"]');
-  radios.forEach(radio => {
-    if (radio.name.startsWith('group_')) {
-      radio.name = `group_${newNumber}_operator`;
-    }
-  });
-  
-  // Update container onclick
-  const container = group.querySelector('.selected-options-container');
-  if (container) {
-    container.setAttribute('onclick', `focusSearchInput('${modalType}-group-${newNumber}-search')`);
-  }
-  
-  // Update remove button
-  const removeBtn = group.querySelector('.remove-group-btn');
-  if (removeBtn) {
-    removeBtn.setAttribute('onclick', `removeCertificateGroup('${modalType}', ${newNumber})`);
-  }
-  
-  // Update add button (only on the last group)
-  const addBtn = group.querySelector('.add-group-btn');
-  if (addBtn) {
-    addBtn.setAttribute('onclick', `addCertificateGroup('${modalType}')`);
-  }
-}
-
-function focusSearchInput(inputId) {
-  document.getElementById(inputId).focus();
-}
-
-function showDropdown(groupId) {
-  const dropdown = document.getElementById(`${groupId}-dropdown`);
-  dropdown.classList.remove('hidden');
-  
-  // Show all options except already selected ones
-  const selectedContainer = document.getElementById(`${groupId}-selected`);
-  const selectedIds = Array.from(selectedContainer.querySelectorAll('[data-option-id]'))
-    .map(tag => tag.getAttribute('data-option-id'));
-  
-  const options = dropdown.querySelectorAll('.certificate-option');
-  options.forEach(option => {
-    const optionId = option.getAttribute('data-option-id');
-    option.style.display = selectedIds.includes(optionId) ? 'none' : 'block';
-  });
-  
-  // Hide other dropdowns
-  document.querySelectorAll('.certificate-dropdown').forEach(d => {
-    if (d.id !== `${groupId}-dropdown`) {
-      d.classList.add('hidden');
-    }
-  });
-}
-
-function filterOptions(groupId) {
-  const input = document.getElementById(`${groupId}-search`);
-  const searchTerm = input.value.toLowerCase();
-  const dropdown = document.getElementById(`${groupId}-dropdown`);
-  const options = dropdown.querySelectorAll('.certificate-option');
-  
-  // Get selected IDs
-  const selectedContainer = document.getElementById(`${groupId}-selected`);
-  const selectedIds = Array.from(selectedContainer.querySelectorAll('[data-option-id]'))
-    .map(tag => tag.getAttribute('data-option-id'));
-  
-  options.forEach(option => {
-    const text = option.textContent.toLowerCase();
-    const optionId = option.getAttribute('data-option-id');
-    const matchesSearch = text.includes(searchTerm);
-    const isSelected = selectedIds.includes(optionId);
-    
-    option.style.display = matchesSearch && !isSelected ? 'block' : 'none';
-  });
-}
-
-function selectOption(groupId, optionId, optionName) {
-  const selectedContainer = document.getElementById(`${groupId}-selected`);
-  
-  // Check if already selected
-  if (selectedContainer.querySelector(`[data-option-id="${optionId}"]`)) {
-    return;
-  }
-  
-  // Add selected tag
-  const tag = document.createElement('span');
-  tag.className = 'selected-option-tag';
-  tag.setAttribute('data-option-id', optionId);
-  tag.innerHTML = `
-    ${optionName}
-    <button type="button" onclick="removeOption('${groupId}', ${optionId}); event.stopPropagation();">
-      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-      </svg>
-    </button>
-  `;
-  
-  // Add hidden input for form submission
-  const input = document.createElement('input');
-  input.type = 'hidden';
-  input.name = `${groupId.split('-').slice(0, -2).join('-')}_group_${groupId.split('-').pop()}_options`;
-  input.value = optionId;
-  tag.appendChild(input);
-  
-  selectedContainer.appendChild(tag);
-  
-  // Hide this option in dropdown
-  const dropdown = document.getElementById(`${groupId}-dropdown`);
-  const option = dropdown.querySelector(`[data-option-id="${optionId}"]`);
-  if (option) option.style.display = 'none';
-  
-  // Clear search input
-  const searchInput = document.getElementById(`${groupId}-search`);
-  searchInput.value = '';
-  // Removed focus() to prevent auto-focusing when loading existing data
-}
-
-function removeOption(groupId, optionId) {
-  const selectedContainer = document.getElementById(`${groupId}-selected`);
-  const tag = selectedContainer.querySelector(`[data-option-id="${optionId}"]`);
-  if (tag) tag.remove();
-  
-  // Show option in dropdown again
-  const dropdown = document.getElementById(`${groupId}-dropdown`);
-  const option = dropdown.querySelector(`[data-option-id="${optionId}"]`);
-  if (option) option.style.display = 'block';
-}
-
-// Hide dropdowns when clicking outside
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.certificate-selector')) {
-    document.querySelectorAll('.certificate-dropdown').forEach(d => {
-      d.classList.add('hidden');
-    });
-  }
-});
 </script>
 
 <!-- Modal for editing existing module -->
@@ -693,16 +441,10 @@ document.addEventListener('click', function(e) {
             </div>
           </div>
 
-          <!-- Module Description and Qualification Goals -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label for="edit_module_description" class="block text-sm font-semibold text-gray-700 mb-2">Beschreibung (optional)</label>
-              <textarea id="edit_module_description" name="module_description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"></textarea>
-            </div>
-            <div>
-              <label for="edit_module_qualification_goals" class="block text-sm font-semibold text-gray-700 mb-2">Qualifikationsziele (optional)</label>
-              <textarea id="edit_module_qualification_goals" name="module_qualification_goals" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"></textarea>
-            </div>
+          <!-- Module Description -->
+          <div>
+            <label for="edit_module_description" class="block text-sm font-semibold text-gray-700 mb-2">Beschreibung (optional)</label>
+            <textarea id="edit_module_description" name="module_description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"></textarea>
           </div>
 
           <!-- Module Certificate -->
@@ -714,7 +456,7 @@ document.addEventListener('click', function(e) {
                 <label class="block text-sm font-semibold text-gray-700">Leistungsnachweis (optional)</label>
                 <div class="flex items-center gap-2">
                   <label class="flex items-center">
-                    <input type="checkbox" name="is_graded" id="edit_is_graded" class="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+                    <input type="checkbox" name="is_graded" id="edit_is_graded" checked class="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
                     <span class="ml-2 text-sm text-gray-700">Benotet</span>
                   </label>
                 </div>
@@ -725,8 +467,30 @@ document.addEventListener('click', function(e) {
                 <!-- Groups will be added here dynamically -->
               </div>
               
-              <!-- Add Group Button will be added dynamically inline with groups -->
+              <!-- Add Group Button -->
+              <div class="flex justify-center">
+                <button type="button" onclick="addCertificateGroup('edit')" class="flex items-center gap-2 px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md border border-blue-200 transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                  Gruppe hinzufügen
+                </button>
+              </div>
               
+              <!-- Global Operator -->
+              <div id="edit-global-operator" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Gruppen kombinieren mit:</label>
+                <div class="flex gap-4">
+                  <label class="flex items-center">
+                    <input type="radio" name="global_operator" value="and" id="edit_global_and" checked class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                    <span class="ml-2 text-sm text-gray-700">UND</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="radio" name="global_operator" value="or" id="edit_global_or" class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+                    <span class="ml-2 text-sm text-gray-700">ODER</span>
+                  </label>
+                </div>
+              </div>
               
               <!-- Certificate Comment -->
               <div>
@@ -769,16 +533,10 @@ document.addEventListener('click', function(e) {
                 </button>
               </div>
               
-              <!-- Course type filter -->
-              <div class="flex items-center gap-4">
-                <label class="flex items-center">
-                  <input type="radio" name="editCourseFilter" value="my" checked class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
-                  <span class="ml-2 text-sm font-medium text-gray-700">Meine Kurse</span>
-                </label>
-                <label class="flex items-center">
-                  <input type="radio" name="editCourseFilter" value="shared" class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
-                  <span class="ml-2 text-sm font-medium text-gray-700">Geteilte Kurse</span>
-                </label>
+              <!-- Shared courses filter -->
+              <div class="flex items-center">
+                <input type="checkbox" id="editShowSharedCourses" checked class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2">
+                <label for="editShowSharedCourses" class="ml-2 text-sm font-medium text-gray-700">Geteilte zeigen</label>
               </div>
               
               <!-- Selected courses summary -->
@@ -858,3 +616,84 @@ document.addEventListener('click', function(e) {
     </div>
   </div>
 </div>
+
+<script>
+// Certificate Group Management
+let groupCounter = 0;
+const certificateGroups = [
+  {% for group in certificate_groups %}
+    {id: {{ group.id }}, name: "{{ group.name|escapejs }}", description: "{{ group.description|escapejs }}"}{% if not forloop.last %},{% endif %}
+  {% endfor %}
+];
+const certificateOptions = [
+  {% for option in certificate_options %}
+    {id: {{ option.id }}, name: "{{ option.name|escapejs }}", description: "{{ option.description|escapejs }}"}{% if not forloop.last %},{% endif %}
+  {% endfor %}
+];
+
+function addCertificateGroup(modalType) {
+  const container = document.getElementById(`${modalType}-certificate-groups`);
+  const globalOperator = document.getElementById(`${modalType}-global-operator`);
+  
+  groupCounter++;
+  
+  const groupHtml = `
+    <div class="certificate-group" id="${modalType}-group-${groupCounter}" data-group-id="${groupCounter}">
+      <div class="certificate-group-header">
+        <select name="group_${groupCounter}_type" class="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500">
+          <option value="">Gruppe auswählen...</option>
+          ${certificateGroups.map(group => `<option value="${group.id}">${group.name}</option>`).join('')}
+        </select>
+        <button type="button" class="remove-group-btn" onclick="removeCertificateGroup('${modalType}', ${groupCounter})">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="certificate-group-options">
+        ${certificateOptions.map(option => `
+          <label class="certificate-option-checkbox">
+            <input type="checkbox" name="group_${groupCounter}_options" value="${option.id}" class="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
+            <span class="text-sm text-gray-700">${option.name}</span>
+          </label>
+        `).join('')}
+      </div>
+      
+      <div class="flex gap-4">
+        <span class="text-sm font-medium text-gray-700">Verknüpfung:</span>
+        <label class="flex items-center">
+          <input type="radio" name="group_${groupCounter}_operator" value="or" checked class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+          <span class="ml-2 text-sm text-gray-700">ODER</span>
+        </label>
+        <label class="flex items-center">
+          <input type="radio" name="group_${groupCounter}_operator" value="and" class="h-4 w-4 text-primary-600 border-gray-300 focus:ring-primary-500">
+          <span class="ml-2 text-sm text-gray-700">UND</span>
+        </label>
+      </div>
+    </div>
+  `;
+  
+  container.insertAdjacentHTML('beforeend', groupHtml);
+  
+  // Show global operator if more than one group
+  if (container.children.length > 1) {
+    globalOperator.classList.remove('hidden');
+  }
+}
+
+function removeCertificateGroup(modalType, groupId) {
+  const groupElement = document.getElementById(`${modalType}-group-${groupId}`);
+  const container = document.getElementById(`${modalType}-certificate-groups`);
+  const globalOperator = document.getElementById(`${modalType}-global-operator`);
+  
+  if (groupElement) {
+    groupElement.remove();
+  }
+  
+  // Hide global operator if only one group left
+  if (container.children.length <= 1) {
+    globalOperator.classList.add('hidden');
+  }
+}
+</script>

@@ -155,6 +155,7 @@ class Module(models.Model):
     description = models.TextField(blank=True)
     certificate = models.TextField(blank=True, help_text="Certificate or qualification information for this module")
     responsible_person = models.CharField(max_length=200, blank=True, help_text="Modulverantwortliche(r)")
+    qualification_goals = models.TextField(blank=True, null=True, help_text="Qualification goals and learning outcomes for this module")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='modules_v2', null=True, blank=True)
     courses = models.ManyToManyField('Course', through='CourseModule', related_name='modules', blank=True)
 
@@ -240,6 +241,48 @@ class Module(models.Model):
         """Get formatted certificate display string."""
         try:
             module_cert = self.module_certificate
+            
+            # Check if we have group structure (new JSON-based system)
+            if hasattr(module_cert, 'group_structure') and module_cert.group_structure and module_cert.group_structure.get('groups'):
+                group_displays = []
+                groups = module_cert.group_structure.get('groups', [])
+                
+                for group in groups:
+                    option_ids = group.get('options', [])
+                    if option_ids:
+                        # Get option names from IDs
+                        options = CertificateOption.objects.filter(id__in=option_ids)
+                        option_names = [opt.name for opt in options]
+                        
+                        if group.get('internal_operator') == 'and':
+                            group_display = ' UND '.join(option_names)
+                        else:
+                            group_display = ' ODER '.join(option_names)
+                        
+                        # Only add parentheses if there are multiple options in the group
+                        if len(option_names) > 1:
+                            group_displays.append(f'({group_display})')
+                        else:
+                            group_displays.append(group_display)
+                
+                if group_displays:
+                    global_operator = module_cert.group_structure.get('global_operator', module_cert.global_operator)
+                    if global_operator == 'and':
+                        result = ' UND '.join(group_displays)
+                    else:
+                        result = ' ODER '.join(group_displays)
+                    
+                    if module_cert.comment:
+                        result += f' - {module_cert.comment}'
+                    
+                    # Add graded/ungraded status in parentheses
+                    if result:
+                        graded_status = "benotet" if module_cert.is_graded else "unbenotet"
+                        result = f"{result} ({graded_status})"
+                    
+                    return result
+            
+            # Fallback to legacy system
             if not module_cert.selected_options.exists() and not module_cert.comment:
                 return self.certificate  # Fallback to old certificate field
             
@@ -267,8 +310,23 @@ class Module(models.Model):
             return self.certificate
 
 
+class CertificateGroup(models.Model):
+    """Predefined certificate groups for organizing options."""
+    name = models.CharField(max_length=100, unique=True, help_text="Name of the certificate group")
+    description = models.TextField(blank=True, help_text="Optional description of this group")
+    order = models.PositiveIntegerField(default=0, help_text="Display order in selection lists")
+    
+    class Meta:
+        ordering = ['order', 'name']
+        verbose_name = "Certificate Group"
+        verbose_name_plural = "Certificate Groups"
+    
+    def __str__(self):
+        return self.name
+
+
 class ModuleCertificate(models.Model):
-    """Certificate configuration for a module with multiple options and operator."""
+    """Certificate configuration for a module with group-based options."""
     
     LOGIC_CHOICES = [
         ('and', 'UND'),
@@ -276,10 +334,14 @@ class ModuleCertificate(models.Model):
     ]
     
     module = models.OneToOneField('Module', on_delete=models.CASCADE, related_name='module_certificate')
-    selected_options = models.ManyToManyField('CertificateOption', blank=True, help_text="Select multiple certificate options")
-    logic_operator = models.CharField(max_length=3, choices=LOGIC_CHOICES, default='or', help_text="How selected options should be combined")
+    global_operator = models.CharField(max_length=3, choices=LOGIC_CHOICES, default='and', help_text="How certificate groups should be combined")
     comment = models.TextField(blank=True, help_text="Additional certificate details or comments")
     is_graded = models.BooleanField(default=True, help_text="Whether this module is graded (benotet) or ungraded (unbenotet)")
+    group_structure = models.JSONField(default=dict, blank=True, null=True, help_text="Complete group structure with options, operators, and order")
+    
+    # Legacy fields for backward compatibility
+    selected_options = models.ManyToManyField('CertificateOption', blank=True, help_text="Legacy: Select multiple certificate options")
+    logic_operator = models.CharField(max_length=3, choices=LOGIC_CHOICES, default='or', help_text="Legacy: How selected options should be combined")
     
     class Meta:
         verbose_name = "Module Certificate"
@@ -290,6 +352,46 @@ class ModuleCertificate(models.Model):
     
     def get_display_text(self):
         """Get formatted display text for this certificate configuration."""
+        # Check if using new group-based system
+        if self.certificate_groups.exists():
+            return self._get_group_display_text()
+        else:
+            return self._get_legacy_display_text()
+    
+    def _get_group_display_text(self):
+        """Get display text for group-based certificates."""
+        group_texts = []
+        for cert_group in self.certificate_groups.all().order_by('order'):
+            if cert_group.selected_options.exists():
+                option_names = [opt.name for opt in cert_group.selected_options.all()]
+                if cert_group.internal_operator == 'and':
+                    group_text = ' UND '.join(option_names)
+                else:
+                    group_text = ' ODER '.join(option_names)
+                
+                # Add parentheses if more than one option
+                if len(option_names) > 1:
+                    group_text = f"({group_text})"
+                
+                group_texts.append(group_text)
+        
+        # Combine groups with global operator
+        if group_texts:
+            if self.global_operator == 'and':
+                result = ' UND '.join(group_texts)
+            else:
+                result = ' ODER '.join(group_texts)
+        else:
+            result = ''
+        
+        # Add comment if present
+        if self.comment:
+            result = f"{result} - {self.comment}" if result else self.comment
+        
+        return result
+    
+    def _get_legacy_display_text(self):
+        """Get display text for legacy flat certificates."""
         parts = []
         if self.selected_options.exists():
             option_names = [opt.name for opt in self.selected_options.all()]
@@ -302,6 +404,30 @@ class ModuleCertificate(models.Model):
             parts.append(self.comment)
         
         return ' - '.join(parts) if parts else ''
+
+
+class ModuleCertificateGroup(models.Model):
+    """Certificate group assignment for a module with specific options and operator."""
+    
+    LOGIC_CHOICES = [
+        ('and', 'UND'),
+        ('or', 'ODER'),
+    ]
+    
+    module_certificate = models.ForeignKey(ModuleCertificate, on_delete=models.CASCADE, related_name='certificate_groups')
+    group = models.ForeignKey(CertificateGroup, on_delete=models.CASCADE)
+    internal_operator = models.CharField(max_length=3, choices=LOGIC_CHOICES, default='or', help_text="How options within this group should be combined")
+    selected_options = models.ManyToManyField(CertificateOption, blank=True, help_text="Selected options for this group")
+    order = models.PositiveIntegerField(default=0, help_text="Display order within the certificate")
+    
+    class Meta:
+        ordering = ['order', 'group__name']
+        unique_together = ('module_certificate', 'group')
+        verbose_name = "Module Certificate Group"
+        verbose_name_plural = "Module Certificate Groups"
+    
+    def __str__(self):
+        return f"{self.module_certificate.module.name} - {self.group.name}"
 
 
 class CourseModule(models.Model):

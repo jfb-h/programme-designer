@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.db import models
-from .models import Course, Module, Programme, Revision, ProgrammeType, ProgrammeModule, ProgrammeStudentCount, ProgrammeNebenfach, DefaultStudentCount, CourseType, Discipline, CourseModule, CertificateOption, ModuleCertificate
+from .models import Course, Module, Programme, Revision, ProgrammeType, ProgrammeModule, ProgrammeStudentCount, ProgrammeNebenfach, DefaultStudentCount, CourseType, Discipline, CourseModule, CertificateOption, CertificateGroup, ModuleCertificate, ModuleCertificateGroup
 from .forms import CourseForm, ModuleForm, ProgrammeForm, RevisionForm, ModuleCertificateForm
 
 
@@ -77,7 +77,13 @@ def course_overview(request):
                 return_url = request.POST.get('return_url') or request.GET.get('return_url')
                 if return_url:
                     return redirect(return_url)
-                return redirect('v2_course_overview')
+                
+                # Preserve tab state
+                current_tab = request.GET.get('tab', 'my')
+                from django.shortcuts import reverse
+                from urllib.parse import urlencode
+                url = reverse('v2_course_overview')
+                return redirect(f'{url}?{urlencode({"tab": current_tab})}')
         
         elif action == 'share':
             # Handle course sharing
@@ -109,7 +115,13 @@ def course_overview(request):
                         
                 except Course.DoesNotExist:
                     messages.error(request, 'Kurs nicht gefunden oder Sie haben keine Berechtigung!')
-                return redirect('v2_course_overview')
+                
+                # Preserve tab state
+                current_tab = request.GET.get('tab', 'my')
+                from django.shortcuts import reverse
+                from urllib.parse import urlencode
+                url = reverse('v2_course_overview')
+                return redirect(f'{url}?{urlencode({"tab": current_tab})}')
         
         else:
             # Handle normal save/edit functionality
@@ -135,8 +147,13 @@ def course_overview(request):
                 return_url = request.POST.get('return_url') or request.GET.get('return_url')
                 if return_url:
                     return redirect(return_url)
-                # Remove edit_course from context by redirecting to overview
-                return redirect('v2_course_overview')
+                
+                # Remove edit_course from context by redirecting to overview with preserved tab
+                current_tab = request.GET.get('tab', 'my')
+                from django.shortcuts import reverse
+                from urllib.parse import urlencode
+                url = reverse('v2_course_overview')
+                return redirect(f'{url}?{urlencode({"tab": current_tab})}')
 
     # Handle edit mode (GET with ?edit=<id>)
     edit_id = request.GET.get('edit')
@@ -307,7 +324,13 @@ def programme_overview(request):
                     
                 except Programme.DoesNotExist:
                     messages.error(request, 'Studiengang nicht gefunden!')
-                return redirect('v2_programme_overview')
+                
+                # Preserve tab state
+                current_tab = request.GET.get('tab', 'my')
+                from django.shortcuts import reverse
+                from urllib.parse import urlencode
+                url = reverse('v2_programme_overview')
+                return redirect(f'{url}?{urlencode({"tab": current_tab})}')
         
         elif action == 'share':
             # Handle programme sharing
@@ -336,16 +359,13 @@ def programme_overview(request):
                             for course in module.courses.filter(user=request.user, is_shared=False):
                                 courses_to_share.append(course)
                         
-                        # Create shared copies of unshared courses
+                        # Mark unshared courses as shared (don't copy them)
                         shared_courses_count = 0
                         for course in courses_to_share:
-                            shared_course = course.create_copy()
-                            shared_course.is_shared = True
-                            shared_course.shared_by = request.user
-                            shared_course.shared_at = timezone.now()
-                            shared_course.original_course = course
-                            shared_course.save()
-                            shared_course.lpo_relevance.set(course.lpo_relevance.all())
+                            course.is_shared = True
+                            course.shared_by = request.user
+                            course.shared_at = timezone.now()
+                            course.save()
                             shared_courses_count += 1
                         
                         success_msg = f'Studiengang "{programme.name}" wurde geteilt.'
@@ -357,7 +377,13 @@ def programme_overview(request):
                         
                 except Programme.DoesNotExist:
                     messages.error(request, 'Studiengang nicht gefunden oder Sie haben keine Berechtigung!')
-                return redirect('v2_programme_overview')
+                
+                # Preserve tab state
+                current_tab = request.GET.get('tab', 'my')
+                from django.shortcuts import reverse
+                from urllib.parse import urlencode
+                url = reverse('v2_programme_overview')
+                return redirect(f'{url}?{urlencode({"tab": current_tab})}')
         
         else:
             # Handle normal save/edit functionality
@@ -377,7 +403,13 @@ def programme_overview(request):
                     programme.user = request.user
                     programme.is_shared = False  # New programmes are private by default
                 programme.save()
-                return redirect('v2_programme_overview')
+                
+                # Preserve tab state
+                current_tab = request.GET.get('tab', 'my')
+                from django.shortcuts import reverse
+                from urllib.parse import urlencode
+                url = reverse('v2_programme_overview')
+                return redirect(f'{url}?{urlencode({"tab": current_tab})}')
 
     # Handle edit mode (GET with ?edit=<id>)
     edit_id = request.GET.get('edit')
@@ -565,7 +597,13 @@ def delete_course(request, course_id):
     course = get_object_or_404(Course, id=course_id)
     if request.method == 'POST':
         course.delete()
-    return redirect('v2_course_overview')
+    
+    # Preserve tab state
+    current_tab = request.GET.get('tab', 'my')
+    from django.shortcuts import reverse
+    from urllib.parse import urlencode
+    url = reverse('v2_course_overview')
+    return redirect(f'{url}?{urlencode({"tab": current_tab})}')
 
 
 def delete_module(request, module_id):
@@ -581,7 +619,13 @@ def delete_programme(request, programme_id):
     programme = get_object_or_404(Programme, id=programme_id)
     if request.method == 'POST':
         programme.delete()
-    return redirect('v2_programme_overview')
+    
+    # Preserve tab state
+    current_tab = request.GET.get('tab', 'my')
+    from django.shortcuts import reverse
+    from urllib.parse import urlencode
+    url = reverse('v2_programme_overview')
+    return redirect(f'{url}?{urlencode({"tab": current_tab})}')
 
 
 def delete_revision(request, revision_id):
@@ -667,13 +711,20 @@ def programme_detail(request, programme_id):
         elif action == 'create_module':
             module_name = request.POST.get('module_name')
             module_description = request.POST.get('module_description', '')
+            module_qualification_goals = request.POST.get('module_qualification_goals', '')
             module_certificate = request.POST.get('module_certificate', '')
             module_responsible_person = request.POST.get('module_responsible_person', '')
             selected_courses = request.POST.getlist('module_courses')
             
-            # Certificate form data
+            # Certificate form data - handle both legacy and new group system
+            # Legacy system (fallback)
             selected_options = request.POST.getlist('certificate_options')
             logic_operator = request.POST.get('logic_operator', 'or')
+            
+            # New group system
+            certificate_group_count = int(request.POST.get('certificate_group_count', 0))
+            global_operator = request.POST.get('global_operator', 'or')
+            
             certificate_comment = request.POST.get('certificate_comment', '')
             is_graded = request.POST.get('is_graded') == 'on'
             
@@ -682,29 +733,67 @@ def programme_detail(request, programme_id):
                 new_module = Module.objects.create(
                     name=module_name.strip(),
                     description=module_description.strip(),
+                    qualification_goals=module_qualification_goals.strip(),
                     certificate=module_certificate.strip(),
                     responsible_person=module_responsible_person.strip()
                 )
                 
-                # Create or update module certificate if new system is used
-                if selected_options or certificate_comment or is_graded is not None:
-                    module_cert, created = ModuleCertificate.objects.get_or_create(
-                        module=new_module,
-                        defaults={
-                            'logic_operator': logic_operator,
-                            'comment': certificate_comment.strip(),
-                            'is_graded': is_graded
-                        }
-                    )
-                    if not created:
-                        module_cert.logic_operator = logic_operator
-                        module_cert.comment = certificate_comment.strip()
-                        module_cert.is_graded = is_graded
-                        module_cert.save()
+                # Always create module certificate to preserve is_graded state
+                module_cert, created = ModuleCertificate.objects.get_or_create(
+                    module=new_module,
+                    defaults={
+                        'logic_operator': logic_operator,
+                        'global_operator': global_operator,
+                        'comment': certificate_comment.strip(),
+                        'is_graded': is_graded
+                    }
+                )
+                if not created:
+                    module_cert.logic_operator = logic_operator
+                    module_cert.global_operator = global_operator
+                    module_cert.comment = certificate_comment.strip()
+                    module_cert.is_graded = is_graded
+                    module_cert.save()
+                
+                # Save complete group structure to JSON field
+                all_options = []
+                group_structure = {
+                    "global_operator": global_operator,
+                    "groups": []
+                }
+                
+                if certificate_group_count > 0:
+                    for group_num in range(1, certificate_group_count + 1):
+                        group_options = request.POST.getlist(f'group_{group_num}_options')
+                        group_operator = request.POST.get(f'group_{group_num}_operator', 'or')
+                        
+                        # Convert string IDs to integers
+                        group_option_ids = [int(opt_id) for opt_id in group_options if opt_id]
+                        
+                        if group_option_ids:  # Only add groups with options
+                            group_structure["groups"].append({
+                                "options": group_option_ids,
+                                "internal_operator": group_operator,
+                                "order": group_num
+                            })
+                            all_options.extend(group_option_ids)
                     
-                    # Set selected options
+                    # Save group structure
+                    module_cert.group_structure = group_structure
+                    
+                    # Also save to legacy field for backward compatibility
+                    unique_options = list(dict.fromkeys(all_options))  # Remove duplicates preserving order
+                    module_cert.selected_options.set(unique_options)
+                    
+                    print(f"DEBUG CREATE: Saved group structure: {group_structure}")
+                    print(f"DEBUG CREATE: Saved {len(unique_options)} legacy options: {unique_options}")
+                else:
+                    # Clear group structure and fallback to legacy system
+                    module_cert.group_structure = {}
                     if selected_options:
                         module_cert.selected_options.set(selected_options)
+                
+                module_cert.save()
                 
                 # Add selected courses to the module with semester
                 if selected_courses:
@@ -717,17 +806,8 @@ def programme_detail(request, programme_id):
                             except (TypeError, ValueError):
                                 semester = 1
                             
-                            # Check if this course is already used in other modules
-                            existing_usage = CourseModule.objects.filter(course=original_course)
-                            
-                            if existing_usage.exists():
-                                # Create a copy of the course
-                                course_to_use = original_course.create_copy()
-                            else:
-                                # Use the original course if it's not used elsewhere
-                                course_to_use = original_course
-                            
-                            CourseModule.objects.create(module=new_module, course=course_to_use, semester=semester, order=0)
+                            # Always use the original course - courses should be shared across modules
+                            CourseModule.objects.create(module=new_module, course=original_course, semester=semester, order=0)
                         except Course.DoesNotExist:
                             pass
                 
@@ -746,13 +826,29 @@ def programme_detail(request, programme_id):
             module_id = request.POST.get('module_id')
             module_name = request.POST.get('module_name')
             module_description = request.POST.get('module_description', '')
+            module_qualification_goals = request.POST.get('module_qualification_goals', '')
             module_certificate = request.POST.get('module_certificate', '')
             module_responsible_person = request.POST.get('module_responsible_person', '')
             selected_courses = request.POST.getlist('module_courses')
             
-            # Certificate form data
+            # Certificate form data - handle both legacy and new group system
+            # Legacy system (fallback)
             selected_options = request.POST.getlist('certificate_options')
             logic_operator = request.POST.get('logic_operator', 'or')
+            
+            # New group system
+            certificate_group_count = int(request.POST.get('certificate_group_count', 0))
+            global_operator = request.POST.get('global_operator', 'or')
+            
+            # Debug: Log what we're receiving
+            print(f"DEBUG EDIT: Received certificate_group_count: {certificate_group_count}")
+            print(f"DEBUG EDIT: Received POST data keys: {list(request.POST.keys())}")
+            if certificate_group_count > 0:
+                for i in range(1, certificate_group_count + 1):
+                    group_options = request.POST.getlist(f'group_{i}_options')
+                    group_operator = request.POST.get(f'group_{i}_operator', 'or')
+                    print(f"DEBUG EDIT: Group {i}: options={group_options}, operator={group_operator}")
+            
             certificate_comment = request.POST.get('certificate_comment', '')
             is_graded = request.POST.get('is_graded') == 'on'
             
@@ -762,34 +858,69 @@ def programme_detail(request, programme_id):
                     # Update module details
                     module.name = module_name.strip()
                     module.description = module_description.strip()
+                    module.qualification_goals = module_qualification_goals.strip()
                     module.certificate = module_certificate.strip()
                     module.responsible_person = module_responsible_person.strip()
                     module.save()
                     
-                    # Create or update module certificate if new system is used
-                    if selected_options or certificate_comment or is_graded is not None:
-                        module_cert, created = ModuleCertificate.objects.get_or_create(
-                            module=module,
-                            defaults={
-                                'logic_operator': logic_operator,
-                                'comment': certificate_comment.strip(),
-                                'is_graded': is_graded
-                            }
-                        )
-                        if not created:
-                            module_cert.logic_operator = logic_operator
-                            module_cert.comment = certificate_comment.strip()
-                            module_cert.is_graded = is_graded
-                            module_cert.save()
+                    # Always create or update module certificate to preserve is_graded state
+                    module_cert, created = ModuleCertificate.objects.get_or_create(
+                        module=module,
+                        defaults={
+                            'logic_operator': logic_operator,
+                            'global_operator': global_operator,
+                            'comment': certificate_comment.strip(),
+                            'is_graded': is_graded
+                        }
+                    )
+                    if not created:
+                        module_cert.logic_operator = logic_operator
+                        module_cert.global_operator = global_operator
+                        module_cert.comment = certificate_comment.strip()
+                        module_cert.is_graded = is_graded
+                        module_cert.save()
+                    
+                    # Save complete group structure to JSON field
+                    all_options = []
+                    group_structure = {
+                        "global_operator": global_operator,
+                        "groups": []
+                    }
+                    
+                    if certificate_group_count > 0:
+                        for group_num in range(1, certificate_group_count + 1):
+                            group_options = request.POST.getlist(f'group_{group_num}_options')
+                            group_operator = request.POST.get(f'group_{group_num}_operator', 'or')
+                            
+                            # Convert string IDs to integers
+                            group_option_ids = [int(opt_id) for opt_id in group_options if opt_id]
+                            
+                            if group_option_ids:  # Only add groups with options
+                                group_structure["groups"].append({
+                                    "options": group_option_ids,
+                                    "internal_operator": group_operator,
+                                    "order": group_num
+                                })
+                                all_options.extend(group_option_ids)
                         
-                        # Set selected options
+                        # Save group structure
+                        module_cert.group_structure = group_structure
+                        
+                        # Also save to legacy field for backward compatibility
+                        unique_options = list(dict.fromkeys(all_options))  # Remove duplicates preserving order
+                        module_cert.selected_options.set(unique_options)
+                        
+                        print(f"DEBUG EDIT: Saved group structure: {group_structure}")
+                        print(f"DEBUG EDIT: Saved {len(unique_options)} legacy options: {unique_options}")
+                    else:
+                        # Clear group structure and fallback to legacy system
+                        module_cert.group_structure = {}
                         if selected_options:
                             module_cert.selected_options.set(selected_options)
                         else:
                             module_cert.selected_options.clear()
-                    else:
-                        # If no new certificate data, remove ModuleCertificate if it exists
-                        ModuleCertificate.objects.filter(module=module).delete()
+                    
+                    module_cert.save()
                     
                     # Update courses - first clear all CourseModule links, then add selected ones with semester
                     module.coursemodule_set.all().delete()
@@ -803,17 +934,8 @@ def programme_detail(request, programme_id):
                                 except (TypeError, ValueError):
                                     semester = 1
                                 
-                                # Check if this course is already used in other modules
-                                existing_usage = CourseModule.objects.filter(course=original_course).exclude(module=module)
-                                
-                                if existing_usage.exists():
-                                    # Create a copy of the course
-                                    course_to_use = original_course.create_copy()
-                                else:
-                                    # Use the original course if it's not used elsewhere
-                                    course_to_use = original_course
-                                
-                                CourseModule.objects.create(module=module, course=course_to_use, semester=semester, order=0)
+                                # Always use the original course - courses should be shared across modules
+                                CourseModule.objects.create(module=module, course=original_course, semester=semester, order=0)
                             except Course.DoesNotExist:
                                 pass
                 except Module.DoesNotExist:
@@ -860,8 +982,9 @@ def programme_detail(request, programme_id):
     
     programme_modules = programme.get_ordered_modules()
     
-    # Get certificate options for the forms
+    # Get certificate options and groups for the forms
     certificate_options = CertificateOption.objects.all().order_by('order', 'name')
+    certificate_groups = CertificateGroup.objects.all().order_by('order', 'name')
     
     return render(request, 'studyprogrammes_v2/programme_detail.html', {
         'programme': programme,
@@ -871,6 +994,7 @@ def programme_detail(request, programme_id):
         'student_counts': student_counts,
         'nebenfach_ects': nebenfach_ects,
         'certificate_options': certificate_options,
+        'certificate_groups': certificate_groups,
     })
 
 
