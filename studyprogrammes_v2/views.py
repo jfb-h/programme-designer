@@ -306,9 +306,10 @@ def programme_overview(request):
                             from .models import ModuleCertificate
                             copied_cert = ModuleCertificate.objects.create(
                                 module=copied_module,
-                                logic_operator=original_cert.logic_operator,
+                                global_operator=original_cert.global_operator,
                                 comment=original_cert.comment,
-                                is_graded=original_cert.is_graded
+                                is_graded=original_cert.is_graded,
+                                group_structure=original_cert.group_structure
                             )
                             # Certificate options are now managed through group structure
                         except:
@@ -641,7 +642,10 @@ def delete_revision(request, revision_id):
 def programme_detail(request, programme_id):
     """Detail view for a programme where modules can be managed."""
     programme = get_object_or_404(Programme, id=programme_id)
-    all_courses = Course.objects.all()
+    # Get user's own courses and all shared courses
+    all_courses = Course.objects.filter(
+        models.Q(user=request.user) | models.Q(is_shared=True)
+    ).distinct()
     
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -737,14 +741,12 @@ def programme_detail(request, programme_id):
                 module_cert, created = ModuleCertificate.objects.get_or_create(
                     module=new_module,
                     defaults={
-                        'logic_operator': logic_operator,
                         'global_operator': global_operator,
                         'comment': certificate_comment.strip(),
                         'is_graded': is_graded
                     }
                 )
                 if not created:
-                    module_cert.logic_operator = logic_operator
                     module_cert.global_operator = global_operator
                     module_cert.comment = certificate_comment.strip()
                     module_cert.is_graded = is_graded
@@ -842,14 +844,12 @@ def programme_detail(request, programme_id):
                     module_cert, created = ModuleCertificate.objects.get_or_create(
                         module=module,
                         defaults={
-                            'logic_operator': logic_operator,
                             'global_operator': global_operator,
                             'comment': certificate_comment.strip(),
                             'is_graded': is_graded
                         }
                     )
                     if not created:
-                        module_cert.logic_operator = logic_operator
                         module_cert.global_operator = global_operator
                         module_cert.comment = certificate_comment.strip()
                         module_cert.is_graded = is_graded

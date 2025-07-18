@@ -83,13 +83,13 @@
                     data-course-semesters="{% for cm in module.coursemodule_set.all %}{{ cm.course.id }}:{{ cm.semester }}{% if not forloop.last %},{% endif %}{% endfor %}"
                     {% if module.module_certificate %}
                     data-certificate-options="{% for option in module.module_certificate.selected_options.all %}{{ option.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
-                    data-logic-operator="{{ module.module_certificate.logic_operator }}"
+                    data-global-operator="{{ module.module_certificate.global_operator }}"
                     data-certificate-comment="{{ module.module_certificate.comment }}"
                     data-is-graded="{{ module.module_certificate.is_graded }}"
                     data-group-structure='{{ module.module_certificate.group_structure|default:"{}"  }}'
                     {% else %}
                     data-certificate-options=""
-                    data-logic-operator="or"
+                    data-global-operator="or"
                     data-certificate-comment=""
                     data-is-graded="true"
                     data-group-structure="{}"

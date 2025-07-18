@@ -62,10 +62,7 @@ function resetCertificateFields() {
     commentField.value = '';
   }
   
-  const orRadio = document.querySelector('[name="logic_operator"][value="or"]');
-  if (orRadio) {
-    orRadio.checked = true;
-  }
+  // Global operator is now handled by the certificate group system
   
   // Reset searchable select
   clearSelectedCertificateOptions('create');
@@ -88,7 +85,7 @@ function openEditModuleModal(moduleId) {
   
   // New certificate system fields
   const certificateOptions = button.getAttribute('data-certificate-options').split(',').filter(id => id !== '');
-  const logicOperator = button.getAttribute('data-logic-operator') || 'or';
+  const globalOperator = button.getAttribute('data-global-operator') || 'or';
   const certificateComment = button.getAttribute('data-certificate-comment') || '';
   const isGradedStr = button.getAttribute('data-is-graded');
   const isGraded = isGradedStr === 'true' || isGradedStr === 'True';
@@ -133,15 +130,7 @@ function openEditModuleModal(moduleId) {
   }
   
   
-  // Set logic operator
-  const logicAndRadio = document.getElementById('edit_logic_and');
-  const logicOrRadio = document.getElementById('edit_logic_or');
-  
-  if (logicOperator === 'and' && logicAndRadio) {
-    logicAndRadio.checked = true;
-  } else if (logicOrRadio) {
-    logicOrRadio.checked = true;
-  }
+  // Logic operator is now handled by the certificate group system
   
   // Clear all certificate option checkboxes first
   document.querySelectorAll('[name="certificate_options"]').forEach(checkbox => {
@@ -311,14 +300,25 @@ function filterCourses() {
   courseItems.forEach(item => {
     const courseName = item.getAttribute('data-course-name');
     const courseType = item.getAttribute('data-course-type');
+    const courseOwner = item.getAttribute('data-course-owner');
+    const currentUser = item.getAttribute('data-current-user');
     const isSharedAttr = item.getAttribute('data-course-shared');
     const isShared = isSharedAttr === 'true' || isSharedAttr === 'True';
     
     const matchesSearch = courseName.includes(searchTerm);
     const matchesType = !selectedType || courseType === selectedType;
-    const matchesShared = (courseFilter === 'shared') ? isShared : !isShared;
     
-    if (matchesSearch && matchesType && matchesShared) {
+    // Filter logic: 
+    // "my" = courses owned by current user (regardless of sharing status)
+    // "shared" = courses shared by other users
+    let matchesFilter = false;
+    if (courseFilter === 'my') {
+      matchesFilter = courseOwner === currentUser;
+    } else if (courseFilter === 'shared') {
+      matchesFilter = courseOwner !== currentUser && isShared;
+    }
+    
+    if (matchesSearch && matchesType && matchesFilter) {
       item.style.display = 'flex';
       visibleCount++;
     } else {
@@ -401,14 +401,25 @@ function filterEditCourses() {
   courseItems.forEach(item => {
     const courseName = item.getAttribute('data-course-name');
     const courseType = item.getAttribute('data-course-type');
+    const courseOwner = item.getAttribute('data-course-owner');
+    const currentUser = item.getAttribute('data-current-user');
     const isSharedAttr = item.getAttribute('data-course-shared');
     const isShared = isSharedAttr === 'true' || isSharedAttr === 'True';
     
     const matchesSearch = courseName.includes(searchTerm);
     const matchesType = !selectedType || courseType === selectedType;
-    const matchesShared = (courseFilter === 'shared') ? isShared : !isShared;
     
-    if (matchesSearch && matchesType && matchesShared) {
+    // Filter logic: 
+    // "my" = courses owned by current user (regardless of sharing status)
+    // "shared" = courses shared by other users
+    let matchesFilter = false;
+    if (courseFilter === 'my') {
+      matchesFilter = courseOwner === currentUser;
+    } else if (courseFilter === 'shared') {
+      matchesFilter = courseOwner !== currentUser && isShared;
+    }
+    
+    if (matchesSearch && matchesType && matchesFilter) {
       item.style.display = 'flex';
       visibleCount++;
     } else {
@@ -1115,7 +1126,6 @@ function collectAndSubmitCertificateData(form) {
   // Remove any existing certificate data inputs to avoid duplicates (but keep the original checkbox and radio buttons)
   form.querySelectorAll('input[name^="certificate_"]').forEach(input => input.remove());
   form.querySelectorAll('input[name^="group_"][type="hidden"]').forEach(input => input.remove()); // Only remove hidden inputs, not radio buttons
-  form.querySelectorAll('input[name="logic_operator"]').forEach(input => input.remove());
   form.querySelectorAll('input[name="is_graded"][type="hidden"]').forEach(input => input.remove());
   
   // Determine modal type based on form action

@@ -253,7 +253,9 @@
                          data-course-type="{{ course.course_type }}"
                          data-course-ects="{{ course.ects }}"
                          data-course-sws="{{ course.sws }}"
-                         data-course-shared="{{ course.is_shared }}">
+                         data-course-shared="{{ course.is_shared }}"
+                         data-course-owner="{{ course.user.id }}"
+                         data-current-user="{{ user.id }}">
                     <div class="col-span-1 flex items-center">
                       <input type="number" name="semester_for_{{ course.id }}" min="1" max="10" class="semester-input w-16 px-1 py-0.5 border border-gray-300 rounded focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-xs" placeholder="Sem" data-course-id="{{ course.id }}">
                     </div>
@@ -772,7 +774,9 @@ document.addEventListener('DOMContentLoaded', function() {
                          data-course-type="{{ course.course_type }}"
                          data-course-ects="{{ course.ects }}"
                          data-course-sws="{{ course.sws }}"
-                         data-course-shared="{{ course.is_shared }}">
+                         data-course-shared="{{ course.is_shared }}"
+                         data-course-owner="{{ course.user.id }}"
+                         data-current-user="{{ user.id }}">
                     <div class="col-span-1 flex items-center">
                       <input type="number" name="semester_for_{{ course.id }}" min="1" max="10" class="semester-input w-16 px-1 py-0.5 border border-gray-300 rounded focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-xs" placeholder="Sem" data-course-id="{{ course.id }}">
                     </div>
