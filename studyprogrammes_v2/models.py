@@ -690,19 +690,7 @@ class Programme(models.Model):
                     'is_graded': module_cert.is_graded,
                     'comment': module_cert.comment,
                     'global_operator': module_cert.global_operator,
-                    'global_operator_display': 'UND' if module_cert.global_operator == 'and' else 'ODER',
-                    
-                    # Legacy fields for backward compatibility
-                    'logic_operator': module_cert.logic_operator,
-                    'logic_operator_display': module_cert.get_logic_operator_display(),
-                    'selected_options': [
-                        {
-                            'id': option.id,
-                            'name': option.name,
-                            'description': option.description,
-                            'order': option.order
-                        } for option in CertificateOption.objects.none()  # Legacy field removed
-                    ]
+                    'global_operator_display': 'UND' if module_cert.global_operator == 'and' else 'ODER'
                 }
                 
                 # Add group structure if it exists (new system)
