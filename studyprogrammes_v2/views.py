@@ -322,6 +322,16 @@ def programme_overview(request):
                             order=programme_module.order
                         )
                     
+                    # Copy student counts
+                    from .models import ProgrammeStudentCount
+                    for student_count in original_programme.student_counts.all():
+                        ProgrammeStudentCount.objects.create(
+                            programme=copied_programme,
+                            semester=student_count.semester,
+                            min_students=student_count.min_students,
+                            max_students=student_count.max_students
+                        )
+                    
                     messages.success(request, f'Studiengang "{original_programme.name}" wurde kopiert.')
                     
                 except Programme.DoesNotExist:
@@ -354,6 +364,15 @@ def programme_overview(request):
                         )
                         # Copy many-to-many relationships (modules)
                         shared_programme.modules.set(programme.modules.all())
+                        
+                        # Copy student counts
+                        for student_count in programme.student_counts.all():
+                            ProgrammeStudentCount.objects.create(
+                                programme=shared_programme,
+                                semester=student_count.semester,
+                                min_students=student_count.min_students,
+                                max_students=student_count.max_students
+                            )
                         
                         # Auto-share all courses in the programme
                         courses_to_share = []
