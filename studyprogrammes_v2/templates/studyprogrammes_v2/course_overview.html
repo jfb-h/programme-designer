@@ -204,7 +204,7 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
     <table class="min-w-full divide-y divide-gray-300 table-fixed">
       <thead class="bg-gray-50">
         <tr>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" style="max-width: 300px;">
             <a href="?sort=name&order={% if current_sort == 'name' and current_order == 'asc' %}desc{% else %}asc{% endif %}&tab={{ current_tab }}" class="group inline-flex items-center hover:text-gray-900">
               Name
               {% if current_sort == 'name' %}
@@ -254,8 +254,8 @@ label:has(input[type="radio"]):hover, label:has(input[type="checkbox"]):hover {
       <tbody class="bg-white divide-y divide-gray-200">
         {% for course in courses %}
         <tr class="hover:bg-gray-50">
-          <td class="px-6 py-4 text-sm font-medium text-gray-900 w-1/6">
-            <div class="truncate" title="{{ course.name }}">{{ course.name }}</div>
+          <td class="px-6 py-4 text-sm font-medium text-gray-900" style="width: 300px;">
+            <div class="break-words" title="{{ course.name }}">{{ course.name }}</div>
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center w-16">
             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" title="{{ course.get_course_type_display }}">
