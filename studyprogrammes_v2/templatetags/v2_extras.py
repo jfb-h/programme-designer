@@ -120,6 +120,9 @@ def programme_type_short(programme_type):
         'lehramt_nicht_vertieft': 'LA nVert',
         'lehramt_mittelschule': 'LA MS',
         'lehramt_grundschule': 'LA GS',
+        'didaktik_grundschule': 'DID GS',
+        'didaktik_mittelschule': 'DID MS',
+        'didaktik_sonderpaedagogik': 'DID SP',
         'master_hg': 'MA-HG',
         'master_pg': 'MA-PG',
     }
@@ -392,6 +395,9 @@ def programme_target_ects_per_semester(programme_type):
         'lehramt_nicht_vertieft': 12,
         'lehramt_mittelschule': 12,
         'lehramt_grundschule': 12,
+        'didaktik_grundschule': 12,
+        'didaktik_mittelschule': 12,
+        'didaktik_sonderpaedagogik': 12,
         'master_hg': 30,
         'master_pg': 30,
     }
@@ -461,20 +467,39 @@ def programme_sws_range(programme):
     if not programme:
         return "—"
     
-    # Get the programme's own student counts (same as programme detail page)
+    # Use the same logic as programme detail view to ensure consistency
     from ..models import ProgrammeStudentCount, DefaultStudentCount
+    
+    # Get programme-specific student counts
     existing_counts = ProgrammeStudentCount.objects.filter(programme=programme)
-    student_counts = {
+    existing_counts_dict = {
         'min': {int(sc.semester): int(sc.min_students) for sc in existing_counts},
         'max': {int(sc.semester): int(sc.max_students) for sc in existing_counts}
     }
     
-    # If no programme-specific student counts, use defaults for this programme type
-    if not existing_counts.exists():
-        default_counts = DefaultStudentCount.objects.filter(programme_type=programme.programme_type)
-        student_counts = {
-            'min': {int(dc.semester): int(dc.min_students) for dc in default_counts},
-            'max': {int(dc.semester): int(dc.max_students) for dc in default_counts}
-        }
+    # Get default student counts for this programme type
+    default_counts = DefaultStudentCount.objects.filter(programme_type=programme.programme_type)
+    default_counts_dict = {
+        'min': {int(dc.semester): int(dc.min_students) for dc in default_counts},
+        'max': {int(dc.semester): int(dc.max_students) for dc in default_counts}
+    }
+    
+    # Determine semester range (assuming 1-10 for now, could be made dynamic)
+    semester_range = range(1, 11)
+    
+    # Build student_counts with same fallback logic as view
+    student_counts = {'min': {}, 'max': {}}
+    for semester in semester_range:
+        # Use programme-specific value if exists, otherwise use default, otherwise use fallback
+        student_counts['min'][semester] = (
+            existing_counts_dict['min'].get(semester) or 
+            default_counts_dict['min'].get(semester) or 
+            20  # fallback
+        )
+        student_counts['max'][semester] = (
+            existing_counts_dict['max'].get(semester) or 
+            default_counts_dict['max'].get(semester) or 
+            30  # fallback
+        )
     
     return programme.get_sws_range_total(student_counts)

@@ -43,6 +43,9 @@ class ProgrammeType(models.TextChoices):
     LEHRAMT_NICHT_VERTIEFT = 'lehramt_nicht_vertieft', 'Lehramt Nicht Vertieft'
     LEHRAMT_MITTELSCHULE = 'lehramt_mittelschule', 'Lehramt Mittelschule'
     LEHRAMT_GRUNDSCHULE = 'lehramt_grundschule', 'Lehramt Grundschule'
+    DIDAKTIK_GRUNDSCHULE = 'didaktik_grundschule', 'Didaktik Grundschule'
+    DIDAKTIK_MITTELSCHULE = 'didaktik_mittelschule', 'Didaktik Mittelschule'
+    DIDAKTIK_SONDERPAEDAGOGIK = 'didaktik_sonderpaedagogik', 'Didaktik Sonderpädagogik'
     MASTER_HG = 'master_hg', 'Master Humangeographie'
     MASTER_PG = 'master_pg', 'Master Physische Geographie'
 
@@ -1023,9 +1026,13 @@ class Revision(models.Model):
         return unique_courses
     
     def _get_student_range_for_course(self, course_id, semester):
-        """Get min/max sum of students taking a course in a semester across revised programmes."""
-        total_min_students = 0
-        total_max_students = 0
+        """Get min/max students taking a course in a semester across revised programmes.
+        
+        For shared courses, we take the MAX of programme student counts since the same
+        physical course serves all programmes simultaneously, subject to participant limits.
+        """
+        programme_min_students = []
+        programme_max_students = []
         
         for programme in self.programmes.all():
             # Check if this programme has this course in this semester
@@ -1042,8 +1049,13 @@ class Revision(models.Model):
                 ).first()
                 
                 if student_count:
-                    total_min_students += student_count.min_students
-                    total_max_students += student_count.max_students
+                    programme_min_students.append(student_count.min_students)
+                    programme_max_students.append(student_count.max_students)
+        
+        # Take MAX instead of SUM for shared courses
+        # If no student counts found, use fallback values
+        total_min_students = max(programme_min_students) if programme_min_students else 20
+        total_max_students = max(programme_max_students) if programme_max_students else 30
         
         return total_min_students, total_max_students
     
@@ -1079,7 +1091,7 @@ class Revision(models.Model):
             courses_semester = self._get_unique_courses_for_semester(semester)
             
             for course_id, course in courses_semester.items():
-                # Get min/max sum of students taking this course in this semester
+                # Get min/max students taking this course in this semester
                 min_students, max_students = self._get_student_range_for_course(course_id, semester)
                 
                 # Get max participants for this course
